@@ -47,8 +47,8 @@
 #include "ns3/yans-wifi-helper.h"
 
 //#include "logging.h"
-#include "nsutil.h"
 #include "ns3/rhpman-helper.h"
+#include "nsutil.h"
 #include "simulation-area.h"
 #include "simulation-params.h"
 #include "util.h"
@@ -182,8 +182,6 @@ int main(int argc, char* argv[]) {
   NS_LOG_UNCOND("Setting up Internet stacks...");
   InternetStackHelper internet;
 
-  std::ostringstream ss;
-  Ptr<OutputStreamWrapper> neighbourStream = Create<OutputStreamWrapper>(&ss);
   if (params.routingProtocol == RoutingType::DSDV) {
     NS_LOG_DEBUG("Using DSDV routing.");
     DsdvHelper dsdv;
@@ -195,7 +193,7 @@ int main(int argc, char* argv[]) {
   }
   internet.Install(allAdHocNodes);
   Ipv4AddressHelper adhocAddresses;
-  adhocAddresses.SetBase("1.1.1.0", "255.255.255.255");
+  adhocAddresses.SetBase("10.1.0.0", "255.255.0.0");
   auto adhocInterfaces = adhocAddresses.Assign(adhocDevices);
 
   // Install the RHPMAN Scheme onto each node.
@@ -217,8 +215,6 @@ int main(int argc, char* argv[]) {
   Simulator::Run();
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
-
-  std::cout << ss.str() << std::endl;
 
   return EX_OK;
 }

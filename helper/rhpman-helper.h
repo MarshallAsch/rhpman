@@ -24,7 +24,6 @@
 #ifndef __rhpman_helper_h
 #define __rhpman_helper_h
 
-#include <bits/stdint-uintn.h>
 #include <map>
 
 #include "ns3/application-container.h"
@@ -38,7 +37,6 @@
 #include "ns3/socket.h"
 
 #include "ns3/rhpman.h"
-
 
 namespace rhpman {
 

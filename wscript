@@ -12,14 +12,15 @@ def build(bld):
     module = bld.create_ns3_module('rhpman', ['core', 'stats', 'aodv', 'dsdv', 'internet', 'mobility', 'wifi'])
     module.source = [
         'model/rhpman.cc',
-       # 'model/data.cc',
+        'model/dataItem.cc',
+        'model/storage.cc',
         'model/nsutil.cc',
         'model/logging.cc',
         'helper/rhpman-helper.cc',
-       # 'model/proto/message.proto',
+       'model/proto/messages.proto',
         ]
 
-    #module.cxxflags = ['-I./contrib/rhpman/model']
+    module.cxxflags =  ['-I./contrib/rhpman/model']
 
     module_test = bld.create_ns3_module_test_library('rhpman')
     module_test.source = [
@@ -35,16 +36,18 @@ def build(bld):
     headers.module = 'rhpman'
     headers.source = [
         'model/rhpman.h',
-       # 'model/data.h',
+        'model/storage.h',
+        'model/dataItem.h',
       #  'model/util.h',
         'helper/rhpman-helper.h',
+       # 'model/proto/messages.proto',
+      #  'model/messages.pb.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
         bld.recurse('examples')
 
     # bld.ns3_python_bindings()
-
 
 
 
@@ -75,7 +78,7 @@ A simple tool to integrate protocol buffers into your build system.
 class protoc(Task):
     run_str = '${PROTOC} ${SRC} --cpp_out=. -I..'
     color = 'BLUE'
-    ext_out = ['.h', 'pb.cc']
+    ext_out = ['pb.h', 'pb.cc']
 
 @extension('.proto')
 def process_protoc(self, node):

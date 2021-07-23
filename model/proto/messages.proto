@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package rhpman.packets;
+
+message Message {
+    uint64 id = 1;              // DO NOT SET THIS TO 0
+    uint64 timestamp = 2;
+
+    oneof payload {
+        ReplicationNodeAnnouncement announce = 4;
+        Ping ping = 5;
+        Request request = 6;
+        Response response = 7;
+        ElectionRequest election = 8;
+        ElectionFitness fitness = 9;
+        ModeChange mode_change = 10;
+        Store store = 11;
+        Transfer transfer = 12;
+    }
+}
+
+message ElectionRequest {
+}
+
+message ReplicationNodeAnnouncement {
+}
+
+message ElectionFitness {
+    double fitness = 1;
+}
+
+message ModeChange {
+    uint32 old_replication_node = 1;
+    uint32 new_replication_node = 2;
+}
+
+message Ping {
+    double delivery_probability = 1;
+}
+
+message Request {
+    //uint64 id = 1;
+    uint64 data_id = 2;
+    uint32 requestor = 3;
+    double sigma = 4;
+}
+
+message Response {
+    uint64 request_id = 1;
+    //uint64 data_id = 2;
+    //uint32 requestor = 3;
+    DataItem data = 4;
+}
+
+message Store {
+    //uint64 id = 1;
+    //uint64 data_id = 2;
+    DataItem data = 4;
+}
+
+message Transfer {
+    repeated DataItem items = 1;
+}
+
+message DataItem {
+    uint64 data_id = 1;
+    uint32 owner = 2;
+    bytes data = 3;
+}

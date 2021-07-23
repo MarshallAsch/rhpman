@@ -30,10 +30,10 @@
 #include "ns3/pointer.h"
 #include "ns3/udp-socket-factory.h"
 
-#include "rhpman-helper.h"
 #include "../model/logging.h"
-#include "../model/util.h"
 #include "../model/nsutil.h"
+#include "../model/util.h"
+#include "rhpman-helper.h"
 
 namespace rhpman {
 
@@ -67,13 +67,12 @@ ApplicationContainer RhpmanAppHelper::Install(NodeContainer nodes) {
   for (size_t i = 0; i < nodes.GetN(); i++) {
     Ptr<Node> node = nodes.Get(i);
     if (std::find(dataOwnerIds.begin(), dataOwnerIds.end(), i) != dataOwnerIds.end()) {
-
       m_factory.Set("Role", EnumValue(RhpmanApp::Role::REPLICATING));
-      m_factory.Set("DataId", IntegerValue(i));
+      // m_factory.Set("DataId", IntegerValue(i));
     }
     apps.Add(createAndInstallApp(node));
     m_factory.Set("Role", EnumValue(RhpmanApp::Role::NON_REPLICATING));
-    m_factory.Set("DataId", IntegerValue(-1));
+    // m_factory.Set("DataId", IntegerValue(-1));
   }
   return apps;
 }

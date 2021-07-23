@@ -24,18 +24,32 @@
 #ifndef __rhpman_h
 #define __rhpman_h
 
-#include <bits/stdint-uintn.h>
+// Uncomment this to enable the optional carrier forwarding
+#define __RHPMAN_OPTIONAL_CARRIER_FORWARDING
+
+// uncomment to enable the optional checking the data items in the buffer when doing a lookup
+#define __RHPMAN_OPTIONAL_CHECK_BUFFER
+
+#define APPLICATION_PORT 5000
+
 #include <map>
+#include <set>  // std::set
 
 #include "ns3/application-container.h"
 #include "ns3/application.h"
 #include "ns3/applications-module.h"
 #include "ns3/attribute.h"
-#include "ns3/core-module.h"
+#include "ns3/callback.h"
+//#include "ns3/core-module.h"
+#include "ns3/event-id.h"
 #include "ns3/node-container.h"
 #include "ns3/object-base.h"
 #include "ns3/object-factory.h"
 #include "ns3/socket.h"
+#include "ns3/uinteger.h"
+
+#include "dataItem.h"
+#include "storage.h"
 
 namespace rhpman {
 
@@ -65,17 +79,19 @@ class RhpmanApp : public Application {
         m_neighborhoodHops(2),
         m_electionNeighborhoodHops(4),
         m_profileDelay(),
-        m_storage(),
         m_degreeConnectivity(),
-        m_socket(0),
-        m_dataId(-1){};
+        m_socket_recv(0),
+        m_neighborhood_socket(0),
+        m_election_socket(0),
+        m_success(MakeNullCallback<void, DataItem*>()),
+        m_failed(MakeNullCallback<void, uint64_t>()){};
 
-  Ptr<Socket> GetSocket() const;
   Role GetRole() const;
   State GetState() const;
-  int32_t GetDataId() const {
-    return m_dataId;
-  }
+
+  void Lookup(uint64_t id);
+  bool Save(DataItem* data);
+  uint32_t GetFreeSpace();
 
  private:
   // Application lifecycle methods.
@@ -89,7 +105,6 @@ class RhpmanApp : public Application {
   void ExchangeProfiles();
 
   // Member fields.
-
   State m_state;
   Role m_role;
   double m_forwardingThreshold;
@@ -99,10 +114,141 @@ class RhpmanApp : public Application {
   uint32_t m_neighborhoodHops;
   uint32_t m_electionNeighborhoodHops;
   Time m_profileDelay;
-  std::vector<uint32_t> m_storage;
   std::map<Time, uint32_t> m_degreeConnectivity;
-  Ptr<Socket> m_socket;
-  int32_t m_dataId;
+
+  Ptr<Socket> m_socket_recv;
+  Ptr<Socket> m_neighborhood_socket;
+  Ptr<Socket> m_election_socket;
+
+  // callbacks for lookup requests
+  // callbacks for  requests
+  Callback<void, DataItem*> m_success;
+  Callback<void, uint64_t> m_failed;
+
+  // timeouts
+  Time m_request_timeout;
+  Time m_missing_replication_timeout;  // if a replication node does not checkin before this time it
+                                       // is removed from the list
+  Time m_profile_timeout;
+  Time m_election_timeout;
+  Time m_election_cooldown;
+  Time m_min_election_time;  // this is the earliest time that another election is allowed to be
+                             // requested by a node
+
+  // event handlers
+  void LookupTimeout(uint64_t requestID);
+  void TriggerElection();
+  void CheckElectionResults();
+  void ProfileTimeout(uint32_t nodeID);
+  void ReplicationNodeTimeout(uint32_t nodeID);
+  void HandleReplicationAnnouncement(uint32_t nodeID);
+
+  EventId m_election_watchdog_event;
+  EventId m_replica_announcement_event;
+
+  // event triggers
+  void BroadcastToNeighbors(Ptr<Packet> packet);
+  void BroadcastToElection(Ptr<Packet> packet);
+  void SendMessage(Ipv4Address dest, Ptr<Packet> packet);
+  void SendStartElection();
+  void SendPing();
+  void SendReplicationAnnouncement();
+  void SendFitness();
+  void SendRoleChange(uint32_t newReplicationNode);
+  void SendSyncLookup(uint64_t requestID, uint32_t nodeID, uint64_t dataID);
+  void SendSyncStore(uint32_t nodeID, DataItem* data);
+  void SendResponse(uint64_t requestID, uint32_t nodeID, const DataItem* data);
+
+  // schedulers
+  void ScheduleElectionCheck();
+  void ScheduleElectionWatchdog();
+  void ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID);
+  void ScheduleProfileTimeout(uint32_t nodeID);
+  void ScheduleReplicaNodeTimeout(uint32_t nodeID);
+  void SchedulePing();
+  void ScheduleReplicaHolderAnnouncement();
+
+  // other helpers
+  void RunElection();
+  void MakeReplicaHolderNode();
+  void MakeNonReplicaHolderNode();
+  void LookupFromReplicaHolders(uint64_t dataID, uint64_t requestID, uint32_t srcNode);
+  uint32_t GetID();
+  static uint64_t GenerateMessageID();
+  void ResetFitnesses();
+  std::set<uint32_t> GetRecipientAddresses(double sigma);
+  std::set<uint32_t> FilterAddresses(
+      const std::set<uint32_t> addresses,
+      const std::set<uint32_t> exclude);
+  std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
+  void TransferBuffer(uint32_t nodeID);
+  DataItem* CheckLocalStorage(uint64_t dataID);
+
+  Ptr<Socket> SetupSocket(uint16_t port, uint32_t ttl);
+  Ptr<Socket> SetupRcvSocket(uint16_t port);
+  Ptr<Socket> SetupSendSocket(uint16_t port, uint8_t ttl);
+  RhpmanApp::Role GetNewRole();
+  void ChangeRole(Role newRole);
+  void CancelEventMap(std::map<uint32_t, EventId> events);
+  void RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint32_t srcNode);
+  bool CheckDuplicateMessage(uint64_t messageID);
+  bool IsResponsePending(uint64_t requestID);
+  void DestroySocket(Ptr<Socket> socket);
+
+  void SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma);
+  void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes);
+
+  // calculation helpers
+  double CalculateElectionFitness();
+  double CalculateProfile();
+  double CalculateChangeDegree();
+  double CalculateColocation();
+
+  // message handlers
+  void HandleRequest(Ptr<Socket> socket);
+  void HandlePing(uint32_t nodeID, double profile);
+  void HandleModeChange(uint32_t oldNode, uint32_t newNode);
+  void HandleElectionRequest();
+  void HandleElectionFitness(uint32_t nodeID, double fitness);
+  void HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID);
+  void HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message);
+  uint32_t HandleTransfer(std::vector<DataItem*> data);
+  void HandleResponse(uint64_t requestID, DataItem* data);
+
+  // message generators
+  Ptr<Packet> GenerateLookup(uint64_t messageID, uint64_t dataID, double sigma, uint32_t srcNode);
+  Ptr<Packet> GenerateStore(const DataItem* data);
+  Ptr<Packet> GeneratePing(double profile);
+  Ptr<Packet> GenerateReplicaAnnouncement();
+  Ptr<Packet> GenerateElectionRequest();
+  Ptr<Packet> GenerateModeChange(uint32_t newNode);
+  Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items);
+  Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
+
+  // data storage for the node
+  uint32_t m_storageSpace;
+  uint32_t m_bufferSpace;
+
+  uint32_t m_address;
+
+  Storage m_storage;
+  Storage m_buffer;
+
+  std::set<uint64_t> m_pendingLookups;
+  std::map<uint64_t, uint64_t> m_lookupMapping;
+
+  // replication values
+
+  std::map<uint32_t, double> m_peerFitness;
+
+  std::map<uint32_t, double> m_peerProfiles;
+  std::map<uint32_t, EventId> m_profileTimeouts;
+  std::map<uint32_t, EventId> m_replicationNodeTimeouts;
+
+  double m_myFitness;
+  std::set<uint32_t> m_replicating_nodes;
+
+  std::set<uint64_t> m_received_messages;
 };
 
 };  // namespace rhpman
