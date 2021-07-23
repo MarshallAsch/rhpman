@@ -919,9 +919,7 @@ double RhpmanApp::CalculateChangeDegree() { return 0; }
 double RhpmanApp::CalculateColocation() {
   if (m_role == Role::REPLICATING) return 1;
 
-  // check routing table here
-
-  return 0;
+  return m_replicating_nodes.size() == 0 ? 0 : 1;
 }
 
 // ================================================
