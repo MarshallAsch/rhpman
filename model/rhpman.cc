@@ -909,10 +909,11 @@ void RhpmanApp::TransferBuffer(uint32_t nodeID) {
 double RhpmanApp::CalculateElectionFitness() {
   double changeDegree = CalculateChangeDegree();
 
-  if (changeDegree != 0) {
-    m_myFitness = (m_ws * (m_storage.GetFreeSpace() / (double) m_storageSpace)) / changeDegree;
-  } else {
+  // check to make sure it is not =
+  if (fabs(changeDegree) <= 0.00001) {
     m_myFitness = DBL_MAX;
+  } else {
+    m_myFitness = (m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace)) / changeDegree;
   }
 
   return m_myFitness;
