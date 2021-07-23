@@ -76,6 +76,7 @@ class RhpmanApp : public Application {
         m_carryingThreshold(0.6),
         m_wcdc(0.5),
         m_wcol(0.5),
+        m_ws(1),
         m_neighborhoodHops(2),
         m_electionNeighborhoodHops(4),
         m_profileDelay(),
@@ -111,6 +112,7 @@ class RhpmanApp : public Application {
   double m_carryingThreshold;
   double m_wcdc;
   double m_wcol;
+  double m_ws;
   uint32_t m_neighborhoodHops;
   uint32_t m_electionNeighborhoodHops;
   Time m_profileDelay;

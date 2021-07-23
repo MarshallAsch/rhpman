@@ -77,6 +77,13 @@ TypeId RhpmanApp::GetTypeId() {
               MakeDoubleAccessor(&RhpmanApp::m_carryingThreshold),
               MakeDoubleChecker<double>(0.0, 1.0))
           .AddAttribute(
+              "StorageWeight",
+              "The weight of the storage component of the election fitness calculation"
+              "(w_s)",
+              DoubleValue(1),
+              MakeDoubleAccessor(&RhpmanApp::m_ws),
+              MakeDoubleChecker<double>(0.0, 1.0))
+          .AddAttribute(
               "DegreeConnectivityWeight",
               "Weight of degree connectivity for computing delivery probabilities (w_cdc)",
               DoubleValue(0.5),
@@ -900,7 +907,14 @@ void RhpmanApp::TransferBuffer(uint32_t nodeID) {
 // ================================================
 
 double RhpmanApp::CalculateElectionFitness() {
-  m_myFitness = 0;
+  double changeDegree = CalculateChangeDegree();
+
+  if (changeDegree != 0) {
+    m_myFitness = (m_ws * (m_storage.GetFreeSpace() / (double) m_storageSpace)) / changeDegree;
+  } else {
+    m_myFitness = DBL_MAX;
+  }
+
   return m_myFitness;
 }
 
