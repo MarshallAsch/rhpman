@@ -48,7 +48,7 @@ static std::vector<std::string> filterStrings(const std::vector<std::string> str
   std::vector<std::string> list;
 
   for (std::vector<std::string>::const_iterator it = strings.begin(); it != strings.end(); ++it) {
-    if ((*it).empty() || !isdigit((*it)[0]) || (*it).substr(0, 9) == "127.0.0.1") {
+    if ((*it).empty() || !isdigit((*it)[0])) {
       continue;
     }
     list.push_back((*it));
@@ -68,12 +68,17 @@ static std::vector<std::string> tokenize(const std::string str) {
   return tokens;
 }
 
-static std::vector<std::string> getDestinations(const std::vector<std::string> strings) {
+static std::vector<std::string> getDestinations(
+    const std::vector<std::string> strings,
+    uint32_t maxHops) {
   std::vector<std::string> list;
 
   for (std::vector<std::string>::const_iterator it = strings.begin(); it != strings.end(); ++it) {
     std::vector<std::string> parts = tokenize(*it);
-    list.push_back(parts[0]);
+
+    uint32_t hops = (uint32_t)std::stoi(parts[3], nullptr, 10);
+
+    if (hops > 0 && hops <= maxHops) list.push_back(parts[0]);
   }
 
   return list;
@@ -122,13 +127,15 @@ Table::Table() {
   currentTable = 0;
   lastTable = 0;
   numTables = 0;
+  maxHops = 0;
   tables.resize(0);
 }
 
-Table::Table(uint16_t num) {
+Table::Table(uint16_t num, uint32_t filter) {
   numTables = num;
   currentTable = 0;
   lastTable = 0;
+  maxHops = filter;
   tables.resize(numTables);
 }
 
@@ -151,7 +158,7 @@ void Table::UpdateTable(const std::string table) {
   std::vector<std::string> trimmed = trimStrings(parts);
   std::vector<std::string> filtered = filterStrings(trimmed);
 
-  std::set<uint32_t> currentNeighbors = createSet(getDestinations(filtered));
+  std::set<uint32_t> currentNeighbors = createSet(getDestinations(filtered, maxHops));
 
   nextTable();
   tables[currentTable] = currentNeighbors;

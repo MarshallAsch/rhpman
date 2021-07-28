@@ -14,13 +14,14 @@ class Table {
   uint16_t numTables;
   uint16_t currentTable;
   uint16_t lastTable;
+  uint32_t maxHops;
   std::vector<std::set<uint32_t> > tables;
 
   void nextTable();
 
  public:
   Table();
-  Table(uint16_t num);
+  Table(uint16_t num, uint32_t hops);
   ~Table();
   double ComputeChangeDegree();
   void UpdateTable(const std::string table);
