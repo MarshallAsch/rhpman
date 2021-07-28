@@ -17,8 +17,10 @@ def build(bld):
         'model/nsutil.cc',
         'model/table.cc',
         'model/logging.cc',
+        'model/dataAccess.cc',
         'helper/rhpman-helper.cc',
-       'model/proto/messages.proto',
+        'model/proto/messages.proto',
+        'helper/data-access-helper.cc'
         ]
 
     module.cxxflags =  ['-I./contrib/rhpman/model']
@@ -40,7 +42,9 @@ def build(bld):
         'model/storage.h',
         'model/dataItem.h',
         'model/table.h',
+        'model/dataAccess.h',
         'helper/rhpman-helper.h',
+        'helper/data-access-helper.h',
        # 'model/proto/messages.proto',
       #  'model/messages.pb.h',
         ]
