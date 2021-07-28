@@ -96,6 +96,9 @@ class RhpmanApp : public Application {
   bool Save(DataItem* data);
   uint32_t GetFreeSpace();
 
+  void RegisterSuccessCallback(Callback<void, DataItem*> success);
+  void RegisterfailureCallback(Callback<void, uint64_t> fail);
+
  private:
   // Application lifecycle methods.
 

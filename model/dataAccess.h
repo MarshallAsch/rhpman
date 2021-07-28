@@ -102,8 +102,8 @@ class DataAccess : public Application {
   void CreateDataItem();
   void lookup();
 
-  void success(DataItem* data);
-  void failed(uint64_t dataID);
+  static void success(DataItem* data);
+  static void failed(uint64_t dataID);
 
   Ptr<UniformRandomVariable> m_lookupSelector;
 };

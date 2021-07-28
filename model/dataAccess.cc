@@ -102,11 +102,15 @@ void DataAccess::StartApplication() {
 
   m_rhpman = GetNode()->GetApplication(0)->GetObject<RhpmanApp>();
 
+  m_rhpman->RegisterSuccessCallback(MakeCallback(&success));
+  m_rhpman->RegisterfailureCallback(MakeCallback(&failed));
   m_nodeID = GetID();
 
   if (m_role == Role::OWNER) CreateDataItem();
 
   m_lookupSelector = CreateObject<UniformRandomVariable>();
+  m_lookupSelector->SetAttribute("Min", DoubleValue(1));
+  m_lookupSelector->SetAttribute("Max", DoubleValue(DBL_MAX));
 
   m_state = State::RUNNING;
 
@@ -167,6 +171,7 @@ void DataAccess::scheduleUpdate() {
 }
 
 uint64_t DataAccess::selectDataToLookup() {
+  // std::cout << "total items: " << unsigned(total_data_items) << "\n";
   return m_lookupSelector->GetInteger(1, total_data_items);
 }
 
@@ -195,9 +200,19 @@ void DataAccess::CreateDataItem() {
   total_data_items++;
 }
 
-void DataAccess::lookup() {}
+void DataAccess::lookup() {
+  // if there are no items stored dont run a lookup
+  if (total_data_items == 0) return;
 
-void DataAccess::success(DataItem* data) {}
-void DataAccess::failed(uint64_t dataID) {}
+  m_rhpman->Lookup(selectDataToLookup());
+}
+
+void DataAccess::success(DataItem* data) {
+  std::cout << "Successfull lookup for data item: " << unsigned(data->getID()) << "\n";
+}
+
+void DataAccess::failed(uint64_t dataID) {
+  std::cout << "failed to  lookup for data item: " << unsigned(dataID) << "\n";
+}
 
 }  // namespace rhpman

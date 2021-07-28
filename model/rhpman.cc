@@ -272,6 +272,10 @@ RhpmanApp::Role RhpmanApp::GetRole() const { return m_role; }
 
 RhpmanApp::State RhpmanApp::GetState() const { return m_state; }
 
+void RhpmanApp::RegisterSuccessCallback(Callback<void, DataItem*> success) { m_success = success; }
+
+void RhpmanApp::RegisterfailureCallback(Callback<void, uint64_t> fail) { m_failed = fail; }
+
 // ================================================
 //  setup helpers
 // ================================================
