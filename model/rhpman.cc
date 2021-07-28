@@ -17,6 +17,9 @@
 #include <algorithm>
 #include <map>
 
+#include <cfloat>
+#include <limits>
+
 #include "ns3/application-container.h"
 #include "ns3/application.h"
 #include "ns3/applications-module.h"
@@ -27,6 +30,7 @@
 #include "ns3/node-container.h"
 #include "ns3/object-base.h"
 #include "ns3/object-factory.h"
+#include "ns3/output-stream-wrapper.h"
 #include "ns3/pointer.h"
 #include "ns3/udp-socket-factory.h"
 
@@ -186,11 +190,13 @@ void RhpmanApp::StartApplication() {
 
   m_address = GetID();
 
+  m_peerTable = Table(5);
   m_state = State::RUNNING;
 
   // TODO: Schedule events.
   SchedulePing();
   ScheduleElectionWatchdog();
+  ScheduleRefreshRoutingTable();
 
   // start inital replica node election
   RunElection();
@@ -601,6 +607,14 @@ void RhpmanApp::ScheduleReplicaNodeTimeout(uint32_t nodeID) {
       Schedule(m_missing_replication_timeout, &RhpmanApp::ReplicationNodeTimeout, this, nodeID);
 }
 
+void RhpmanApp::ScheduleRefreshRoutingTable() {
+  if (m_state != State::RUNNING) return;
+
+  RefreshRoutingTable();
+
+  Simulator::Schedule(1.0_sec, &RhpmanApp::ScheduleRefreshRoutingTable, this);
+}
+
 // ================================================
 //  message handlers
 // ================================================
@@ -927,7 +941,7 @@ double RhpmanApp::CalculateProfile() {
 }
 
 // this is the U_cdc value
-double RhpmanApp::CalculateChangeDegree() { return 0; }
+double RhpmanApp::CalculateChangeDegree() { return m_peerTable.ComputeChangeDegree(); }
 
 // this is the U_col value
 // it is 1 if there is a replication node within h, 0 otherwise
@@ -1023,6 +1037,21 @@ DataItem* RhpmanApp::CheckLocalStorage(uint64_t dataID) {
 #endif  // __RHPMAN_OPTIONAL_CHECK_BUFFER
 
   return NULL;
+}
+
+void RhpmanApp::RefreshRoutingTable() {
+  // if (m_address != 167837856) return;
+
+  Ptr<Ipv4> ipv4 = GetNode()->GetObject<Ipv4>();
+  Ptr<Ipv4RoutingProtocol> table = ipv4->GetRoutingProtocol();
+  NS_ASSERT(table);
+
+  std::ostringstream ss;
+  table->PrintRoutingTable(Create<OutputStreamWrapper>(&ss));
+  // std::cout << ss.str() << "\n";
+  // std::cout << table->GetTypeId() << "\n";
+
+  m_peerTable.UpdateTable(ss.str());
 }
 
 }  // namespace rhpman

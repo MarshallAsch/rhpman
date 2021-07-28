@@ -51,6 +51,8 @@
 #include "dataItem.h"
 #include "storage.h"
 
+#include "table.h"
+
 namespace rhpman {
 
 using namespace ns3;
@@ -169,6 +171,7 @@ class RhpmanApp : public Application {
   void ScheduleReplicaNodeTimeout(uint32_t nodeID);
   void SchedulePing();
   void ScheduleReplicaHolderAnnouncement();
+  void ScheduleRefreshRoutingTable();
 
   // other helpers
   void RunElection();
@@ -199,6 +202,8 @@ class RhpmanApp : public Application {
 
   void SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma);
   void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes);
+
+  void RefreshRoutingTable();
 
   // calculation helpers
   double CalculateElectionFitness();
@@ -251,6 +256,8 @@ class RhpmanApp : public Application {
   std::set<uint32_t> m_replicating_nodes;
 
   std::set<uint64_t> m_received_messages;
+
+  Table m_peerTable;
 };
 
 };  // namespace rhpman
