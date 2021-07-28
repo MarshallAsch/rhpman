@@ -79,6 +79,12 @@ class SimulationParameters {
   /// The period after which traveller nodes should change their direction if
   /// the travellerWalkMode is MODE_TIME.
   ns3::Time travellerDirectionChangePeriod;
+
+  ns3::Time updateTime;
+  ns3::Time lookupTime;
+  ns3::Time waitTime;
+  uint32_t dataSize;
+
   /// The distance after which traveller nodes should change their direction if
   /// the travellerWalkMode is MODE_DISTANCE.
   double travellerDirectionChangeDistance;

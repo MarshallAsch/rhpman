@@ -32,13 +32,14 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   // Simulation run time.
   double optRuntime = 2.0_minutes;
 
+  double optWaitTime = 30.0_seconds;
+
   // Simulation seed.
   uint32_t optSeed = 1;
 
   // Node parameters.
   uint32_t optTotalNodes = 160;
   uint32_t optNodesPerPartition = 8;
-  double optPercentageDataOwners = 10;
 
   // Simulation area parameters.
   double optAreaWidth = 1000.0_meters;
@@ -77,6 +78,12 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optWcol = 0.5;
   double optProfileUpdateDelay = 6.0_seconds;
 
+  // data access parameters
+  double optPercentageDataOwners = 10;
+  double optLookupTime = 30._seconds;
+  double optUpdateTime = 120.0_seconds;
+  uint32_t optDataSize = 512;
+
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
 
@@ -89,6 +96,19 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "percent-data-owners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
+  cmd.AddValue(
+      "lookup-time",
+      "number of seconds to used to generate the delay between data lookup",
+      optLookupTime);
+  cmd.AddValue(
+      "update-time",
+      "number of seconds to used to generate the delay between data updates",
+      optUpdateTime);
+  cmd.AddValue(
+      "wait-time",
+      "number of seconds to wait before starting the data access application",
+      optWaitTime);
+  cmd.AddValue("data-size", "The number of bytes that make up a data object", optDataSize);
   cmd.AddValue("partition-nodes", "The number of nodes placed per partition", optNodesPerPartition);
   cmd.AddValue(
       "carrying-threshold",
@@ -239,6 +259,11 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.wcdc = optWcdc;
   result.wcol = optWcol;
   result.profileUpdateDelay = Seconds(optProfileUpdateDelay);
+
+  result.lookupTime = Seconds(optLookupTime);
+  result.updateTime = Seconds(optUpdateTime);
+  result.dataSize = optDataSize;
+  result.waitTime = Seconds(optWaitTime);
 
   result.netanimTraceFilePath = animationTraceFilePath;
 
