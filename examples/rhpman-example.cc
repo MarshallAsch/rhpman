@@ -47,7 +47,9 @@
 #include "ns3/yans-wifi-helper.h"
 
 //#include "logging.h"
+#include "ns3/data-access-helper.h"
 #include "ns3/rhpman-helper.h"
+
 #include "nsutil.h"
 #include "simulation-area.h"
 #include "simulation-params.h"
@@ -207,6 +209,16 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(params.profileUpdateDelay));
   rhpman.SetDataOwners(params.dataOwners);
   rhpman.Install(allAdHocNodes);
+
+  // Install the RHPMAN Scheme onto each node.
+  DataAccessHelper dataAccess;
+  dataAccess.SetAttribute("RequestTime", TimeValue(params.lookupTime));
+  dataAccess.SetAttribute("UpdateTime", TimeValue(params.updateTime));
+  dataAccess.SetAttribute("DataSize", UintegerValue(params.dataSize));
+
+  dataAccess.SetDataOwners(params.dataOwners);
+  ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
+  accessApps.Start(params.waitTime);
 
   // Run the simulation with support for animations.
   AnimationInterface anim(params.netanimTraceFilePath);
