@@ -190,7 +190,7 @@ void RhpmanApp::StartApplication() {
 
   m_address = GetID();
 
-  m_peerTable = Table(m_profile_timeout.GetSeconds(), m_neighborhoodHops);
+  m_peerTable = Table(m_profileDelay.GetSeconds(), m_neighborhoodHops);
   m_state = State::RUNNING;
 
   // TODO: Schedule events.
