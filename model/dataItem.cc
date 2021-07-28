@@ -14,7 +14,7 @@ DataItem::DataItem() {
 
 DataItem::DataItem(uint32_t dataSize, uint32_t ownerID, const uint8_t* payload) {
   static uint64_t autoID = 1;
-  dataID = ++autoID;
+  dataID = autoID++;
   size = dataSize;
   owner = ownerID;
   bytes = (uint8_t*)malloc(size * sizeof(uint8_t));
