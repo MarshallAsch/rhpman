@@ -99,6 +99,8 @@ class RhpmanApp : public Application {
   void RegisterSuccessCallback(Callback<void, DataItem*> success);
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
 
+  static void PrintStats();
+
  private:
   // Application lifecycle methods.
 

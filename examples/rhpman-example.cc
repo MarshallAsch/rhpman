@@ -228,5 +228,8 @@ int main(int argc, char* argv[]) {
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
 
+  DataAccess::PrintStats();
+  RhpmanApp::PrintStats();
+
   return EX_OK;
 }

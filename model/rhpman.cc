@@ -41,6 +41,9 @@
 
 #include "proto/messages.pb.h"
 
+/// values for statistics:::
+static uint64_t total_messages_sent;
+
 namespace rhpman {
 
 using namespace ns3;
@@ -493,14 +496,21 @@ static rhpman::packets::Message ParsePacket(const Ptr<Packet> packet) {
 // ================================================
 
 // this will send to all nodes within h hops
-void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet) { m_neighborhood_socket->Send(packet); }
+void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet) {
+  m_neighborhood_socket->Send(packet);
+  total_messages_sent++;
+}
 
 // this will send to all nodes within h_r hops
-void RhpmanApp::BroadcastToElection(Ptr<Packet> packet) { m_election_socket->Send(packet); }
+void RhpmanApp::BroadcastToElection(Ptr<Packet> packet) {
+  m_election_socket->Send(packet);
+  total_messages_sent++;
+}
 
 // this does not have a TTL restriction, use this for targetted messages
 void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet) {
   m_socket_recv->SendTo(packet, 0, InetSocketAddress(dest, APPLICATION_PORT));
+  total_messages_sent++;
 }
 
 // ================================================
@@ -1058,4 +1068,7 @@ void RhpmanApp::RefreshRoutingTable() {
   m_peerTable.UpdateTable(ss.str());
 }
 
+void RhpmanApp::PrintStats() {
+  std::cout << "Total Messages Sent\t" << unsigned(total_messages_sent) << "\n";
+}
 }  // namespace rhpman
