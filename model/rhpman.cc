@@ -652,6 +652,8 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
 
     if (CheckDuplicateMessage(message.id())) {
       NS_LOG_INFO("already received this message, dropping.");
+      // std::cout << "received a duplicate message\n";
+
       return;
     }
 
@@ -671,13 +673,22 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     } else if (message.has_store()) {
       rhpman::packets::DataItem item = message.store().data();
       HandleStore(srcAddress, new DataItem(item.data_id(), item.owner(), item.data()), packet);
+
+      // std::cout << "received a store message for " << unsigned(item.data_id()) << "\n";
+
     } else if (message.has_request()) {
       HandleLookup(message.request().requestor(), message.id(), message.request().data_id());
+
+      // std::cout << "received a request for " << unsigned(message.request().data_id()) << "\n";
+
     } else if (message.has_response()) {
       rhpman::packets::DataItem item = message.response().data();
       HandleResponse(
           message.response().request_id(),
           new DataItem(item.data_id(), item.owner(), item.data()));
+
+      std::cout << "received a data item for " << unsigned(item.data_id()) << "\n";
+
     } else if (message.has_transfer()) {
       std::vector<DataItem*> items;
 
@@ -711,6 +722,10 @@ void RhpmanApp::HandlePing(uint32_t nodeID, double profile) {
 
 void RhpmanApp::HandleReplicationAnnouncement(uint32_t nodeID) {
   m_election_watchdog_event.Cancel();
+
+  if (m_replicating_nodes.find(nodeID) == m_replicating_nodes.end()) {
+    TransferBuffer(nodeID);
+  }
 
   m_replicating_nodes.insert(nodeID);
   ScheduleReplicaNodeTimeout(nodeID);
@@ -863,6 +878,8 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   m_role = Role::NON_REPLICATING;
   m_replica_announcement_event.Cancel();
   SendRoleChange(0);
+
+  std::cout << "step down\n";
 
   // TODO: when to send the current replica data to the new replica node?
 }
