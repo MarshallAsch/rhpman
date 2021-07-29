@@ -203,6 +203,8 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("CarryingThreshold", DoubleValue(params.carryingThreshold));
   rhpman.SetAttribute("ForwardingThreshold", DoubleValue(params.forwardingThreshold));
   rhpman.SetAttribute("NeighborhoodSize", UintegerValue(params.neighborhoodSize));
+  rhpman.SetAttribute("StorageSpace", UintegerValue(params.storageSpace));
+  rhpman.SetAttribute("BufferSpace", UintegerValue(params.bufferSpace));
   rhpman.SetAttribute("ElectionNeighborhoodSize", UintegerValue(params.electionNeighborhoodSize));
   rhpman.SetAttribute("ColocationWeight", DoubleValue(params.wcol));
   rhpman.SetAttribute("DegreeConnectivityWeight", DoubleValue(params.wcdc));

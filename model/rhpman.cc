@@ -46,10 +46,14 @@ static uint64_t total_messages_sent;
 static uint64_t final_pending_requests;
 static uint64_t total_lookups;
 
-static uint64_t total_timeouts;
 static uint64_t total_success;
 static uint64_t total_failed;
-static uint64_t total_scheduled_timeouts;
+
+static uint64_t total_messages_received;
+static uint64_t total_duplicates_received;
+
+static uint64_t total_step_down_events;
+static uint64_t total_step_up_events;
 
 namespace rhpman {
 
@@ -114,6 +118,18 @@ TypeId RhpmanApp::GetTypeId() {
               "Number of hops considered to be in the neighborhood of this node (h)",
               UintegerValue(2),
               MakeUintegerAccessor(&RhpmanApp::m_neighborhoodHops),
+              MakeUintegerChecker<uint32_t>(1))
+          .AddAttribute(
+              "StorageSpace",
+              "Number of data items that a node can hold",
+              UintegerValue(10),
+              MakeUintegerAccessor(&RhpmanApp::m_storageSpace),
+              MakeUintegerChecker<uint32_t>(1))
+          .AddAttribute(
+              "BufferSpace",
+              "Number of data items that a node can hold",
+              UintegerValue(10),
+              MakeUintegerAccessor(&RhpmanApp::m_bufferSpace),
               MakeUintegerChecker<uint32_t>(1))
           .AddAttribute(
               "ElectionNeighborhoodSize",
@@ -489,6 +505,7 @@ static Ptr<Packet> GeneratePacket(const rhpman::packets::Message message) {
     NS_LOG_ERROR("Failed to serialize the message for transmission");
   }
 
+  std::cout << "size: " << unsigned(size) << "\n";
   Ptr<Packet> packet = Create<Packet>(payload, size);
   delete[] payload;
 
@@ -610,8 +627,6 @@ void RhpmanApp::ScheduleElectionWatchdog() {
 void RhpmanApp::ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID) {
   if (m_state != State::RUNNING) return;
 
-  total_scheduled_timeouts++;
-
   EventId event =
       Simulator::Schedule(m_request_timeout, &RhpmanApp::LookupTimeout, this, requestID);
 
@@ -674,10 +689,10 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     uint32_t srcAddress = InetSocketAddress::ConvertFrom(from).GetIpv4().Get();
     rhpman::packets::Message message = ParsePacket(packet);
 
+    total_messages_received++;
     if (CheckDuplicateMessage(message.id())) {
       NS_LOG_INFO("already received this message, dropping.");
-      // std::cout << "received a duplicate message\n";
-
+      total_duplicates_received++;
       return;
     }
 
@@ -704,9 +719,6 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       HandleResponse(
           message.response().request_id(),
           new DataItem(item.data_id(), item.owner(), item.data()));
-
-      std::cout << "received a data item for " << unsigned(item.data_id()) << "\n";
-
     } else if (message.has_transfer()) {
       std::vector<DataItem*> items;
 
@@ -875,7 +887,7 @@ void RhpmanApp::RunElection() {
 }
 
 void RhpmanApp::ChangeRole(Role newRole) {
-  if (newRole == Role::REPLICATING) {
+  if (m_role != Role::REPLICATING && newRole == Role::REPLICATING) {
     MakeReplicaHolderNode();
   } else if (m_role == Role::REPLICATING && newRole != Role::REPLICATING) {
     MakeNonReplicaHolderNode();
@@ -887,6 +899,7 @@ void RhpmanApp::MakeReplicaHolderNode() {
   m_role = Role::REPLICATING;
   SendRoleChange(m_address);
   ScheduleReplicaHolderAnnouncement();
+  total_step_up_events++;
 }
 
 // this helper will convert the new role to the ip address that should be sent
@@ -894,6 +907,7 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   m_role = Role::NON_REPLICATING;
   m_replica_announcement_event.Cancel();
   SendRoleChange(0);
+  total_step_down_events++;
 
   // TODO: when to send the current replica data to the new replica node?
 }
@@ -1000,7 +1014,6 @@ double RhpmanApp::CalculateColocation() {
 void RhpmanApp::LookupTimeout(uint64_t requestID) {
   NS_LOG_FUNCTION(this);
 
-  total_timeouts++;
   if (IsResponsePending(requestID)) {
     std::map<uint64_t, uint64_t>::iterator dataMapping;
     dataMapping = m_lookupMapping.find(requestID);
@@ -1101,16 +1114,18 @@ void RhpmanApp::RefreshRoutingTable() {
 }
 
 void RhpmanApp::PrintStats() {
-  std::cout << "Total Messages Sent\t" << unsigned(total_messages_sent) << "\n";
+  std::cout << "Total messages sent\t" << unsigned(total_messages_sent) << "\n";
+  std::cout << "Total messages received\t" << unsigned(total_messages_received) << "\n";
+  std::cout << "Total duplicates received\t" << unsigned(total_duplicates_received) << "\n";
+
   std::cout << "Pending lookups at exit\t" << unsigned(final_pending_requests) << "\n";
 
-  std::cout << "Another total lookups\t" << unsigned(total_lookups) << "\n";
-  std::cout << "Another total success\t" << unsigned(total_success) << "\n";
-  std::cout << "Another total failed\t" << unsigned(total_failed) << "\n";
+  std::cout << "Total replica holder step downs\t" << unsigned(total_step_down_events) << "\n";
+  std::cout << "Total replica holder step ups\t" << unsigned(total_step_up_events) << "\n";
 
-  std::cout << "Total scheduled timeouts\t" << unsigned(total_scheduled_timeouts) << "\n";
-
-  std::cout << "Total timeouts\t" << unsigned(total_timeouts) << "\n";
+  std::cout << "Total lookups\t" << unsigned(total_lookups) << "\n";
+  std::cout << "Total success\t" << unsigned(total_success) << "\n";
+  std::cout << "Total failed\t" << unsigned(total_failed) << "\n";
 }
 
 void RhpmanApp::SuccessfulLookup(DataItem* data) {

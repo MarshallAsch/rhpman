@@ -85,6 +85,9 @@ class SimulationParameters {
   ns3::Time waitTime;
   uint32_t dataSize;
 
+  uint32_t storageSpace;
+  uint32_t bufferSpace;
+
   /// The distance after which traveller nodes should change their direction if
   /// the travellerWalkMode is MODE_DISTANCE.
   double travellerDirectionChangeDistance;

@@ -84,6 +84,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optUpdateTime = 120.0_seconds;
   uint32_t optDataSize = 512;
 
+  uint32_t optStorageSpace = 160;
+  uint32_t optBufferSpace = 10;
+
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
 
@@ -104,6 +107,14 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "update-time",
       "number of seconds to used to generate the delay between data updates",
       optUpdateTime);
+  cmd.AddValue(
+      "storage-space",
+      "The number of data items that can be stored in the devices storage space",
+      optStorageSpace);
+  cmd.AddValue(
+      "buffer-space",
+      "The number of data items that can be stored in the devices FCFS buffer space",
+      optBufferSpace);
   cmd.AddValue(
       "wait-time",
       "number of seconds to wait before starting the data access application",
@@ -264,6 +275,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.updateTime = Seconds(optUpdateTime);
   result.dataSize = optDataSize;
   result.waitTime = Seconds(optWaitTime);
+
+  result.storageSpace = optStorageSpace;
+  result.bufferSpace = optBufferSpace;
 
   result.netanimTraceFilePath = animationTraceFilePath;
 
