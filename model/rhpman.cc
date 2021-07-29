@@ -44,6 +44,12 @@
 /// values for statistics:::
 static uint64_t total_messages_sent;
 static uint64_t final_pending_requests;
+static uint64_t total_lookups;
+
+static uint64_t total_timeouts;
+static uint64_t total_success;
+static uint64_t total_failed;
+static uint64_t total_scheduled_timeouts;
 
 namespace rhpman {
 
@@ -234,12 +240,17 @@ void RhpmanApp::StopApplication() {
   m_state = State::STOPPED;
 
   // TODO: Cancel events.
+  // std::cout << "stopping \n";
 
   final_pending_requests += m_pendingLookups.size();
   m_election_watchdog_event.Cancel();
   m_replica_announcement_event.Cancel();
+  m_ping_event.Cancel();
+  m_election_results_event.Cancel();
+  m_table_update_event.Cancel();
   CancelEventMap(m_profileTimeouts);
   CancelEventMap(m_replicationNodeTimeouts);
+  CancelEventMap(m_lookupTimeouts);
 }
 
 // ================================================
@@ -248,11 +259,11 @@ void RhpmanApp::StopApplication() {
 
 // this is public and is how any data lookup is made
 void RhpmanApp::Lookup(uint64_t id) {
+  total_lookups++;
   // check cache
   DataItem* item = CheckLocalStorage(id);
   if (item != NULL) {
-    if (!m_success.IsNull()) m_success(item);
-    return;
+    return SuccessfulLookup(item);
   }
 
   // run semi probabilistic lookup
@@ -568,7 +579,7 @@ void RhpmanApp::SchedulePing() {
   SendPing();
 
   // schedule sending ping broadcast
-  Simulator::Schedule(m_profileDelay, &RhpmanApp::SchedulePing, this);
+  m_ping_event = Simulator::Schedule(m_profileDelay, &RhpmanApp::SchedulePing, this);
 }
 
 void RhpmanApp::ScheduleReplicaHolderAnnouncement() {
@@ -585,7 +596,8 @@ void RhpmanApp::ScheduleElectionCheck() {
   if (m_state != State::RUNNING) return;
 
   // schedule checking election results
-  Simulator::Schedule(m_election_timeout, &RhpmanApp::CheckElectionResults, this);
+  m_election_results_event =
+      Simulator::Schedule(m_election_timeout, &RhpmanApp::CheckElectionResults, this);
 }
 
 void RhpmanApp::ScheduleElectionWatchdog() {
@@ -598,8 +610,16 @@ void RhpmanApp::ScheduleElectionWatchdog() {
 void RhpmanApp::ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID) {
   if (m_state != State::RUNNING) return;
 
+  total_scheduled_timeouts++;
+
   EventId event =
       Simulator::Schedule(m_request_timeout, &RhpmanApp::LookupTimeout, this, requestID);
+
+  if (m_pendingLookups.find(requestID) != m_pendingLookups.end()) {
+    std::cout << "lookup ID has been reused\n";
+  }
+
+  m_lookupTimeouts[requestID] = event;
   m_pendingLookups.insert(requestID);
   m_lookupMapping[requestID] = dataID;
 }
@@ -608,7 +628,6 @@ void RhpmanApp::ScheduleProfileTimeout(uint32_t nodeID) {
   if (m_state != State::RUNNING) return;
 
   EventId e = m_profileTimeouts[nodeID];
-
   e.Cancel();
 
   m_profileTimeouts[nodeID] =
@@ -619,7 +638,6 @@ void RhpmanApp::ScheduleReplicaNodeTimeout(uint32_t nodeID) {
   if (m_state != State::RUNNING) return;
 
   EventId e = m_replicationNodeTimeouts[nodeID];
-
   e.Cancel();
 
   m_replicationNodeTimeouts[nodeID] = Simulator::
@@ -631,7 +649,8 @@ void RhpmanApp::ScheduleRefreshRoutingTable() {
 
   RefreshRoutingTable();
 
-  Simulator::Schedule(1.0_sec, &RhpmanApp::ScheduleRefreshRoutingTable, this);
+  m_table_update_event =
+      Simulator::Schedule(1.0_sec, &RhpmanApp::ScheduleRefreshRoutingTable, this);
 }
 
 // ================================================
@@ -814,7 +833,7 @@ void RhpmanApp::HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message
 void RhpmanApp::HandleResponse(uint64_t requestID, DataItem* data) {
   if (IsResponsePending(requestID)) {
     m_pendingLookups.erase(requestID);
-    if (!m_success.IsNull()) m_success(data);
+    SuccessfulLookup(data);
   }
 }
 
@@ -981,12 +1000,13 @@ double RhpmanApp::CalculateColocation() {
 void RhpmanApp::LookupTimeout(uint64_t requestID) {
   NS_LOG_FUNCTION(this);
 
+  total_timeouts++;
   if (IsResponsePending(requestID)) {
     std::map<uint64_t, uint64_t>::iterator dataMapping;
     dataMapping = m_lookupMapping.find(requestID);
     m_pendingLookups.erase(requestID);
 
-    if (!m_failed.IsNull()) m_failed(dataMapping->second);
+    FailedLookup(dataMapping->second);
   }
 }
 
@@ -1008,6 +1028,12 @@ void RhpmanApp::TriggerElection() {
 
 void RhpmanApp::CancelEventMap(std::map<uint32_t, EventId> events) {
   for (std::map<uint32_t, EventId>::iterator it = events.begin(); it != events.end(); ++it) {
+    it->second.Cancel();
+  }
+}
+
+void RhpmanApp::CancelEventMap(std::map<uint64_t, EventId> events) {
+  for (std::map<uint64_t, EventId>::iterator it = events.begin(); it != events.end(); ++it) {
     it->second.Cancel();
   }
 }
@@ -1077,6 +1103,24 @@ void RhpmanApp::RefreshRoutingTable() {
 void RhpmanApp::PrintStats() {
   std::cout << "Total Messages Sent\t" << unsigned(total_messages_sent) << "\n";
   std::cout << "Pending lookups at exit\t" << unsigned(final_pending_requests) << "\n";
+
+  std::cout << "Another total lookups\t" << unsigned(total_lookups) << "\n";
+  std::cout << "Another total success\t" << unsigned(total_success) << "\n";
+  std::cout << "Another total failed\t" << unsigned(total_failed) << "\n";
+
+  std::cout << "Total scheduled timeouts\t" << unsigned(total_scheduled_timeouts) << "\n";
+
+  std::cout << "Total timeouts\t" << unsigned(total_timeouts) << "\n";
+}
+
+void RhpmanApp::SuccessfulLookup(DataItem* data) {
+  total_success++;
+  if (!m_success.IsNull()) m_success(data);
+}
+
+void RhpmanApp::FailedLookup(uint64_t dataID) {
+  total_failed++;
+  if (!m_failed.IsNull()) m_failed(dataID);
 }
 
 }  // namespace rhpman

@@ -154,6 +154,9 @@ class RhpmanApp : public Application {
 
   EventId m_election_watchdog_event;
   EventId m_replica_announcement_event;
+  EventId m_ping_event;
+  EventId m_election_results_event;
+  EventId m_table_update_event;
 
   // event triggers
   void BroadcastToNeighbors(Ptr<Packet> packet);
@@ -200,6 +203,7 @@ class RhpmanApp : public Application {
   RhpmanApp::Role GetNewRole();
   void ChangeRole(Role newRole);
   void CancelEventMap(std::map<uint32_t, EventId> events);
+  void CancelEventMap(std::map<uint64_t, EventId> events);
   void RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint32_t srcNode);
   bool CheckDuplicateMessage(uint64_t messageID);
   bool IsResponsePending(uint64_t requestID);
@@ -237,6 +241,9 @@ class RhpmanApp : public Application {
   Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items);
   Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
 
+  void SuccessfulLookup(DataItem* data);
+  void FailedLookup(uint64_t dataID);
+
   // data storage for the node
   uint32_t m_storageSpace;
   uint32_t m_bufferSpace;
@@ -256,6 +263,7 @@ class RhpmanApp : public Application {
   std::map<uint32_t, double> m_peerProfiles;
   std::map<uint32_t, EventId> m_profileTimeouts;
   std::map<uint32_t, EventId> m_replicationNodeTimeouts;
+  std::map<uint64_t, EventId> m_lookupTimeouts;
 
   double m_myFitness;
   std::set<uint32_t> m_replicating_nodes;

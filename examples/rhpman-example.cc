@@ -208,7 +208,9 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("DegreeConnectivityWeight", DoubleValue(params.wcdc));
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(params.profileUpdateDelay));
   rhpman.SetDataOwners(params.dataOwners);
-  rhpman.Install(allAdHocNodes);
+  ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
+  rhpmanApps.Stop(Seconds(0));
+  rhpmanApps.Stop(params.runtime);
 
   // Install the RHPMAN Scheme onto each node.
   DataAccessHelper dataAccess;
@@ -219,15 +221,18 @@ int main(int argc, char* argv[]) {
   dataAccess.SetDataOwners(params.dataOwners);
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
   accessApps.Start(params.waitTime);
+  accessApps.Stop(params.runtime);
 
   // Run the simulation with support for animations.
-  AnimationInterface anim(params.netanimTraceFilePath);
+  // AnimationInterface anim(params.netanimTraceFilePath);
   NS_LOG_UNCOND("Running simulation for " << params.runtime.GetSeconds() << " seconds...");
-  Simulator::Stop(params.runtime);
+  Simulator::Stop(params.runtime + 1.0_sec);
+  // Simulator::Stop();
   Simulator::Run();
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
 
+  std::cout << "==================================\n";
   DataAccess::PrintStats();
   RhpmanApp::PrintStats();
 
