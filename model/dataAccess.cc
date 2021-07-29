@@ -117,6 +117,12 @@ void DataAccess::StartApplication() {
   m_lookupSelector->SetAttribute("Min", DoubleValue(1));
   m_lookupSelector->SetAttribute("Max", DoubleValue(DBL_MAX));
 
+  m_lookupVariable = CreateObject<ExponentialRandomVariable>();
+  m_updateVariable = CreateObject<ExponentialRandomVariable>();
+
+  m_lookupVariable->SetAttribute("Mean", DoubleValue(m_request_generation_time.GetSeconds()));
+  m_updateVariable->SetAttribute("Mean", DoubleValue(m_update_generation_time.GetSeconds()));
+
   m_state = State::RUNNING;
 
   // TODO: Schedule events.
@@ -143,16 +149,9 @@ void DataAccess::StopApplication() {
 //  event schedulers
 // ================================================
 
-Time DataAccess::GenerateLookupDelay() {
-  NS_LOG_WARN("this should be generated using a Poission point proccess, not using this value");
-  return m_request_generation_time;
-}
+Time DataAccess::GenerateLookupDelay() { return Seconds(m_lookupVariable->GetValue()); }
 
-Time DataAccess::GenerateUpdateDelay() {
-  NS_LOG_WARN("this should be generated using a Poission point proccess, not using this value");
-
-  return m_update_generation_time;
-}
+Time DataAccess::GenerateUpdateDelay() { return Seconds(m_updateVariable->GetValue()); }
 
 void DataAccess::scheduleLookup() {
   if (m_state != State::RUNNING) return;

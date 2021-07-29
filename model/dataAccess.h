@@ -108,6 +108,8 @@ class DataAccess : public Application {
   static void failed(uint64_t dataID);
 
   Ptr<UniformRandomVariable> m_lookupSelector;
+  Ptr<ExponentialRandomVariable> m_lookupVariable;
+  Ptr<ExponentialRandomVariable> m_updateVariable;
 };
 
 };  // namespace rhpman
