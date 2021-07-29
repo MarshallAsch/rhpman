@@ -156,10 +156,7 @@ Time DataAccess::GenerateUpdateDelay() { return Seconds(m_updateVariable->GetVal
 void DataAccess::scheduleLookup() {
   if (m_state != State::RUNNING) return;
 
-  // dont actually run a lookup if the time is 0
-  if (Simulator::Now().GetMilliSeconds() != 0) {
-    lookup();
-  }
+  lookup();
 
   Simulator::Schedule(GenerateLookupDelay(), &DataAccess::scheduleLookup, this);
 }
@@ -167,9 +164,7 @@ void DataAccess::scheduleLookup() {
 void DataAccess::scheduleUpdate() {
   if (m_state != State::RUNNING) return;
 
-  if (Simulator::Now().GetMilliSeconds() != 0) {
-    NS_LOG_WARN("NOT YET IMPLEMENTED!!!");
-  }
+  NS_LOG_WARN("NOT YET IMPLEMENTED!!!");
 
   Simulator::Schedule(GenerateUpdateDelay(), &DataAccess::scheduleUpdate, this);
 }
@@ -223,6 +218,7 @@ void DataAccess::failed(uint64_t dataID) {
 }
 
 void DataAccess::PrintStats() {
+  std::cout << "Total Data items\t" << unsigned(total_data_items) << "\n";
   std::cout << "Total Lookups\t" << unsigned(total_lookups) << "\n";
   std::cout << "Successful Lookups\t" << unsigned(successful_lookups) << "\n";
   std::cout << "Failed Lookups\t" << unsigned(failed_lookups) << "\n";

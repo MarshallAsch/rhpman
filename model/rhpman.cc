@@ -43,6 +43,7 @@
 
 /// values for statistics:::
 static uint64_t total_messages_sent;
+static uint64_t final_pending_requests;
 
 namespace rhpman {
 
@@ -233,6 +234,8 @@ void RhpmanApp::StopApplication() {
   m_state = State::STOPPED;
 
   // TODO: Cancel events.
+
+  final_pending_requests += m_pendingLookups.size();
   m_election_watchdog_event.Cancel();
   m_replica_announcement_event.Cancel();
   CancelEventMap(m_profileTimeouts);
@@ -255,6 +258,8 @@ void RhpmanApp::Lookup(uint64_t id) {
   // run semi probabilistic lookup
   uint64_t requestID = GenerateMessageID();
   RunProbabilisticLookup(requestID, id, m_address);
+
+  ScheduleLookupTimeout(requestID, id);
 }
 
 // this is public and is how new data items are stored in the network
@@ -673,14 +678,8 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     } else if (message.has_store()) {
       rhpman::packets::DataItem item = message.store().data();
       HandleStore(srcAddress, new DataItem(item.data_id(), item.owner(), item.data()), packet);
-
-      // std::cout << "received a store message for " << unsigned(item.data_id()) << "\n";
-
     } else if (message.has_request()) {
       HandleLookup(message.request().requestor(), message.id(), message.request().data_id());
-
-      // std::cout << "received a request for " << unsigned(message.request().data_id()) << "\n";
-
     } else if (message.has_response()) {
       rhpman::packets::DataItem item = message.response().data();
       HandleResponse(
@@ -839,15 +838,13 @@ void RhpmanApp::RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint
   // ask replica holder nodes
   if (m_replicating_nodes.size() != 0) {
     LookupFromReplicaHolders(dataID, requestID, srcNode);
-    return;
+  } else {
+    // run semi probabilistic lookup
+    double sigma = CalculateProfile();
+    Ptr<Packet> message = GenerateLookup(requestID, dataID, sigma, srcNode);
+
+    SemiProbabilisticSend(message, srcNode, sigma);
   }
-
-  // run semi probabilistic lookup
-  double sigma = CalculateProfile();
-  Ptr<Packet> message = GenerateLookup(requestID, dataID, sigma, srcNode);
-
-  SemiProbabilisticSend(message, srcNode, sigma);
-  ScheduleLookupTimeout(requestID, dataID);
 }
 
 void RhpmanApp::RunElection() {
@@ -879,8 +876,6 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   m_replica_announcement_event.Cancel();
   SendRoleChange(0);
 
-  std::cout << "step down\n";
-
   // TODO: when to send the current replica data to the new replica node?
 }
 
@@ -888,10 +883,6 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
 void RhpmanApp::LookupFromReplicaHolders(uint64_t dataID, uint64_t requestID, uint32_t srcNode) {
   Ptr<Packet> message = GenerateLookup(requestID, dataID, 0, srcNode);
   SendToNodes(message, m_replicating_nodes);
-
-  if (srcNode == m_address) {
-    ScheduleLookupTimeout(requestID, dataID);
-  }
 }
 
 // this will generate the ID value to use for the requests this is a static function that should be
@@ -1079,13 +1070,13 @@ void RhpmanApp::RefreshRoutingTable() {
 
   std::ostringstream ss;
   table->PrintRoutingTable(Create<OutputStreamWrapper>(&ss));
-  // std::cout << ss.str() << "\n";
-  // std::cout << table->GetTypeId() << "\n";
 
   m_peerTable.UpdateTable(ss.str());
 }
 
 void RhpmanApp::PrintStats() {
   std::cout << "Total Messages Sent\t" << unsigned(total_messages_sent) << "\n";
+  std::cout << "Pending lookups at exit\t" << unsigned(final_pending_requests) << "\n";
 }
+
 }  // namespace rhpman
