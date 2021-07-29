@@ -94,12 +94,16 @@ class RhpmanApp : public Application {
 
   void Lookup(uint64_t id);
   bool Save(DataItem* data);
+  void ClearBuffer();
+  void ClearStorage();
+
   uint32_t GetFreeSpace();
 
   void RegisterSuccessCallback(Callback<void, DataItem*> success);
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
 
   static void PrintStats();
+  static void CleanUp();
 
  private:
   // Application lifecycle methods.

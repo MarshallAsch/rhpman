@@ -142,6 +142,9 @@ void DataAccess::StopApplication() {
 
   m_state = State::STOPPED;
 
+  m_rhpman->ClearStorage();
+  m_rhpman->ClearBuffer();
+
   // TODO: Cancel events.
 }
 

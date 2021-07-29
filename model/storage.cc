@@ -77,7 +77,7 @@ bool Storage::RemoveItem(uint64_t dataID) {
 void Storage::ClearStorage() {
   for (uint32_t i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] != NULL) {
-      free(m_storage[i]);
+      delete m_storage[i];
       m_storage[i] = NULL;
     }
   }

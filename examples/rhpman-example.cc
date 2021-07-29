@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 
   NS_LOG_UNCOND("Assigning MAC addresses in ad-hoc mode...");
   auto adhocDevices = wifi.Install(wifiPhy, wifiMac, allAdHocNodes);
-  wifiPhy.EnablePcap("rhpman", adhocDevices);
+  // wifiPhy.EnablePcap("rhpman", adhocDevices);
 
   NS_LOG_UNCOND("Setting up Internet stacks...");
   InternetStackHelper internet;
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
   internet.Install(allAdHocNodes);
   Ipv4AddressHelper adhocAddresses;
   adhocAddresses.SetBase("10.1.0.0", "255.255.0.0");
-  auto adhocInterfaces = adhocAddresses.Assign(adhocDevices);
+  adhocAddresses.Assign(adhocDevices);
 
   // Install the RHPMAN Scheme onto each node.
   RhpmanAppHelper rhpman;
@@ -237,6 +237,8 @@ int main(int argc, char* argv[]) {
   std::cout << "==================================\n";
   DataAccess::PrintStats();
   RhpmanApp::PrintStats();
+
+  RhpmanApp::CleanUp();
 
   return EX_OK;
 }

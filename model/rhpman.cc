@@ -311,6 +311,10 @@ void RhpmanApp::RegisterSuccessCallback(Callback<void, DataItem*> success) { m_s
 
 void RhpmanApp::RegisterfailureCallback(Callback<void, uint64_t> fail) { m_failed = fail; }
 
+void RhpmanApp::ClearBuffer() { m_buffer.ClearStorage(); }
+
+void RhpmanApp::ClearStorage() { m_storage.ClearStorage(); }
+
 // ================================================
 //  setup helpers
 // ================================================
@@ -505,7 +509,6 @@ static Ptr<Packet> GeneratePacket(const rhpman::packets::Message message) {
     NS_LOG_ERROR("Failed to serialize the message for transmission");
   }
 
-  std::cout << "size: " << unsigned(size) << "\n";
   Ptr<Packet> packet = Create<Packet>(payload, size);
   delete[] payload;
 
@@ -808,11 +811,9 @@ void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataI
 }
 
 uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data) {
-  Storage storage = m_role == Role::REPLICATING ? m_storage : m_buffer;
-
   uint32_t stored = 0;
   for (std::vector<DataItem*>::iterator it = data.begin(); it != data.end(); ++it) {
-    if (!storage.StoreItem(*it)) {
+    if (!(m_role == Role::REPLICATING ? m_storage : m_buffer).StoreItem(new DataItem(*it))) {
       NS_LOG_DEBUG("not enough space to store all the items");
       break;
     }
@@ -1127,6 +1128,8 @@ void RhpmanApp::PrintStats() {
   std::cout << "Total success\t" << unsigned(total_success) << "\n";
   std::cout << "Total failed\t" << unsigned(total_failed) << "\n";
 }
+
+void RhpmanApp::CleanUp() { google::protobuf::ShutdownProtobufLibrary(); }
 
 void RhpmanApp::SuccessfulLookup(DataItem* data) {
   total_success++;
