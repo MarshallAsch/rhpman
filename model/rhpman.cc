@@ -1114,16 +1114,35 @@ void RhpmanApp::RefreshRoutingTable() {
   m_peerTable.UpdateTable(ss.str());
 }
 
+void RhpmanApp::ResetStats() {
+  std::cout << "InitalSent\t" << unsigned(total_messages_sent) << "\n";
+  std::cout << "InitalReceived\t" << unsigned(total_messages_received) << "\n";
+  std::cout << "InitalDuplicates\t" << unsigned(total_duplicates_received) << "\n";
+  std::cout << "InitalPendingLookups\t" << unsigned(final_pending_requests) << "\n";
+  std::cout << "InitalStepDowns\t" << unsigned(total_step_down_events) << "\n";
+  std::cout << "InitalStepUps\t" << unsigned(total_step_up_events) << "\n";
+  std::cout << "InitalLookups\t" << unsigned(total_lookups) << "\n";
+  std::cout << "InitalSuccess\t" << unsigned(total_success) << "\n";
+  std::cout << "InitalFailed\t" << unsigned(total_failed) << "\n";
+
+  total_messages_sent = 0;
+  final_pending_requests = 0;
+  total_lookups = 0;
+  total_success = 0;
+  total_failed = 0;
+  total_messages_received = 0;
+  total_duplicates_received = 0;
+  total_step_down_events = 0;
+  total_step_up_events = 0;
+}
+
 void RhpmanApp::PrintStats() {
   std::cout << "TotalSent\t" << unsigned(total_messages_sent) << "\n";
   std::cout << "TotalReceived\t" << unsigned(total_messages_received) << "\n";
   std::cout << "TotalDuplicates\t" << unsigned(total_duplicates_received) << "\n";
-
   std::cout << "PendingLookups\t" << unsigned(final_pending_requests) << "\n";
-
   std::cout << "TotalStepDowns\t" << unsigned(total_step_down_events) << "\n";
   std::cout << "TotalStepUps\t" << unsigned(total_step_up_events) << "\n";
-
   std::cout << "TotalLookups\t" << unsigned(total_lookups) << "\n";
   std::cout << "TotalSuccess\t" << unsigned(total_success) << "\n";
   std::cout << "TotalFailed\t" << unsigned(total_failed) << "\n";

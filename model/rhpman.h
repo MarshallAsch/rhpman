@@ -103,6 +103,7 @@ class RhpmanApp : public Application {
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
 
   static void PrintStats();
+  static void ResetStats();
   static void CleanUp();
 
  private:

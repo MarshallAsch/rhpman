@@ -128,6 +128,8 @@ void setupPbNodes(const SimulationParameters& params, NodeContainer& nodes) {
   }
 }
 
+void resetStats() { RhpmanApp::ResetStats(); }
+
 int main(int argc, char* argv[]) {
   Time::SetResolution(Time::NS);
 
@@ -225,6 +227,9 @@ int main(int argc, char* argv[]) {
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
   accessApps.Start(params.waitTime);
   accessApps.Stop(params.runtime);
+
+  // this will reset the statistics before the data access application begins
+  Simulator::Schedule(params.waitTime, &resetStats);
 
   // Run the simulation with support for animations.
   // AnimationInterface anim(params.netanimTraceFilePath);
