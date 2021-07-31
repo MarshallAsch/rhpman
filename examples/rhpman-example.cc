@@ -119,7 +119,9 @@ void setupPbNodes(const SimulationParameters& params, NodeContainer& nodes) {
         "Distance",
         DoubleValue(distance),
         "Time",
-        TimeValue(params.pbnVelocityChangePeriod));
+        TimeValue(params.pbnVelocityChangePeriod),
+        "Mode",
+        EnumValue(ns3::RandomWalk2dMobilityModel::Mode::MODE_TIME));
     mobilityHelper.Install(nodeContainer);
 
     nodes.Add(nodeContainer);
@@ -141,7 +143,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Create nodes, network topology, and start simulation. */
-  RngSeedManager::SetSeed(params.seed);
+  // RngSeedManager::SetSeed(params.seed);
   NodeContainer allAdHocNodes;
   NS_LOG_DEBUG("Simulation running over area: " << params.area);
 
@@ -209,7 +211,6 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ColocationWeight", DoubleValue(params.wcol));
   rhpman.SetAttribute("DegreeConnectivityWeight", DoubleValue(params.wcdc));
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(params.profileUpdateDelay));
-  rhpman.SetDataOwners(params.dataOwners);
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   rhpmanApps.Stop(Seconds(0));
   rhpmanApps.Stop(params.runtime);
@@ -234,7 +235,6 @@ int main(int argc, char* argv[]) {
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
 
-  std::cout << "==================================\n";
   DataAccess::PrintStats();
   RhpmanApp::PrintStats();
 

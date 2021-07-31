@@ -62,7 +62,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   // Partition-bound node mobility model parameters.
   double optPbnVelocityMin = 1.0_mps;
-  double optPbnVelocityMax = 1.0_mps;
+  double optPbnVelocityMax = 10.0_mps;
   double optPbnVelocityChangeAfter = 100.0_seconds;
 
   // Link and network parameters.
@@ -92,41 +92,41 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   /* Setup commandline option for each simulation parameter. */
   CommandLine cmd;
-  cmd.AddValue("run-time", "Simulation run time in seconds", optRuntime);
-  cmd.AddValue("seed", "Simulation seed", optSeed);
-  cmd.AddValue("total-nodes", "Total number of nodes in the simulation", optTotalNodes);
+  cmd.AddValue("runTime", "Simulation run time in seconds", optRuntime);
+  // cmd.AddValue("seed", "Simulation seed", optSeed);
+  cmd.AddValue("totalNodes", "Total number of nodes in the simulation", optTotalNodes);
   cmd.AddValue(
-      "percent-data-owners",
+      "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
   cmd.AddValue(
-      "lookup-time",
+      "lookupTime",
       "number of seconds to used to generate the delay between data lookup",
       optLookupTime);
   cmd.AddValue(
-      "update-time",
+      "updateTime",
       "number of seconds to used to generate the delay between data updates",
       optUpdateTime);
   cmd.AddValue(
-      "storage-space",
+      "storageSpace",
       "The number of data items that can be stored in the devices storage space",
       optStorageSpace);
   cmd.AddValue(
-      "buffer-space",
+      "bufferSpace",
       "The number of data items that can be stored in the devices FCFS buffer space",
       optBufferSpace);
   cmd.AddValue(
-      "wait-time",
+      "waitTime",
       "number of seconds to wait before starting the data access application",
       optWaitTime);
-  cmd.AddValue("data-size", "The number of bytes that make up a data object", optDataSize);
-  cmd.AddValue("partition-nodes", "The number of nodes placed per partition", optNodesPerPartition);
+  cmd.AddValue("dataSize", "The number of bytes that make up a data object", optDataSize);
+  cmd.AddValue("partitionNodes", "The number of nodes placed per partition", optNodesPerPartition);
   cmd.AddValue(
-      "carrying-threshold",
+      "carryingThreshold",
       "The delivery probability threshold for a node to cache data",
       optCarryingThreshold);
   cmd.AddValue(
-      "forwarding-threshold",
+      "forwardingThreshold",
       "The delivery probability threshold for a node to forward data",
       optForwardingThreshold);
   cmd.AddValue(
@@ -134,7 +134,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "The number of hops to consider in the neighborhood of a node",
       optNeighborhoodSize);
   cmd.AddValue(
-      "replication-hops",
+      "replicationHops",
       "The number of hops to consider in the neighborhood of a node for replicating node elections",
       optElectionNeighborhoodSize);
   cmd.AddValue(
@@ -143,44 +143,45 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       optWcdc);
   cmd.AddValue("wcol", "Weight of colocation in delivery probability calculations", optWcol);
   cmd.AddValue(
-      "profile-update-delay",
+      "profileUpdateDelay",
       "Number of seconds between profile updates",
       optProfileUpdateDelay);
-  cmd.AddValue("area-width", "Width of the simulation area in meters", optAreaWidth);
-  cmd.AddValue("area-length", "Length of the simulation area in meters", optAreaLength);
-  cmd.AddValue("grid-rows", "Number of rows in the partition grid", optRows);
-  cmd.AddValue("grid-cols", "Number of columns in the partition grid", optCols);
-  cmd.AddValue("traveller-velocity", "Velocity of traveller nodes in m/s", optTravellerVelocity);
+  cmd.AddValue("areaWidth", "Width of the simulation area in meters", optAreaWidth);
+  cmd.AddValue("areaLength", "Length of the simulation area in meters", optAreaLength);
+  cmd.AddValue("gridRows", "Number of rows in the partition grid", optRows);
+  cmd.AddValue("gridCols", "Number of columns in the partition grid", optCols);
+  cmd.AddValue("travellerVelocity", "Velocity of traveller nodes in m/s", optTravellerVelocity);
   cmd.AddValue(
-      "traveller-walk-dist",
+      "travellerWalkDist",
       "The distance in meters that traveller walks before changing "
       "directions",
       optTravellerWalkDistance);
   cmd.AddValue(
-      "traveller-walk-time",
+      "travellerWalkTime",
       "The time in seconds that should pass before a traveller changes "
       "directions",
       optTravellerWalkTime);
   cmd.AddValue(
-      "traveller-walk-mode",
+      "travellerWalkMode",
       "Should a traveller change direction after distance walked or time "
       "passed; options are 'distance' or 'time' ",
       optTravellerWalkMode);
   cmd.AddValue(
-      "pbn-velocity-min",
+      "pbnVelocityMin",
       "Minimum velocity of partition-bound-nodes in m/s",
       optPbnVelocityMin);
   cmd.AddValue(
-      "pbn-velocity-max",
+      "pbnVelocityMax",
       "Maximum velocity of partition-bound-nodes in m/s",
       optPbnVelocityMax);
   cmd.AddValue(
-      "pbn-velocity-change-after",
+      "pbnVelocityChangeAfter",
       "Number of seconds after which each partition-bound node should change velocity",
       optPbnVelocityChangeAfter);
   cmd.AddValue("routing", "One of either 'DSDV' or 'AODV'", optRoutingProtocol);
-  cmd.AddValue("wifi-radius", "The radius of connectivity for each node in meters", optWifiRadius);
-  cmd.AddValue("animation-xml", "Output file path for NetAnim trace file", animationTraceFilePath);
+  cmd.AddValue("wifiRadius", "The radius of connectivity for each node in meters", optWifiRadius);
+  // cmd.AddValue("animationXml", "Output file path for NetAnim trace file",
+  // animationTraceFilePath);
   cmd.Parse(argc, argv);
 
   /* Parse the parameters. */

@@ -48,10 +48,7 @@ using namespace ns3;
 ///     The defaults of this class as described by Shi and Chen in their paper.
 class RhpmanAppHelper {
  public:
-  RhpmanAppHelper(uint32_t dataOwners = 0) : m_dataOwners(dataOwners) {
-    m_factory.SetTypeId(RhpmanApp::GetTypeId());
-    rand = CreateObject<UniformRandomVariable>();
-  };
+  RhpmanAppHelper() { m_factory.SetTypeId(RhpmanApp::GetTypeId()); };
 
   void SetAttribute(std::string name, const AttributeValue& value);
   void SetDataOwners(uint32_t num);
@@ -64,8 +61,6 @@ class RhpmanAppHelper {
  private:
   Ptr<Application> createAndInstallApp(Ptr<Node> node) const;
   ObjectFactory m_factory;
-  Ptr<UniformRandomVariable> rand;
-  uint32_t m_dataOwners;
 };
 
 };  // namespace rhpman

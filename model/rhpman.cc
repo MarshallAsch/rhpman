@@ -1115,18 +1115,18 @@ void RhpmanApp::RefreshRoutingTable() {
 }
 
 void RhpmanApp::PrintStats() {
-  std::cout << "Total messages sent\t" << unsigned(total_messages_sent) << "\n";
-  std::cout << "Total messages received\t" << unsigned(total_messages_received) << "\n";
-  std::cout << "Total duplicates received\t" << unsigned(total_duplicates_received) << "\n";
+  std::cout << "TotalSent\t" << unsigned(total_messages_sent) << "\n";
+  std::cout << "TotalReceived\t" << unsigned(total_messages_received) << "\n";
+  std::cout << "TotalDuplicates\t" << unsigned(total_duplicates_received) << "\n";
 
-  std::cout << "Pending lookups at exit\t" << unsigned(final_pending_requests) << "\n";
+  std::cout << "PendingLookups\t" << unsigned(final_pending_requests) << "\n";
 
-  std::cout << "Total replica holder step downs\t" << unsigned(total_step_down_events) << "\n";
-  std::cout << "Total replica holder step ups\t" << unsigned(total_step_up_events) << "\n";
+  std::cout << "TotalStepDowns\t" << unsigned(total_step_down_events) << "\n";
+  std::cout << "TotalStepUps\t" << unsigned(total_step_up_events) << "\n";
 
-  std::cout << "Total lookups\t" << unsigned(total_lookups) << "\n";
-  std::cout << "Total success\t" << unsigned(total_success) << "\n";
-  std::cout << "Total failed\t" << unsigned(total_failed) << "\n";
+  std::cout << "TotalLookups\t" << unsigned(total_lookups) << "\n";
+  std::cout << "TotalSuccess\t" << unsigned(total_success) << "\n";
+  std::cout << "TotalFailed\t" << unsigned(total_failed) << "\n";
 }
 
 void RhpmanApp::CleanUp() { google::protobuf::ShutdownProtobufLibrary(); }

@@ -220,7 +220,7 @@ void DataAccess::failed(uint64_t dataID) {
 }
 
 void DataAccess::PrintStats() {
-  std::cout << "Total Data items\t" << unsigned(total_data_items) << "\n";
+  std::cout << "TotalItems\t" << unsigned(total_data_items) << "\n";
   //  std::cout << "Total Lookups\t" << unsigned(total_lookups) << "\n";
   //  std::cout << "Successful Lookups\t" << unsigned(successful_lookups) << "\n";
   //  std::cout << "Failed Lookups\t" << unsigned(failed_lookups) << "\n";

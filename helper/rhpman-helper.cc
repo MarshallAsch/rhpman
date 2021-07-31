@@ -43,36 +43,10 @@ void RhpmanAppHelper::SetAttribute(std::string name, const AttributeValue& value
   m_factory.Set(name, value);
 }
 
-void RhpmanAppHelper::SetDataOwners(uint32_t num) { m_dataOwners = num; }
-
 ApplicationContainer RhpmanAppHelper::Install(NodeContainer nodes) {
   ApplicationContainer apps;
-
-  rand->SetAttribute("Min", DoubleValue(0));
-  rand->SetAttribute("Max", DoubleValue(nodes.GetN()));
-
-  std::vector<uint32_t> dataOwnerIds;
-  for (size_t i = 0; i < m_dataOwners; i++) {
-    uint32_t id = 0;
-    do {
-      id = rand->GetInteger();
-    } while (std::find(dataOwnerIds.begin(), dataOwnerIds.end(), id) != dataOwnerIds.end());
-    dataOwnerIds.push_back(id);
-  }
-
-  NS_ASSERT(dataOwnerIds.size() == m_dataOwners);
-
-  NS_LOG_DEBUG("Data owner nodes: " << dataOwnerIds);
-
   for (size_t i = 0; i < nodes.GetN(); i++) {
-    Ptr<Node> node = nodes.Get(i);
-    if (std::find(dataOwnerIds.begin(), dataOwnerIds.end(), i) != dataOwnerIds.end()) {
-      m_factory.Set("Role", EnumValue(RhpmanApp::Role::REPLICATING));
-      // m_factory.Set("DataId", IntegerValue(i));
-    }
-    apps.Add(createAndInstallApp(node));
-    m_factory.Set("Role", EnumValue(RhpmanApp::Role::NON_REPLICATING));
-    // m_factory.Set("DataId", IntegerValue(-1));
+    apps.Add(createAndInstallApp(nodes.Get(i)));
   }
   return apps;
 }
