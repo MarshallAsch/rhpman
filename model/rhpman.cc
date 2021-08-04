@@ -61,16 +61,6 @@ TypeId RhpmanApp::GetTypeId() {
           .SetGroupName("Applications")
           .AddConstructor<RhpmanApp>()
           .AddAttribute(
-              "Role",
-              "The initial role of this app",
-              EnumValue(Role::NON_REPLICATING),
-              MakeEnumAccessor(&RhpmanApp::m_role),
-              MakeEnumChecker<Role>(
-                  Role::NON_REPLICATING,
-                  "Role::NONE_REPLICATING",
-                  Role::REPLICATING,
-                  "Role::REPLICATING"))
-          .AddAttribute(
               "ForwardingThreshold",
               "If probability of delivery to a node is higher than this value, data is forwarded "
               "(sigma)",
@@ -109,6 +99,12 @@ TypeId RhpmanApp::GetTypeId() {
               MakeUintegerAccessor(&RhpmanApp::m_neighborhoodHops),
               MakeUintegerChecker<uint32_t>(1))
           .AddAttribute(
+              "ElectionNeighborhoodSize",
+              "Number of hops considered to be in the election neighborhood of this node (h_r)",
+              UintegerValue(4),
+              MakeUintegerAccessor(&RhpmanApp::m_electionNeighborhoodHops),
+              MakeUintegerChecker<uint32_t>(1))
+          .AddAttribute(
               "StorageSpace",
               "Number of data items that a node can hold",
               UintegerValue(10),
@@ -119,12 +115,6 @@ TypeId RhpmanApp::GetTypeId() {
               "Number of data items that a node can hold",
               UintegerValue(10),
               MakeUintegerAccessor(&RhpmanApp::m_bufferSpace),
-              MakeUintegerChecker<uint32_t>(1))
-          .AddAttribute(
-              "ElectionNeighborhoodSize",
-              "Number of hops considered to be in the election neighborhood of this node (h_r)",
-              UintegerValue(4),
-              MakeUintegerAccessor(&RhpmanApp::m_electionNeighborhoodHops),
               MakeUintegerChecker<uint32_t>(1))
           .AddAttribute(
               "ProfileUpdateDelay",
@@ -139,29 +129,22 @@ TypeId RhpmanApp::GetTypeId() {
               MakeTimeAccessor(&RhpmanApp::m_request_timeout),
               MakeTimeChecker(0.1_sec))
           .AddAttribute(
-              "ReplicationNodeTimeout",
-              "Time to wait between last hearing from a replication node and removing them from "
-              "the list of nodes (T)",
-              TimeValue(5.0_sec),
-              MakeTimeAccessor(&RhpmanApp::m_missing_replication_timeout),
-              MakeTimeChecker(0.1_sec))
-          .AddAttribute(
-              "ProfileTimeout",
+              "PeerTimeout",
               "Time to wait between last hearing from a node and removing them from the list of "
-              "neighbors (T)",
+              "neighbors or replicating nodes (T)",
               TimeValue(5.0_sec),
-              MakeTimeAccessor(&RhpmanApp::m_profile_timeout),
+              MakeTimeAccessor(&RhpmanApp::m_peer_timeout),
               MakeTimeChecker(0.1_sec))
           .AddAttribute(
-              "ElectionTimeout",
-              "Time to wait between before checking the results of an election (T)",
-              TimeValue(5.0_sec),
-              MakeTimeAccessor(&RhpmanApp::m_election_timeout),
+              "ElectionPeriod",
+              "Time to wait between before checking the results of an election (Ta)",
+              TimeValue(6.0_sec),
+              MakeTimeAccessor(&RhpmanApp::m_election_period),
               MakeTimeChecker(0.1_sec))
           .AddAttribute(
               "ElectionCooldown",
               "Time to wait before an election can be started again (T)",
-              TimeValue(1.0_sec),
+              TimeValue(6.0_sec),
               MakeTimeAccessor(&RhpmanApp::m_election_cooldown),
               MakeTimeChecker(0.1_sec))
           .AddAttribute(
@@ -606,14 +589,14 @@ void RhpmanApp::ScheduleElectionCheck() {
 
   // schedule checking election results
   m_election_results_event =
-      Simulator::Schedule(m_election_timeout, &RhpmanApp::CheckElectionResults, this);
+      Simulator::Schedule(m_election_period, &RhpmanApp::CheckElectionResults, this);
 }
 
 void RhpmanApp::ScheduleElectionWatchdog() {
   if (m_state != State::RUNNING) return;
 
   m_election_watchdog_event =
-      Simulator::Schedule(m_missing_replication_timeout, &RhpmanApp::TriggerElection, this);
+      Simulator::Schedule(m_peer_timeout, &RhpmanApp::TriggerElection, this);
 }
 
 void RhpmanApp::ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID) {
@@ -638,7 +621,7 @@ void RhpmanApp::ScheduleProfileTimeout(uint32_t nodeID) {
   e.Cancel();
 
   m_profileTimeouts[nodeID] =
-      Simulator::Schedule(m_profile_timeout, &RhpmanApp::ProfileTimeout, this, nodeID);
+      Simulator::Schedule(m_peer_timeout, &RhpmanApp::ProfileTimeout, this, nodeID);
 }
 
 void RhpmanApp::ScheduleReplicaNodeTimeout(uint32_t nodeID) {
@@ -647,8 +630,8 @@ void RhpmanApp::ScheduleReplicaNodeTimeout(uint32_t nodeID) {
   EventId e = m_replicationNodeTimeouts[nodeID];
   e.Cancel();
 
-  m_replicationNodeTimeouts[nodeID] = Simulator::
-      Schedule(m_missing_replication_timeout, &RhpmanApp::ReplicationNodeTimeout, this, nodeID);
+  m_replicationNodeTimeouts[nodeID] =
+      Simulator::Schedule(m_peer_timeout, &RhpmanApp::ReplicationNodeTimeout, this, nodeID);
 }
 
 void RhpmanApp::ScheduleRefreshRoutingTable() {

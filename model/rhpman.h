@@ -140,10 +140,8 @@ class RhpmanApp : public Application {
 
   // timeouts
   Time m_request_timeout;
-  Time m_missing_replication_timeout;  // if a replication node does not checkin before this time it
-                                       // is removed from the list
-  Time m_profile_timeout;
-  Time m_election_timeout;
+  Time m_peer_timeout;
+  Time m_election_period;
   Time m_election_cooldown;
   Time m_min_election_time;  // this is the earliest time that another election is allowed to be
                              // requested by a node
