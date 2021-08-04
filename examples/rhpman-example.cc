@@ -217,6 +217,15 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ColocationWeight", DoubleValue(params.wcol));
   rhpman.SetAttribute("DegreeConnectivityWeight", DoubleValue(params.wcdc));
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(params.profileUpdateDelay));
+
+  rhpman.SetAttribute("ElectionCooldown", TimeValue(params.electionCooldown));
+  rhpman.SetAttribute("ElectionPeriod", TimeValue(params.electionPeriod));
+  rhpman.SetAttribute("PeerTimeout", TimeValue(params.peerTimeout));
+  rhpman.SetAttribute("RequestTimeout", TimeValue(params.requestTimeout));
+  rhpman.SetAttribute("StorageWeight", DoubleValue(params.storageWeight));
+  rhpman.SetAttribute("EnergyWeight", DoubleValue(params.energyWeight));
+  rhpman.SetAttribute("ProcessingWeight", DoubleValue(params.processingWeight));
+
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   rhpmanApps.Stop(Seconds(0));
   rhpmanApps.Stop(params.runtime);

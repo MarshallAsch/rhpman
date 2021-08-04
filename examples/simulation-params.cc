@@ -87,6 +87,15 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   uint32_t optStorageSpace = 160;
   uint32_t optBufferSpace = 10;
 
+  double optElectionCooldown = 6.0_seconds;
+  double optElectionPeriod = 6.0_seconds;
+  double optPeerTimeout = 12.0_seconds;
+  double optRequestTimeout = 2.0_minutes;  // set to the runtime means no timeout
+
+  double optStorageWeight = 1.0;
+  double optEnergyWeight = 0.0;
+  double optProcessingWeight = 0.0;
+
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
 
@@ -178,6 +187,37 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "pbnVelocityChangeAfter",
       "Number of seconds after which each partition-bound node should change velocity",
       optPbnVelocityChangeAfter);
+  cmd.AddValue(
+      "electionCooldown",
+      "The number of seconds to wait before another election can be triggered",
+      optElectionCooldown);
+  cmd.AddValue(
+      "electionPeriod",
+      "The number of seconds to wait before checking the results of an election",
+      optElectionPeriod);
+  cmd.AddValue(
+      "peerTimeout",
+      "The number of seconds to wait before removing a node from the list of peers or removing it "
+      "as a replication node",
+      optPeerTimeout);
+  cmd.AddValue(
+      "requestTimeout",
+      "The number of seconds to wait before marking a lookup as failed",
+      optRequestTimeout);
+
+  cmd.AddValue(
+      "storageWeight",
+      "The available storage space weight used for the election fitness calculation",
+      optStorageWeight);
+  cmd.AddValue(
+      "energyWeight",
+      "The available energy level weight used for the election fitness calculation",
+      optEnergyWeight);
+  cmd.AddValue(
+      "processingWeight",
+      "The available processing power weight used for the election fitness calculation",
+      optProcessingWeight);
+
   cmd.AddValue("routing", "One of either 'DSDV' or 'AODV'", optRoutingProtocol);
   cmd.AddValue("wifiRadius", "The radius of connectivity for each node in meters", optWifiRadius);
   // cmd.AddValue("animationXml", "Output file path for NetAnim trace file",
@@ -204,6 +244,22 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   }
   if (optWcdc < 0 || optWcdc > 1) {
     std::cerr << "Degree connectivity weight (" << optWcdc << ") is not a probability" << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
+  if (optStorageWeight != 1) {  // if (optStorageWeight < 0 || optStorageWeight > 1) {
+    std::cerr << "Storage space weight (" << optStorageWeight << ") is not a probability"
+              << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+  if (optEnergyWeight != 0) {  // if (optEnergyWeight < 0 || optEnergyWeight > 1) {
+    std::cerr << "Energy level weight (" << optEnergyWeight << ") is not a probability"
+              << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+  if (optProcessingWeight != 0) {  // if (optProcessingWeight < 0 || optProcessingWeight > 1) {
+    std::cerr << "Processing power weight (" << optProcessingWeight << ") is not a probability"
+              << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
@@ -276,6 +332,15 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.updateTime = Seconds(optUpdateTime);
   result.dataSize = optDataSize;
   result.waitTime = Seconds(optWaitTime);
+
+  result.electionCooldown = Seconds(optElectionCooldown);
+  result.electionPeriod = Seconds(optElectionPeriod);
+  result.peerTimeout = Seconds(optPeerTimeout);
+  result.requestTimeout = Seconds(optRequestTimeout);
+
+  result.storageWeight = optStorageWeight;
+  result.energyWeight = optEnergyWeight;
+  result.processingWeight = optProcessingWeight;
 
   result.storageSpace = optStorageSpace;
   result.bufferSpace = optBufferSpace;

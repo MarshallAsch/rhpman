@@ -85,6 +85,15 @@ class SimulationParameters {
   ns3::Time waitTime;
   uint32_t dataSize;
 
+  ns3::Time electionCooldown;
+  ns3::Time electionPeriod;
+  ns3::Time peerTimeout;
+  ns3::Time requestTimeout;
+
+  double storageWeight;
+  double energyWeight;
+  double processingWeight;
+
   uint32_t storageSpace;
   uint32_t bufferSpace;
 

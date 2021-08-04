@@ -81,6 +81,20 @@ TypeId RhpmanApp::GetTypeId() {
               MakeDoubleAccessor(&RhpmanApp::m_ws),
               MakeDoubleChecker<double>(0.0, 1.0))
           .AddAttribute(
+              "EnergyWeight",
+              "The weight of the energy component of the election fitness calculation"
+              "(w_e)",
+              DoubleValue(0),
+              MakeDoubleAccessor(&RhpmanApp::m_we),
+              MakeDoubleChecker<double>(0.0, 1.0))
+          .AddAttribute(
+              "ProcessingWeight",
+              "The weight of the processing component of the election fitness calculation"
+              "(w_p)",
+              DoubleValue(0),
+              MakeDoubleAccessor(&RhpmanApp::m_wp),
+              MakeDoubleChecker<double>(0.0, 1.0))
+          .AddAttribute(
               "DegreeConnectivityWeight",
               "Weight of degree connectivity for computing delivery probabilities (w_cdc)",
               DoubleValue(0.5),
