@@ -94,6 +94,9 @@ class SimulationParameters {
   double energyWeight;
   double processingWeight;
 
+  bool staggeredStart;
+  double staggeredVariance;
+
   uint32_t storageSpace;
   uint32_t bufferSpace;
 

@@ -217,7 +217,6 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ColocationWeight", DoubleValue(params.wcol));
   rhpman.SetAttribute("DegreeConnectivityWeight", DoubleValue(params.wcdc));
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(params.profileUpdateDelay));
-
   rhpman.SetAttribute("ElectionCooldown", TimeValue(params.electionCooldown));
   rhpman.SetAttribute("ElectionPeriod", TimeValue(params.electionPeriod));
   rhpman.SetAttribute("PeerTimeout", TimeValue(params.peerTimeout));
@@ -227,7 +226,14 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ProcessingWeight", DoubleValue(params.processingWeight));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
-  rhpmanApps.Stop(Seconds(0));
+  if (params.staggeredStart) {
+    Ptr<NormalRandomVariable> jitter = CreateObject<NormalRandomVariable>();
+    jitter->SetAttribute("Mean", DoubleValue(0));
+    jitter->SetAttribute("Variance", DoubleValue(params.staggeredVariance));
+    rhpmanApps.StartWithJitter(Seconds(0), jitter);
+  } else {
+    rhpmanApps.Start(Seconds(0));
+  }
   rhpmanApps.Stop(params.runtime);
 
   // Install the RHPMAN Scheme onto each node.
@@ -238,7 +244,15 @@ int main(int argc, char* argv[]) {
 
   dataAccess.SetDataOwners(params.dataOwners);
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
-  accessApps.Start(params.waitTime);
+
+  if (params.staggeredStart) {
+    Ptr<NormalRandomVariable> jitter = CreateObject<NormalRandomVariable>();
+    jitter->SetAttribute("Mean", DoubleValue(0));
+    jitter->SetAttribute("Variance", DoubleValue(params.staggeredVariance));
+    accessApps.StartWithJitter(params.waitTime, jitter);
+  } else {
+    accessApps.Start(params.waitTime);
+  }
   accessApps.Stop(params.runtime);
 
   // this will reset the statistics before the data access application begins

@@ -96,14 +96,24 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optEnergyWeight = 0.0;
   double optProcessingWeight = 0.0;
 
+  bool optStaggeredStart = false;
+  double optStaggeredVariance = 4.0;
+
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
 
   /* Setup commandline option for each simulation parameter. */
   CommandLine cmd;
   cmd.AddValue("runTime", "Simulation run time in seconds", optRuntime);
-  // cmd.AddValue("seed", "Simulation seed", optSeed);
   cmd.AddValue("totalNodes", "Total number of nodes in the simulation", optTotalNodes);
+  cmd.AddValue(
+      "staggeredStart",
+      "If the application starting should be staggered across the different nodes",
+      optStaggeredStart);
+  cmd.AddValue(
+      "staggeredStartVariance",
+      "The variance used to generate the application startup variance",
+      optStaggeredVariance);
   cmd.AddValue(
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
@@ -247,6 +257,12 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
+  if (optStaggeredVariance < 0) {
+    std::cerr << "Startup variance can not be negative (" << optStaggeredVariance << ")"
+              << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
   if (optStorageWeight != 1) {  // if (optStorageWeight < 0 || optStorageWeight > 1) {
     std::cerr << "Storage space weight (" << optStorageWeight << ") is not a probability"
               << std::endl;
@@ -344,6 +360,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   result.storageSpace = optStorageSpace;
   result.bufferSpace = optBufferSpace;
+
+  result.staggeredStart = optStaggeredStart;
+  result.staggeredVariance = optStaggeredVariance;
 
   result.netanimTraceFilePath = animationTraceFilePath;
 
