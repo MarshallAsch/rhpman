@@ -90,7 +90,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optElectionCooldown = 6.0_seconds;
   double optElectionPeriod = 6.0_seconds;
   double optPeerTimeout = 12.0_seconds;
-  double optRequestTimeout = 2.0_minutes;  // set to the runtime means no timeout
+  double optRequestTimeout = 0.0_seconds;  // set to 0 to ignore timeouts
 
   double optStorageWeight = 1.0;
   double optEnergyWeight = 0.0;

@@ -151,7 +151,7 @@ class RhpmanApp : public Application {
                              // requested by a node
 
   // event handlers
-  void LookupTimeout(uint64_t requestID);
+  void LookupTimeout(uint64_t requestID, uint64_t dataID);
   void TriggerElection();
   void CheckElectionResults();
   void ProfileTimeout(uint32_t nodeID);
@@ -260,7 +260,7 @@ class RhpmanApp : public Application {
   Storage m_buffer;
 
   std::set<uint64_t> m_pendingLookups;
-  std::map<uint64_t, uint64_t> m_lookupMapping;
+  // std::map<uint64_t, uint64_t> m_lookupMapping;
 
   // replication values
 

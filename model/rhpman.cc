@@ -139,9 +139,9 @@ TypeId RhpmanApp::GetTypeId() {
           .AddAttribute(
               "RequestTimeout",
               "Time to wait after a lookup is made before it is marked as unsuccessful (T)",
-              TimeValue(5.0_sec),
+              TimeValue(0.0_sec),
               MakeTimeAccessor(&RhpmanApp::m_request_timeout),
-              MakeTimeChecker(0.1_sec))
+              MakeTimeChecker(0.0_sec))
           .AddAttribute(
               "PeerTimeout",
               "Time to wait between last hearing from a node and removing them from the list of "
@@ -616,16 +616,16 @@ void RhpmanApp::ScheduleElectionWatchdog() {
 void RhpmanApp::ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID) {
   if (m_state != State::RUNNING) return;
 
-  EventId event =
-      Simulator::Schedule(m_request_timeout, &RhpmanApp::LookupTimeout, this, requestID);
+  m_pendingLookups.insert(requestID);
 
-  if (m_pendingLookups.find(requestID) != m_pendingLookups.end()) {
-    std::cout << "lookup ID has been reused\n";
-  }
+  // dont schedule any timeout events
+  if (m_request_timeout.IsZero()) return;
+
+  EventId event =
+      Simulator::Schedule(m_request_timeout, &RhpmanApp::LookupTimeout, this, requestID, dataID);
 
   m_lookupTimeouts[requestID] = event;
-  m_pendingLookups.insert(requestID);
-  m_lookupMapping[requestID] = dataID;
+  // m_lookupMapping[requestID] = dataID;
 }
 
 void RhpmanApp::ScheduleProfileTimeout(uint32_t nodeID) {
@@ -1007,15 +1007,15 @@ double RhpmanApp::CalculateColocation() {
 // ================================================
 
 // this will call the lookup failed callback for the request
-void RhpmanApp::LookupTimeout(uint64_t requestID) {
+void RhpmanApp::LookupTimeout(uint64_t requestID, uint64_t dataID) {
   NS_LOG_FUNCTION(this);
 
   if (IsResponsePending(requestID)) {
-    std::map<uint64_t, uint64_t>::iterator dataMapping;
-    dataMapping = m_lookupMapping.find(requestID);
+    // std::map<uint64_t, uint64_t>::iterator dataMapping;
+    // dataMapping = m_lookupMapping.find(requestID);
     m_pendingLookups.erase(requestID);
 
-    FailedLookup(dataMapping->second);
+    FailedLookup(dataID);
   }
 }
 
