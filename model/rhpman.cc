@@ -43,17 +43,6 @@
 
 /// values for statistics:::
 static uint64_t total_messages_sent;
-static uint64_t final_pending_requests;
-static uint64_t total_lookups;
-
-static uint64_t total_success;
-static uint64_t total_failed;
-
-static uint64_t total_messages_received;
-static uint64_t total_duplicates_received;
-
-static uint64_t total_step_down_events;
-static uint64_t total_step_up_events;
 
 namespace rhpman {
 
@@ -257,8 +246,7 @@ void RhpmanApp::StopApplication() {
 
   // TODO: Cancel events.
   // std::cout << "stopping \n";
-
-  final_pending_requests += m_pendingLookups.size();
+  stats.addPending(m_pendingLookups.size());
   m_election_watchdog_event.Cancel();
   m_replica_announcement_event.Cancel();
   m_ping_event.Cancel();
@@ -275,7 +263,7 @@ void RhpmanApp::StopApplication() {
 
 // this is public and is how any data lookup is made
 void RhpmanApp::Lookup(uint64_t id) {
-  total_lookups++;
+  stats.incLookup();
   // check cache
   DataItem* item = CheckLocalStorage(id);
   if (item != NULL) {
@@ -292,6 +280,7 @@ void RhpmanApp::Lookup(uint64_t id) {
 // this is public and is how new data items are stored in the network
 // if there is no more space in the local cache false is returned, otherwise it is true
 bool RhpmanApp::Save(DataItem* data) {
+  stats.incSave();
   bool status = m_storage.StoreItem(data);
 
   Ptr<Packet> message = GenerateStore(data);
@@ -692,37 +681,45 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     uint32_t srcAddress = InetSocketAddress::ConvertFrom(from).GetIpv4().Get();
     rhpman::packets::Message message = ParsePacket(packet);
 
-    total_messages_received++;
     if (CheckDuplicateMessage(message.id())) {
       NS_LOG_INFO("already received this message, dropping.");
-      total_duplicates_received++;
+      stats.incDuplicate();
       return;
     }
 
     // switch based on message type
     if (message.has_announce()) {
+      stats.incReceived(Stats::Type::REPLICATION_ANNOUNCEMENT);
       HandleReplicationAnnouncement(srcAddress);
     } else if (message.has_ping()) {
+      stats.incReceived(Stats::Type::PING);
       HandlePing(srcAddress, message.ping().delivery_probability());
     } else if (message.has_mode_change()) {
+      stats.incReceived(Stats::Type::MODE_CHANGE);
       HandleModeChange(
           message.mode_change().old_replication_node(),
           message.mode_change().new_replication_node());
     } else if (message.has_election()) {
+      stats.incReceived(Stats::Type::ELECTION_REQUEST);
       HandleElectionRequest();
     } else if (message.has_fitness()) {
+      stats.incReceived(Stats::Type::ELECTION_FITNESS);
       HandleElectionFitness(srcAddress, message.fitness().fitness());
     } else if (message.has_store()) {
+      stats.incReceived(Stats::Type::STORE);
       rhpman::packets::DataItem item = message.store().data();
       HandleStore(srcAddress, new DataItem(item.data_id(), item.owner(), item.data()), packet);
     } else if (message.has_request()) {
+      stats.incReceived(Stats::Type::LOOKUP);
       HandleLookup(message.request().requestor(), message.id(), message.request().data_id());
     } else if (message.has_response()) {
+      stats.incReceived(Stats::Type::LOOKUP_RESPONSE);
       rhpman::packets::DataItem item = message.response().data();
       HandleResponse(
           message.response().request_id(),
           new DataItem(item.data_id(), item.owner(), item.data()));
     } else if (message.has_transfer()) {
+      stats.incReceived(Stats::Type::TRANSFER);
       std::vector<DataItem*> items;
 
       for (int i = 0; i < message.transfer().items_size(); i++) {
@@ -732,6 +729,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
 
       HandleTransfer(items);
     } else {
+      stats.incReceived(Stats::Type::UNKOWN);
       std::cout << "handling message: other\n";
       NS_LOG_WARN("unknown message type");
     }
@@ -900,7 +898,7 @@ void RhpmanApp::MakeReplicaHolderNode() {
   m_role = Role::REPLICATING;
   SendRoleChange(m_address);
   ScheduleReplicaHolderAnnouncement();
-  total_step_up_events++;
+  stats.incStepUp();
 }
 
 // this helper will convert the new role to the ip address that should be sent
@@ -908,7 +906,7 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   m_role = Role::NON_REPLICATING;
   m_replica_announcement_event.Cancel();
   SendRoleChange(0);
-  total_step_down_events++;
+  stats.incStepDown();
 
   // TODO: when to send the current replica data to the new replica node?
 }
@@ -1088,13 +1086,19 @@ void RhpmanApp::ReplicationNodeTimeout(uint32_t nodeID) {
 DataItem* RhpmanApp::CheckLocalStorage(uint64_t dataID) {
   // check cache
   DataItem* item = m_storage.GetItem(dataID);
-  if (item != NULL) return item;
+  if (item != NULL) {
+    stats.incCache();
+    return item;
+  }
 
 #if defined(__RHPMAN_OPTIONAL_CHECK_BUFFER)
 
   // check the data items in the buffer
   item = m_buffer.GetItem(dataID);
-  if (item != NULL) return item;
+  if (item != NULL) {
+    stats.incCache();
+    return item;
+  }
 
 #endif  // __RHPMAN_OPTIONAL_CHECK_BUFFER
 
@@ -1102,8 +1106,6 @@ DataItem* RhpmanApp::CheckLocalStorage(uint64_t dataID) {
 }
 
 void RhpmanApp::RefreshRoutingTable() {
-  // if (m_address != 167837856) return;
-
   Ptr<Ipv4> ipv4 = GetNode()->GetObject<Ipv4>();
   Ptr<Ipv4RoutingProtocol> table = ipv4->GetRoutingProtocol();
   NS_ASSERT(table);
@@ -1114,49 +1116,15 @@ void RhpmanApp::RefreshRoutingTable() {
   m_peerTable.UpdateTable(ss.str());
 }
 
-void RhpmanApp::ResetStats() {
-  std::cout << "InitalSent\t" << unsigned(total_messages_sent) << "\n";
-  std::cout << "InitalReceived\t" << unsigned(total_messages_received) << "\n";
-  std::cout << "InitalDuplicates\t" << unsigned(total_duplicates_received) << "\n";
-  std::cout << "InitalPendingLookups\t" << unsigned(final_pending_requests) << "\n";
-  std::cout << "InitalStepDowns\t" << unsigned(total_step_down_events) << "\n";
-  std::cout << "InitalStepUps\t" << unsigned(total_step_up_events) << "\n";
-  std::cout << "InitalLookups\t" << unsigned(total_lookups) << "\n";
-  std::cout << "InitalSuccess\t" << unsigned(total_success) << "\n";
-  std::cout << "InitalFailed\t" << unsigned(total_failed) << "\n";
-
-  total_messages_sent = 0;
-  final_pending_requests = 0;
-  total_lookups = 0;
-  total_success = 0;
-  total_failed = 0;
-  total_messages_received = 0;
-  total_duplicates_received = 0;
-  total_step_down_events = 0;
-  total_step_up_events = 0;
-}
-
-void RhpmanApp::PrintStats() {
-  std::cout << "TotalSent\t" << unsigned(total_messages_sent) << "\n";
-  std::cout << "TotalReceived\t" << unsigned(total_messages_received) << "\n";
-  std::cout << "TotalDuplicates\t" << unsigned(total_duplicates_received) << "\n";
-  std::cout << "PendingLookups\t" << unsigned(final_pending_requests) << "\n";
-  std::cout << "TotalStepDowns\t" << unsigned(total_step_down_events) << "\n";
-  std::cout << "TotalStepUps\t" << unsigned(total_step_up_events) << "\n";
-  std::cout << "TotalLookups\t" << unsigned(total_lookups) << "\n";
-  std::cout << "TotalSuccess\t" << unsigned(total_success) << "\n";
-  std::cout << "TotalFailed\t" << unsigned(total_failed) << "\n";
-}
-
 void RhpmanApp::CleanUp() { google::protobuf::ShutdownProtobufLibrary(); }
 
 void RhpmanApp::SuccessfulLookup(DataItem* data) {
-  total_success++;
+  stats.incSuccess();
   if (!m_success.IsNull()) m_success(data);
 }
 
 void RhpmanApp::FailedLookup(uint64_t dataID) {
-  total_failed++;
+  stats.incFailed();
   if (!m_failed.IsNull()) m_failed(dataID);
 }
 

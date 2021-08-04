@@ -69,8 +69,6 @@ class DataAccess : public Application {
   Role GetRole() const;
   State GetState() const;
 
-  static void PrintStats();
-
  private:
   // Application lifecycle methods.
 

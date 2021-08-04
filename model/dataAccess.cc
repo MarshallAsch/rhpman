@@ -45,11 +45,6 @@
 // system
 static uint32_t total_data_items;
 
-/// values for statistics:::
-static uint64_t total_lookups;
-static uint64_t successful_lookups;
-static uint64_t failed_lookups;
-
 namespace rhpman {
 
 using namespace ns3;
@@ -206,24 +201,10 @@ void DataAccess::lookup() {
   if (total_data_items == 0) return;
 
   m_rhpman->Lookup(selectDataToLookup());
-  total_lookups++;
 }
 
-void DataAccess::success(DataItem* data) {
-  // std::cout << "Successfull lookup for data item: " << unsigned(data->getID()) << "\n";
-  successful_lookups++;
-}
+void DataAccess::success(DataItem* data) {}
 
-void DataAccess::failed(uint64_t dataID) {
-  // std::cout << "failed to  lookup for data item: " << unsigned(dataID) << "\n";
-  failed_lookups++;
-}
-
-void DataAccess::PrintStats() {
-  std::cout << "TotalItems\t" << unsigned(total_data_items) << "\n";
-  //  std::cout << "Total Lookups\t" << unsigned(total_lookups) << "\n";
-  //  std::cout << "Successful Lookups\t" << unsigned(successful_lookups) << "\n";
-  //  std::cout << "Failed Lookups\t" << unsigned(failed_lookups) << "\n";
-}
+void DataAccess::failed(uint64_t dataID) {}
 
 }  // namespace rhpman

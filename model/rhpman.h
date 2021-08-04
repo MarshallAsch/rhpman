@@ -51,6 +51,7 @@
 #include "dataItem.h"
 #include "storage.h"
 
+#include "rhpman-stats.h"
 #include "table.h"
 
 namespace rhpman {
@@ -102,8 +103,6 @@ class RhpmanApp : public Application {
   void RegisterSuccessCallback(Callback<void, DataItem*> success);
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
 
-  static void PrintStats();
-  static void ResetStats();
   static void CleanUp();
 
  private:
@@ -276,6 +275,8 @@ class RhpmanApp : public Application {
   std::set<uint64_t> m_received_messages;
 
   Table m_peerTable;
+
+  Stats stats;
 };
 
 };  // namespace rhpman

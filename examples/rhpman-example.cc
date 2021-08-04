@@ -49,6 +49,7 @@
 //#include "logging.h"
 #include "ns3/data-access-helper.h"
 #include "ns3/rhpman-helper.h"
+#include "ns3/rhpman-stats.h"
 
 #include "nsutil.h"
 #include "simulation-area.h"
@@ -128,7 +129,10 @@ void setupPbNodes(const SimulationParameters& params, NodeContainer& nodes) {
   }
 }
 
-void resetStats() { RhpmanApp::ResetStats(); }
+void resetStats(Stats stats) {
+  stats.Print("Inital");
+  stats.Reset();
+}
 
 int main(int argc, char* argv[]) {
   Time::SetResolution(Time::NS);
@@ -229,7 +233,9 @@ int main(int argc, char* argv[]) {
   accessApps.Stop(params.runtime);
 
   // this will reset the statistics before the data access application begins
-  Simulator::Schedule(params.waitTime, &resetStats);
+
+  Stats stats;
+  Simulator::Schedule(params.waitTime, &resetStats, stats);
 
   // Run the simulation with support for animations.
   // AnimationInterface anim(params.netanimTraceFilePath);
@@ -240,8 +246,7 @@ int main(int argc, char* argv[]) {
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
 
-  DataAccess::PrintStats();
-  RhpmanApp::PrintStats();
+  stats.Print("Final");
 
   RhpmanApp::CleanUp();
 
