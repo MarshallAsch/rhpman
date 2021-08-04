@@ -135,6 +135,7 @@ void resetStats(Stats stats) {
 }
 
 int main(int argc, char* argv[]) {
+  RngSeedManager::SetSeed(7);  // arbitrarily chosen
   Time::SetResolution(Time::NS);
 
   /* Setup and parse the command line options. */

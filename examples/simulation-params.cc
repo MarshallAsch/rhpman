@@ -214,7 +214,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "requestTimeout",
       "The number of seconds to wait before marking a lookup as failed",
       optRequestTimeout);
-
   cmd.AddValue(
       "storageWeight",
       "The available storage space weight used for the election fitness calculation",
