@@ -228,9 +228,9 @@ int main(int argc, char* argv[]) {
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   if (params.staggeredStart) {
-    Ptr<NormalRandomVariable> jitter = CreateObject<NormalRandomVariable>();
-    jitter->SetAttribute("Mean", DoubleValue(0));
-    jitter->SetAttribute("Variance", DoubleValue(params.staggeredVariance));
+    Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
+    jitter->SetAttribute("Min", DoubleValue(0));
+    jitter->SetAttribute("Max", DoubleValue(params.profileUpdateDelay.GetSeconds()));
     rhpmanApps.StartWithJitter(Seconds(0), jitter);
   } else {
     rhpmanApps.Start(Seconds(0));
@@ -247,9 +247,9 @@ int main(int argc, char* argv[]) {
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
 
   if (params.staggeredStart) {
-    Ptr<NormalRandomVariable> jitter = CreateObject<NormalRandomVariable>();
-    jitter->SetAttribute("Mean", DoubleValue(0));
-    jitter->SetAttribute("Variance", DoubleValue(params.staggeredVariance));
+    Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
+    jitter->SetAttribute("Min", DoubleValue(0));
+    jitter->SetAttribute("Max", DoubleValue(params.profileUpdateDelay.GetSeconds()));
     accessApps.StartWithJitter(params.waitTime, jitter);
   } else {
     accessApps.Start(params.waitTime);
