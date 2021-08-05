@@ -165,9 +165,9 @@ class RhpmanApp : public Application {
   EventId m_table_update_event;
 
   // event triggers
-  void BroadcastToNeighbors(Ptr<Packet> packet);
-  void BroadcastToElection(Ptr<Packet> packet);
-  void SendMessage(Ipv4Address dest, Ptr<Packet> packet);
+  void BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type);
+  void BroadcastToElection(Ptr<Packet> packet, Stats::Type type);
+  void SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type);
   void SendStartElection();
   void SendPing();
   void SendReplicationAnnouncement();
@@ -175,7 +175,7 @@ class RhpmanApp : public Application {
   void SendRoleChange(uint32_t newReplicationNode);
   void SendSyncLookup(uint64_t requestID, uint32_t nodeID, uint64_t dataID);
   void SendSyncStore(uint32_t nodeID, DataItem* data);
-  void SendResponse(uint64_t requestID, uint32_t nodeID, const DataItem* data);
+  void SendResponse(uint64_t requestID, uint32_t nodeID, const DataItem* data, Stats::Type type);
 
   // schedulers
   void ScheduleElectionCheck();
@@ -215,8 +215,8 @@ class RhpmanApp : public Application {
   bool IsResponsePending(uint64_t requestID);
   void DestroySocket(Ptr<Socket> socket);
 
-  void SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma);
-  void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes);
+  void SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma, Stats::Type type);
+  void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes, Stats::Type type);
 
   void RefreshRoutingTable();
 

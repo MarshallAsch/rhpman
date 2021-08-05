@@ -41,9 +41,6 @@
 
 #include "proto/messages.pb.h"
 
-/// values for statistics:::
-static uint64_t total_messages_sent;
-
 namespace rhpman {
 
 using namespace ns3;
@@ -281,7 +278,7 @@ bool RhpmanApp::Save(DataItem* data) {
   bool status = m_storage.StoreItem(data);
 
   Ptr<Packet> message = GenerateStore(data);
-  SemiProbabilisticSend(message, 0, m_forwardingThreshold);
+  SemiProbabilisticSend(message, 0, m_forwardingThreshold, Stats::Type::STORE);
 
   return status;
 }
@@ -358,19 +355,23 @@ void RhpmanApp::DestroySocket(Ptr<Socket> socket) {
 //  send wrappers
 // ================================================
 
-void RhpmanApp::SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma) {
-  SendToNodes(message, m_replicating_nodes);
+void RhpmanApp::SemiProbabilisticSend(
+    Ptr<Packet> message,
+    uint32_t srcAddr,
+    double sigma,
+    Stats::Type type) {
+  SendToNodes(message, m_replicating_nodes, type);
 
   std::set<uint32_t> nodes = GetRecipientAddresses(sigma);
   nodes = FilterAddresses(nodes, m_replicating_nodes);
   nodes = FilterAddress(nodes, srcAddr);
 
-  SendToNodes(message, nodes);
+  SendToNodes(message, nodes, type);
 }
 
-void RhpmanApp::SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes) {
+void RhpmanApp::SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes, Stats::Type type) {
   for (std::set<uint32_t>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-    SendMessage(Ipv4Address(*it), message);
+    SendMessage(Ipv4Address(*it), message, type);
   }
 }
 
@@ -518,21 +519,21 @@ static rhpman::packets::Message ParsePacket(const Ptr<Packet> packet) {
 // ================================================
 
 // this will send to all nodes within h hops
-void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet) {
+void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type) {
   m_neighborhood_socket->Send(packet);
-  total_messages_sent++;
+  stats.incSent(type);
 }
 
 // this will send to all nodes within h_r hops
-void RhpmanApp::BroadcastToElection(Ptr<Packet> packet) {
+void RhpmanApp::BroadcastToElection(Ptr<Packet> packet, Stats::Type type) {
   m_election_socket->Send(packet);
-  total_messages_sent++;
+  stats.incSent(type);
 }
 
 // this does not have a TTL restriction, use this for targetted messages
-void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet) {
+void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type) {
   m_socket_recv->SendTo(packet, 0, InetSocketAddress(dest, APPLICATION_PORT));
-  total_messages_sent++;
+  stats.incSent(type);
 }
 
 // ================================================
@@ -542,18 +543,18 @@ void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet) {
 // send the broadcast to all h_r nodes to start a new election
 void RhpmanApp::SendStartElection() {
   Ptr<Packet> message = GenerateElectionRequest();
-  BroadcastToElection(message);
+  BroadcastToElection(message, Stats::Type::ELECTION_REQUEST);
 }
 
 // this will send an announcement that this node is a replica holder node
 void RhpmanApp::SendReplicationAnnouncement() {
   Ptr<Packet> message = GenerateReplicaAnnouncement();
-  BroadcastToElection(message);
+  BroadcastToElection(message, Stats::Type::REPLICATION_ANNOUNCEMENT);
 }
 
 void RhpmanApp::SendPing() {
   Ptr<Packet> message = GeneratePing(CalculateProfile());
-  BroadcastToNeighbors(message);
+  BroadcastToNeighbors(message, Stats::Type::PING);
 }
 
 // broadcast fitness value to all nodes in h_r hops
@@ -567,12 +568,16 @@ void RhpmanApp::SendFitness() {
 // if the node is stepping down this should be 0
 void RhpmanApp::SendRoleChange(uint32_t newReplicationNode) {
   Ptr<Packet> message = GenerateModeChange(newReplicationNode);
-  BroadcastToElection(message);
+  BroadcastToElection(message, Stats::Type::MODE_CHANGE);
 }
 
-void RhpmanApp::SendResponse(uint64_t requestID, uint32_t nodeID, const DataItem* data) {
+void RhpmanApp::SendResponse(
+    uint64_t requestID,
+    uint32_t nodeID,
+    const DataItem* data,
+    Stats::Type type) {
   Ptr<Packet> message = GenerateResponse(requestID, data);
-  SendMessage(Ipv4Address(nodeID), message);
+  SendMessage(Ipv4Address(nodeID), message, type);
 }
 
 // ================================================
@@ -797,7 +802,7 @@ void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataI
   DataItem* res = CheckLocalStorage(dataID);
 
   if (res != NULL) {
-    SendResponse(requestID, nodeID, res);
+    SendResponse(requestID, nodeID, res, Stats::Type::LOOKUP_RESPONSE);
     return;
   }
 
@@ -829,7 +834,7 @@ void RhpmanApp::HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message
     return;
   }
 
-  SemiProbabilisticSend(message, nodeID, m_forwardingThreshold);
+  SemiProbabilisticSend(message, nodeID, m_forwardingThreshold, Stats::Type::STORE);
 
   if (CalculateProfile() > m_carryingThreshold) {
     if (!m_buffer.StoreItem(data)) {
@@ -870,7 +875,7 @@ void RhpmanApp::RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint
     double sigma = CalculateProfile();
     Ptr<Packet> message = GenerateLookup(requestID, dataID, sigma, srcNode);
 
-    SemiProbabilisticSend(message, srcNode, sigma);
+    SemiProbabilisticSend(message, srcNode, sigma, Stats::Type::LOOKUP);
   }
 }
 
@@ -911,7 +916,7 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
 // this will send the synchonous data lookup requests to all of the known replica holder nodes
 void RhpmanApp::LookupFromReplicaHolders(uint64_t dataID, uint64_t requestID, uint32_t srcNode) {
   Ptr<Packet> message = GenerateLookup(requestID, dataID, 0, srcNode);
-  SendToNodes(message, m_replicating_nodes);
+  SendToNodes(message, m_replicating_nodes, Stats::Type::LOOKUP);
 }
 
 // this will generate the ID value to use for the requests this is a static function that should be
@@ -961,7 +966,7 @@ std::set<uint32_t> RhpmanApp::FilterAddress(const std::set<uint32_t> addresses, 
 // call this to send the all of the contents of the buffer to a new node
 void RhpmanApp::TransferBuffer(uint32_t nodeID) {
   Ptr<Packet> message = GenerateTransfer(m_buffer.GetAll());
-  SendMessage(Ipv4Address(nodeID), message);
+  SendMessage(Ipv4Address(nodeID), message, Stats::Type::TRANSFER);
 
   // remove items from the buffer once they have been transferer so they cant be forwarded again
   m_buffer.ClearStorage();
