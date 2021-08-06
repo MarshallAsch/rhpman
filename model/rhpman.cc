@@ -264,7 +264,6 @@ void RhpmanApp::StopApplication() {
   // std::cout << "stopping \n";
   stats.addPending(m_pendingLookups.size());
   m_election_watchdog_event.Cancel();
-  m_replica_announcement_event.Cancel();
   m_replica_exit_event.Cancel();
   m_ping_event.Cancel();
   m_election_results_event.Cancel();
@@ -442,16 +441,8 @@ Ptr<Packet> RhpmanApp::GeneratePing(double profile) {
   rhpman::packets::Ping* ping = message.mutable_ping();
   // ping.setReplicating_node(m_role == Role::REPLICATING);
   ping->set_delivery_probability(profile);
+  ping->set_replicating_node(m_role == Role::REPLICATING);
 
-  return GeneratePacket(message);
-}
-
-Ptr<Packet> RhpmanApp::GenerateReplicaAnnouncement() {
-  rhpman::packets::Message message;
-  message.set_id(GenerateMessageID());
-  message.set_timestamp(Simulator::Now().GetMilliSeconds());
-
-  message.mutable_announce();
   return GeneratePacket(message);
 }
 
@@ -570,15 +561,14 @@ void RhpmanApp::SendStartElection() {
   BroadcastToElection(message, Stats::Type::ELECTION_REQUEST);
 }
 
-// this will send an announcement that this node is a replica holder node
-void RhpmanApp::SendReplicationAnnouncement() {
-  Ptr<Packet> message = GenerateReplicaAnnouncement();
-  BroadcastToElection(message, Stats::Type::REPLICATION_ANNOUNCEMENT);
-}
-
 void RhpmanApp::SendPing() {
   Ptr<Packet> message = GeneratePing(CalculateProfile());
-  BroadcastToNeighbors(message, Stats::Type::PING);
+
+  if (m_role == Role::REPLICATING) {
+    BroadcastToElection(message, Stats::Type::PING);
+  } else {
+    BroadcastToNeighbors(message, Stats::Type::PING);
+  }
 }
 
 // broadcast fitness value to all nodes in h_r hops
@@ -615,16 +605,6 @@ void RhpmanApp::SchedulePing() {
 
   // schedule sending ping broadcast
   m_ping_event = Simulator::Schedule(m_profileDelay, &RhpmanApp::SchedulePing, this);
-}
-
-void RhpmanApp::ScheduleReplicaHolderAnnouncement() {
-  if (m_state != State::RUNNING) return;
-
-  SendReplicationAnnouncement();
-
-  // schedule sending replica holder announcement
-  m_replica_announcement_event =
-      Simulator::Schedule(m_profileDelay, &RhpmanApp::ScheduleReplicaHolderAnnouncement, this);
 }
 
 void RhpmanApp::ScheduleExitCheck() {
@@ -723,12 +703,12 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     }
 
     // switch based on message type
-    if (message.has_announce()) {
-      stats.incReceived(Stats::Type::REPLICATION_ANNOUNCEMENT);
-      HandleReplicationAnnouncement(srcAddress);
-    } else if (message.has_ping()) {
+    if (message.has_ping()) {
       stats.incReceived(Stats::Type::PING);
-      HandlePing(srcAddress, message.ping().delivery_probability());
+      HandlePing(
+          srcAddress,
+          message.ping().delivery_probability(),
+          message.ping().replicating_node());
     } else if (message.has_mode_change()) {
       stats.incReceived(Stats::Type::MODE_CHANGE);
       HandleModeChange(
@@ -771,9 +751,11 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
   }
 }
 
-void RhpmanApp::HandlePing(uint32_t nodeID, double profile) {
+void RhpmanApp::HandlePing(uint32_t nodeID, double profile, bool isReplicatingNode) {
   m_peerProfiles[nodeID] = profile;
   ScheduleProfileTimeout(nodeID);
+
+  if (isReplicatingNode) HandleReplicationAnnouncement(nodeID);
 
 // if the peer has a higher value then the current node, send items in the buffer to that node
 // this is optional
@@ -936,7 +918,6 @@ void RhpmanApp::ChangeRole(Role newRole) {
 void RhpmanApp::MakeReplicaHolderNode() {
   m_role = Role::REPLICATING;
   SendRoleChange(m_address);
-  ScheduleReplicaHolderAnnouncement();
   ScheduleExitCheck();
   stats.incStepUp();
 }
@@ -944,7 +925,6 @@ void RhpmanApp::MakeReplicaHolderNode() {
 // this helper will convert the new role to the ip address that should be sent
 void RhpmanApp::MakeNonReplicaHolderNode() {
   m_role = Role::NON_REPLICATING;
-  m_replica_announcement_event.Cancel();
   m_replica_exit_event.Cancel();
   SendRoleChange(0);
   stats.incStepDown();

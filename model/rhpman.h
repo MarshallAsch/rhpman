@@ -162,7 +162,6 @@ class RhpmanApp : public Application {
   void HandleReplicationAnnouncement(uint32_t nodeID);
 
   EventId m_election_watchdog_event;
-  EventId m_replica_announcement_event;
   EventId m_replica_exit_event;
   EventId m_ping_event;
   EventId m_election_results_event;
@@ -174,7 +173,6 @@ class RhpmanApp : public Application {
   void SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type);
   void SendStartElection();
   void SendPing();
-  void SendReplicationAnnouncement();
   void SendFitness();
   void SendRoleChange(uint32_t newReplicationNode);
   void SendSyncLookup(uint64_t requestID, uint32_t nodeID, uint64_t dataID);
@@ -188,7 +186,6 @@ class RhpmanApp : public Application {
   void ScheduleProfileTimeout(uint32_t nodeID);
   void ScheduleReplicaNodeTimeout(uint32_t nodeID);
   void SchedulePing();
-  void ScheduleReplicaHolderAnnouncement();
   void ScheduleExitCheck();
   void ScheduleRefreshRoutingTable();
 
@@ -241,7 +238,7 @@ class RhpmanApp : public Application {
 
   // message handlers
   void HandleRequest(Ptr<Socket> socket);
-  void HandlePing(uint32_t nodeID, double profile);
+  void HandlePing(uint32_t nodeID, double profile, bool isReplicatingNode);
   void HandleModeChange(uint32_t oldNode, uint32_t newNode);
   void HandleElectionRequest();
   void HandleElectionFitness(uint32_t nodeID, double fitness);
@@ -254,7 +251,6 @@ class RhpmanApp : public Application {
   Ptr<Packet> GenerateLookup(uint64_t messageID, uint64_t dataID, double sigma, uint32_t srcNode);
   Ptr<Packet> GenerateStore(const DataItem* data);
   Ptr<Packet> GeneratePing(double profile);
-  Ptr<Packet> GenerateReplicaAnnouncement();
   Ptr<Packet> GenerateElectionRequest();
   Ptr<Packet> GenerateModeChange(uint32_t newNode);
   Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items, bool stepUp);

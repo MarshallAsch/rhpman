@@ -7,22 +7,18 @@ message Message {
     uint64 timestamp = 2;
 
     oneof payload {
-        ReplicationNodeAnnouncement announce = 4;
-        Ping ping = 5;
-        Request request = 6;
-        Response response = 7;
-        ElectionRequest election = 8;
-        ElectionFitness fitness = 9;
-        ModeChange mode_change = 10;
-        Store store = 11;
-        Transfer transfer = 12;
+        Ping ping = 3;
+        Request request = 4;
+        Response response = 5;
+        ElectionRequest election = 6;
+        ElectionFitness fitness = 7;
+        ModeChange mode_change = 8;
+        Store store = 9;
+        Transfer transfer = 10;
     }
 }
 
 message ElectionRequest {
-}
-
-message ReplicationNodeAnnouncement {
 }
 
 message ElectionFitness {
@@ -36,6 +32,7 @@ message ModeChange {
 
 message Ping {
     double delivery_probability = 1;
+    bool replicating_node = 2;
 }
 
 message Request {

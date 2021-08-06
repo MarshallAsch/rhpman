@@ -38,8 +38,6 @@ Stats::~Stats() {}
 
 std::string Stats::TypeString(Stats::Type type) {
   switch (type) {
-    case REPLICATION_ANNOUNCEMENT:
-      return "REPLICATION_ANNOUNCEMENT";
     case PING:
       return "PING";
     case MODE_CHANGE:
