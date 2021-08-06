@@ -122,6 +122,14 @@ static std::set<uint32_t> setIntersection(const std::set<uint32_t> a, const std:
   return res;
 }
 
+std::set<uint32_t> Table::GetNeighbors(const std::string table, uint32_t maxHops) {
+  std::vector<std::string> parts = split(table, '\n');
+  std::vector<std::string> trimmed = trimStrings(parts);
+  std::vector<std::string> filtered = filterStrings(trimmed);
+
+  return createSet(getDestinations(filtered, maxHops));
+}
+
 Table::Table() {
   numTables = 0;
   currentTable = 0;
@@ -154,14 +162,9 @@ double Table::ComputeChangeDegree() {
 }
 
 void Table::UpdateTable(const std::string table) {
-  std::vector<std::string> parts = split(table, '\n');
-  std::vector<std::string> trimmed = trimStrings(parts);
-  std::vector<std::string> filtered = filterStrings(trimmed);
-
-  std::set<uint32_t> currentNeighbors = createSet(getDestinations(filtered, maxHops));
-
   nextTable();
-  tables[currentTable] = currentNeighbors;
+  tables[currentTable] = Table::GetNeighbors(table, maxHops);
+  ;
 }
 
 }  // namespace rhpman

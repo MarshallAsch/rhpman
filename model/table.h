@@ -25,6 +25,8 @@ class Table {
   ~Table();
   double ComputeChangeDegree();
   void UpdateTable(const std::string table);
+
+  static std::set<uint32_t> GetNeighbors(const std::string table, uint32_t maxHops);
 };
 
 }  // namespace rhpman

@@ -224,6 +224,8 @@ class RhpmanApp : public Application {
   void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes, Stats::Type type);
 
   void RefreshRoutingTable();
+  std::string GetRoutingTableString();
+  uint32_t CountExpectedRecipients(uint32_t hops);
 
   void PowerLossHandler();
   void PowerRechargedHandler();

@@ -41,8 +41,8 @@ class Stats {
   void addPending(uint64_t num);
 
   // stats related to messages
-  void incSent(Type type = Type::UNKOWN);
-  void incReceived(Type type = Type::UNKOWN);
+  void incSent(Type type, uint32_t expectedRecipients = 1);
+  void incReceived(Type type);
   void incDuplicate();
 
   void incStepUp();
