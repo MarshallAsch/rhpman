@@ -866,6 +866,8 @@ void RhpmanApp::HandleResponse(uint64_t requestID, DataItem* data) {
   if (IsResponsePending(requestID)) {
     m_pendingLookups.erase(requestID);
     SuccessfulLookup(data);
+  } else {
+    stats.incLate();
   }
 }
 
