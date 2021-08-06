@@ -44,8 +44,6 @@ std::string Stats::TypeString(Stats::Type type) {
       return "MODE_CHANGE";
     case ELECTION_REQUEST:
       return "ELECTION_REQUEST";
-    case ELECTION_FITNESS:
-      return "ELECTION_FITNESS";
     case STORE:
       return "STORE";
     case LOOKUP:

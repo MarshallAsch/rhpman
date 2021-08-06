@@ -269,7 +269,6 @@ void RhpmanApp::StopApplication() {
   m_election_results_event.Cancel();
   m_table_update_event.Cancel();
   CancelEventMap(m_profileTimeouts);
-  CancelEventMap(m_replicationNodeTimeouts);
   CancelEventMap(m_lookupTimeouts);
 }
 
@@ -433,15 +432,15 @@ Ptr<Packet> RhpmanApp::GenerateStore(const DataItem* data) {
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GeneratePing(double profile) {
+Ptr<Packet> RhpmanApp::GeneratePing(double profile, double fitness, bool isReplicating) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
 
   rhpman::packets::Ping* ping = message.mutable_ping();
-  // ping.setReplicating_node(m_role == Role::REPLICATING);
   ping->set_delivery_probability(profile);
-  ping->set_replicating_node(m_role == Role::REPLICATING);
+  ping->set_fitness(fitness);
+  ping->set_replicating_node(isReplicating);
 
   return GeneratePacket(message);
 }
@@ -455,14 +454,14 @@ Ptr<Packet> RhpmanApp::GenerateElectionRequest() {
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GenerateModeChange(uint32_t newNode) {
+Ptr<Packet> RhpmanApp::GenerateModeChange(uint32_t address, uint32_t newNode) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
 
   rhpman::packets::ModeChange* mode = message.mutable_mode_change();
 
-  mode->set_old_replication_node(m_address);
+  mode->set_old_replication_node(address);
   mode->set_new_replication_node(newNode);
 
   return GeneratePacket(message);
@@ -562,7 +561,8 @@ void RhpmanApp::SendStartElection() {
 }
 
 void RhpmanApp::SendPing() {
-  Ptr<Packet> message = GeneratePing(CalculateProfile());
+  Ptr<Packet> message =
+      GeneratePing(CalculateProfile(), CalculateElectionFitness(), m_role == Role::REPLICATING);
 
   if (m_role == Role::REPLICATING) {
     BroadcastToElection(message, Stats::Type::PING);
@@ -571,17 +571,11 @@ void RhpmanApp::SendPing() {
   }
 }
 
-// broadcast fitness value to all nodes in h_r hops
-void RhpmanApp::SendFitness() {
-  // send UDP broadcast
-  // set TTL to configure the distance it can travel
-}
-
 // this will take the IP address of the new node to become a replicating node
 // if the node is stepping up then this should be set to the current ip
 // if the node is stepping down this should be 0
 void RhpmanApp::SendRoleChange(uint32_t newReplicationNode) {
-  Ptr<Packet> message = GenerateModeChange(newReplicationNode);
+  Ptr<Packet> message = GenerateModeChange(m_address, newReplicationNode);
   BroadcastToElection(message, Stats::Type::MODE_CHANGE);
 }
 
@@ -656,16 +650,6 @@ void RhpmanApp::ScheduleProfileTimeout(uint32_t nodeID) {
       Simulator::Schedule(m_peer_timeout, &RhpmanApp::ProfileTimeout, this, nodeID);
 }
 
-void RhpmanApp::ScheduleReplicaNodeTimeout(uint32_t nodeID) {
-  if (m_state != State::RUNNING) return;
-
-  EventId e = m_replicationNodeTimeouts[nodeID];
-  e.Cancel();
-
-  m_replicationNodeTimeouts[nodeID] =
-      Simulator::Schedule(m_peer_timeout, &RhpmanApp::ReplicationNodeTimeout, this, nodeID);
-}
-
 void RhpmanApp::ScheduleRefreshRoutingTable() {
   if (m_state != State::RUNNING) return;
 
@@ -708,6 +692,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       HandlePing(
           srcAddress,
           message.ping().delivery_probability(),
+          message.ping().fitness(),
           message.ping().replicating_node());
     } else if (message.has_mode_change()) {
       stats.incReceived(Stats::Type::MODE_CHANGE);
@@ -717,9 +702,6 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     } else if (message.has_election()) {
       stats.incReceived(Stats::Type::ELECTION_REQUEST);
       HandleElectionRequest();
-    } else if (message.has_fitness()) {
-      stats.incReceived(Stats::Type::ELECTION_FITNESS);
-      HandleElectionFitness(srcAddress, message.fitness().fitness());
     } else if (message.has_store()) {
       stats.incReceived(Stats::Type::STORE);
       rhpman::packets::DataItem item = message.store().data();
@@ -751,32 +733,31 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
   }
 }
 
-void RhpmanApp::HandlePing(uint32_t nodeID, double profile, bool isReplicatingNode) {
+void RhpmanApp::HandlePing(
+    uint32_t nodeID,
+    double profile,
+    double fitness,
+    bool isReplicatingNode) {
   m_peerProfiles[nodeID] = profile;
+  m_peerFitness[nodeID] = fitness;
   ScheduleProfileTimeout(nodeID);
 
-  if (isReplicatingNode) HandleReplicationAnnouncement(nodeID);
+  if (isReplicatingNode) {
+    m_election_watchdog_event.Cancel();
+    m_replicating_nodes.insert(nodeID);
+
+    if (m_replicating_nodes.find(nodeID) == m_replicating_nodes.end()) {
+      TransferBuffer(nodeID, false);
+    }
+  }
 
 // if the peer has a higher value then the current node, send items in the buffer to that node
 // this is optional
 #if defined(__RHPMAN_OPTIONAL_CARRIER_FORWARDING)
-
   if (profile > CalculateProfile()) {
     TransferBuffer(nodeID, false);
   }
-
 #endif  // __RHPMAN_OPTIONAL_CARRIER_FORWARDING
-}
-
-void RhpmanApp::HandleReplicationAnnouncement(uint32_t nodeID) {
-  m_election_watchdog_event.Cancel();
-
-  if (m_replicating_nodes.find(nodeID) == m_replicating_nodes.end()) {
-    TransferBuffer(nodeID, false);
-  }
-
-  m_replicating_nodes.insert(nodeID);
-  ScheduleReplicaNodeTimeout(nodeID);
 }
 
 // this will handle updating the nodes in the replication node list
@@ -807,10 +788,6 @@ void RhpmanApp::HandleElectionRequest() {
   }
 
   RunElection();
-}
-
-void RhpmanApp::HandleElectionFitness(uint32_t nodeID, double fitness) {
-  m_peerFitness[nodeID] = fitness;
 }
 
 void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID) {
@@ -903,8 +880,7 @@ void RhpmanApp::RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint
 void RhpmanApp::RunElection() {
   m_min_election_time = Simulator::Now() + m_election_cooldown;
 
-  CalculateElectionFitness();
-  SendFitness();
+  SendPing();
   ScheduleElectionCheck();
 }
 
@@ -945,12 +921,6 @@ void RhpmanApp::LookupFromReplicaHolders(uint64_t dataID, uint64_t requestID, ui
 uint64_t RhpmanApp::GenerateMessageID() {
   static uint64_t id = 0;
   return ++id;
-}
-
-// reset the fitness map values, call this after checking the election results
-void RhpmanApp::ResetFitnesses() {
-  m_myFitness = 0;
-  m_peerFitness.clear();
 }
 
 std::set<uint32_t> RhpmanApp::GetRecipientAddresses(double sigma) {
@@ -1010,14 +980,15 @@ double RhpmanApp::GetWeightedEnergyLevel() { return m_we * GetEnergyLevel(); }
 double RhpmanApp::CalculateElectionFitness() {
   double changeDegree = CalculateChangeDegree();
 
+  double fitness;
   // check to make sure it is not =
   if (fabs(changeDegree - 0) <= EPSILON) {
-    m_myFitness = DBL_MAX;
+    fitness = DBL_MAX;
   } else {
-    m_myFitness = (GetWeightedStorageSpace() + GetWeightedEnergyLevel()) / changeDegree;
+    fitness = (GetWeightedStorageSpace() + GetWeightedEnergyLevel()) / changeDegree;
   }
 
-  return m_myFitness;
+  return fitness;
 }
 
 void RhpmanApp::PowerLossHandler() {
@@ -1111,24 +1082,23 @@ void RhpmanApp::CancelEventMap(std::map<uint64_t, EventId> events) {
 // a replication node announce to all the other nodes the results if the status is changing
 void RhpmanApp::CheckElectionResults() {
   Role newRole = GetNewRole();
-  ResetFitnesses();
   ChangeRole(newRole);
 }
 
 RhpmanApp::Role RhpmanApp::GetNewRole() {
+  double myFitness = CalculateElectionFitness();
   for (std::map<uint32_t, double>::iterator it = m_peerFitness.begin(); it != m_peerFitness.end();
        ++it) {
-    if (m_myFitness < it->second) return Role::NON_REPLICATING;
+    if (myFitness < it->second) return Role::NON_REPLICATING;
   }
 
   return Role::REPLICATING;
 }
 
 // this will remove the nodes information from the probabilistic table
-void RhpmanApp::ProfileTimeout(uint32_t nodeID) { m_peerProfiles.erase(nodeID); }
-
-// this will remove the replication node from the list if missed its checkins
-void RhpmanApp::ReplicationNodeTimeout(uint32_t nodeID) {
+void RhpmanApp::ProfileTimeout(uint32_t nodeID) {
+  m_peerProfiles.erase(nodeID);
+  m_peerFitness.erase(nodeID);
   m_replicating_nodes.erase(nodeID);
 
   if (m_replicating_nodes.size() == 0) {
