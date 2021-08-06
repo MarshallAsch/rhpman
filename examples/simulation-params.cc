@@ -96,6 +96,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   bool optStaggeredStart = false;
 
   double optInitalPower = 20000;
+  double optLowPowerThreshold = 0.0;
 
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
@@ -112,10 +113,15 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
+  //  cmd.AddValue(
+  //      "initalPower",
+  //      "Amount of inital battery power that each node starts with (J)",
+  //      optInitalPower);
   cmd.AddValue(
-      "initalPower",
-      "Amount of inital battery power that each node starts with (J)",
-      optInitalPower);
+      "lowPowerThreshold",
+      "The battery precentage at which a node will step down as a replication node if it drops "
+      "below this point",
+      optLowPowerThreshold);
   cmd.AddValue(
       "lookupTime",
       "number of seconds to used to generate the delay between data lookup",
@@ -254,12 +260,18 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
-  if (optStorageWeight != 1) {  // if (optStorageWeight < 0 || optStorageWeight > 1) {
+  if (optLowPowerThreshold < 0 || optLowPowerThreshold > 1) {
+    std::cerr << "Low power threshold (" << optLowPowerThreshold << ") is not a percentage"
+              << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
+  if (optStorageWeight < 0 || optStorageWeight > 1) {
     std::cerr << "Storage space weight (" << optStorageWeight << ") is not a probability"
               << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }
-  if (optEnergyWeight != 0) {  // if (optEnergyWeight < 0 || optEnergyWeight > 1) {
+  if (optEnergyWeight < 0 || optEnergyWeight > 1) {
     std::cerr << "Energy level weight (" << optEnergyWeight << ") is not a probability"
               << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
@@ -352,6 +364,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.bufferSpace = optBufferSpace;
 
   result.initalPower = optInitalPower;
+  result.lowPowerThreshold = optLowPowerThreshold;
 
   result.staggeredStart = optStaggeredStart;
 

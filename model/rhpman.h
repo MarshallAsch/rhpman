@@ -142,6 +142,8 @@ class RhpmanApp : public Application {
   Callback<void, DataItem*> m_success;
   Callback<void, uint64_t> m_failed;
 
+  double m_low_power_threshold;
+
   // timeouts
   Time m_request_timeout;
   Time m_peer_timeout;
@@ -151,6 +153,7 @@ class RhpmanApp : public Application {
                              // requested by a node
 
   // event handlers
+  void ExitCheck();
   void LookupTimeout(uint64_t requestID, uint64_t dataID);
   void TriggerElection();
   void CheckElectionResults();
@@ -160,6 +163,7 @@ class RhpmanApp : public Application {
 
   EventId m_election_watchdog_event;
   EventId m_replica_announcement_event;
+  EventId m_replica_exit_event;
   EventId m_ping_event;
   EventId m_election_results_event;
   EventId m_table_update_event;
@@ -185,6 +189,7 @@ class RhpmanApp : public Application {
   void ScheduleReplicaNodeTimeout(uint32_t nodeID);
   void SchedulePing();
   void ScheduleReplicaHolderAnnouncement();
+  void ScheduleExitCheck();
   void ScheduleRefreshRoutingTable();
 
   // other helpers
@@ -200,7 +205,7 @@ class RhpmanApp : public Application {
       const std::set<uint32_t> addresses,
       const std::set<uint32_t> exclude);
   std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
-  void TransferBuffer(uint32_t nodeID);
+  void TransferBuffer(uint32_t nodeID, bool stepUp);
   DataItem* CheckLocalStorage(uint64_t dataID);
 
   Ptr<Socket> SetupSocket(uint16_t port, uint32_t ttl);
@@ -224,6 +229,7 @@ class RhpmanApp : public Application {
   void PowerRechargedHandler();
 
   // calculation helpers
+  double GetEnergyLevel();
   double GetWeightedEnergyLevel();
   double GetWeightedStorageSpace();
   double CalculateElectionFitness();
@@ -239,7 +245,7 @@ class RhpmanApp : public Application {
   void HandleElectionFitness(uint32_t nodeID, double fitness);
   void HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID);
   void HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message);
-  uint32_t HandleTransfer(std::vector<DataItem*> data);
+  uint32_t HandleTransfer(std::vector<DataItem*> data, bool stepUp);
   void HandleResponse(uint64_t requestID, DataItem* data);
 
   // message generators
@@ -249,7 +255,7 @@ class RhpmanApp : public Application {
   Ptr<Packet> GenerateReplicaAnnouncement();
   Ptr<Packet> GenerateElectionRequest();
   Ptr<Packet> GenerateModeChange(uint32_t newNode);
-  Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items);
+  Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items, bool stepUp);
   Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
 
   void SuccessfulLookup(DataItem* data);

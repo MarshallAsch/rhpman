@@ -9,7 +9,7 @@
 #     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
 
 def build(bld):
-    module = bld.create_ns3_module('rhpman', ['core', 'stats', 'aodv', 'dsdv', 'internet', 'mobility', 'wifi'])
+    module = bld.create_ns3_module('rhpman', ['core', 'stats', 'aodv', 'dsdv', 'internet', 'mobility', 'energy', 'wifi'])
     module.source = [
         'model/rhpman.cc',
         'model/dataItem.cc',

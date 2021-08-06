@@ -47,6 +47,7 @@
 #include "ns3/yans-wifi-helper.h"
 
 #include "ns3/energy-module.h"
+#include "ns3/li-ion-energy-source.h"
 #include "ns3/wifi-radio-energy-model-helper.h"
 
 //#include "logging.h"
@@ -198,11 +199,11 @@ int main(int argc, char* argv[]) {
   /* energy source */
   NS_LOG_UNCOND("Assigning energy model...");
 
-  BasicEnergySourceHelper basicSourceHelper;
+  LiIonEnergySourceHelper liIonSourceHelper;
   // configure energy source
-  basicSourceHelper.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(params.initalPower));
+  // liIonSourceHelper.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(params.initalPower));
   // install source
-  EnergySourceContainer sources = basicSourceHelper.Install(allAdHocNodes);
+  EnergySourceContainer sources = liIonSourceHelper.Install(allAdHocNodes);
   /* device energy model */
   WifiRadioEnergyModelHelper radioEnergyHelper;
   // configure radio energy model
@@ -246,6 +247,7 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("StorageWeight", DoubleValue(params.storageWeight));
   rhpman.SetAttribute("EnergyWeight", DoubleValue(params.energyWeight));
   rhpman.SetAttribute("ProcessingWeight", DoubleValue(params.processingWeight));
+  rhpman.SetAttribute("LowPowerThreshold", DoubleValue(params.lowPowerThreshold));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   if (params.staggeredStart) {
