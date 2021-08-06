@@ -35,6 +35,8 @@ class Stats {
   void incFailed();
   void incLate();
   void incCache();
+  void incPowerloss();
+  void incPowerRecharge();
 
   void addPending(uint64_t num);
 

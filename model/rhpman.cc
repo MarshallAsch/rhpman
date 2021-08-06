@@ -34,6 +34,9 @@
 #include "ns3/pointer.h"
 #include "ns3/udp-socket-factory.h"
 
+#include "ns3/energy-module.h"
+#include "ns3/wifi-radio-energy-model.h"
+
 #include "logging.h"
 #include "nsutil.h"
 #include "rhpman.h"
@@ -182,6 +185,14 @@ void RhpmanApp::StartApplication() {
   NS_LOG_DEBUG("Starting RhpmanApp");
   m_state = State::NOT_STARTED;
 
+  // set powerloss callbacks
+  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  Ptr<WifiRadioEnergyModel> model = energy->FindDeviceEnergyModels("ns3::WifiRadioEnergyModel")
+                                        .Get(0)
+                                        ->GetObject<WifiRadioEnergyModel>();
+  model->SetEnergyDepletionCallback(MakeCallback(&RhpmanApp::PowerLossHandler, this));
+  model->SetEnergyRechargedCallback(MakeCallback(&RhpmanApp::PowerRechargedHandler, this));
+
   if (m_socket_recv == 0) {
     m_socket_recv = SetupSocket(APPLICATION_PORT, 0);
   }
@@ -237,6 +248,11 @@ void RhpmanApp::StopApplication() {
   }
 
   m_state = State::STOPPED;
+
+  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  // double energyLevel = energy->GetEnergyFraction();
+  std::cerr << "Node: " << GetNode()->GetId() << " has " << energy->GetEnergyFraction()
+            << " battery left\n";
 
   // TODO: Cancel events.
   // std::cout << "stopping \n";
@@ -976,6 +992,15 @@ void RhpmanApp::TransferBuffer(uint32_t nodeID) {
 //  calculation helpers
 // ================================================
 
+double RhpmanApp::GetWeightedStorageSpace() {
+  return m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace);
+}
+
+double RhpmanApp::GetWeightedEnergyLevel() {
+  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  return m_we * energy->GetEnergyFraction();
+}
+
 double RhpmanApp::CalculateElectionFitness() {
   double changeDegree = CalculateChangeDegree();
 
@@ -983,10 +1008,22 @@ double RhpmanApp::CalculateElectionFitness() {
   if (fabs(changeDegree) <= 0.00001) {
     m_myFitness = DBL_MAX;
   } else {
-    m_myFitness = (m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace)) / changeDegree;
+    m_myFitness = (GetWeightedStorageSpace() + GetWeightedEnergyLevel()) / changeDegree;
   }
 
   return m_myFitness;
+}
+
+void RhpmanApp::PowerLossHandler() {
+  stats.incPowerloss();
+  std::cerr << "Node: " << GetNode()->GetId() << " lost power at: " << Simulator::Now().GetSeconds()
+            << "\n";
+}
+
+void RhpmanApp::PowerRechargedHandler() {
+  stats.incPowerRecharge();
+  std::cerr << "Node: " << GetNode()->GetId()
+            << " regained power at: " << Simulator::Now().GetSeconds() << "\n";
 }
 
 // this is the value of P_ij

@@ -220,7 +220,12 @@ class RhpmanApp : public Application {
 
   void RefreshRoutingTable();
 
+  void PowerLossHandler();
+  void PowerRechargedHandler();
+
   // calculation helpers
+  double GetWeightedEnergyLevel();
+  double GetWeightedStorageSpace();
   double CalculateElectionFitness();
   double CalculateProfile();
   double CalculateChangeDegree();

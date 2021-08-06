@@ -34,9 +34,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   double optWaitTime = 30.0_seconds;
 
-  // Simulation seed.
-  uint32_t optSeed = 1;
-
   // Node parameters.
   uint32_t optTotalNodes = 160;
   uint32_t optNodesPerPartition = 8;
@@ -98,6 +95,8 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   bool optStaggeredStart = false;
 
+  double optInitalPower = 20000;
+
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
 
@@ -113,6 +112,10 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
+  cmd.AddValue(
+      "initalPower",
+      "Amount of inital battery power that each node starts with (J)",
+      optInitalPower);
   cmd.AddValue(
       "lookupTime",
       "number of seconds to used to generate the delay between data lookup",
@@ -301,7 +304,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   pbnVelocityGenerator->SetAttribute("Min", DoubleValue(optPbnVelocityMin));
   pbnVelocityGenerator->SetAttribute("Max", DoubleValue(optPbnVelocityMax));
 
-  result.seed = optSeed;
   result.runtime = Seconds(optRuntime);
   result.area = SimulationArea(
       std::pair<double, double>(0.0, 0.0),
@@ -348,6 +350,8 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   result.storageSpace = optStorageSpace;
   result.bufferSpace = optBufferSpace;
+
+  result.initalPower = optInitalPower;
 
   result.staggeredStart = optStaggeredStart;
 

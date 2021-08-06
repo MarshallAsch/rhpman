@@ -12,6 +12,9 @@ static uint64_t pending;
 static uint64_t stepUps;
 static uint64_t stepDowns;
 
+static uint64_t powerLoss;
+static uint64_t recharged;
+
 static uint64_t totalSent;
 static uint64_t totalReceived;
 static uint64_t duplicatesReceived;
@@ -71,6 +74,9 @@ void Stats::Reset() {
   stepUps = 0;
   stepDowns = 0;
 
+  powerLoss = 0;
+  recharged = 0;
+
   totalSent = 0;
   totalReceived = 0;
   duplicatesReceived = 0;
@@ -94,18 +100,21 @@ void Stats::Print(std::string prefix) {
   std::cout << prefix << "TotalStepUp\t" << unsigned(stepUps) << "\n";
   std::cout << prefix << "TotalStepDowns\t" << unsigned(stepDowns) << "\n";
 
+  std::cout << prefix << "TotalPowerloss\t" << unsigned(powerLoss) << "\n";
+  std::cout << prefix << "TotalPowerRecharge\t" << unsigned(recharged) << "\n";
+
   // message stats
   std::cout << prefix << "TotalSent\t" << unsigned(totalSent) << "\n";
   std::cout << prefix << "TotalReceived\t" << unsigned(totalReceived) << "\n";
   std::cout << prefix << "TotalDuplicates\t" << unsigned(duplicatesReceived) << "\n";
 
   for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
-    std::cout << prefix << "Total" << TypeString(static_cast<Stats::Type>(i)) << "Sent\t"
+    std::cout << prefix << "TotalSent" << TypeString(static_cast<Stats::Type>(i)) << "\t"
               << unsigned(sentCounters[i]) << "\n";
   }
 
   for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
-    std::cout << prefix << "Total" << TypeString(static_cast<Stats::Type>(i)) << "Received\t"
+    std::cout << prefix << "TotalReceived" << TypeString(static_cast<Stats::Type>(i)) << "\t"
               << unsigned(receivedCounters[i]) << "\n";
   }
 }
@@ -140,5 +149,8 @@ void Stats::incDuplicate() { duplicatesReceived++; }
 void Stats::incStepUp() { stepUps++; }
 
 void Stats::incStepDown() { stepDowns++; }
+
+void Stats::incPowerloss() { powerLoss++; }
+void Stats::incPowerRecharge() { recharged++; }
 
 };  // namespace rhpman
