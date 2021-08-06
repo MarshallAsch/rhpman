@@ -1,3 +1,10 @@
+![Code linter on main](https://img.shields.io/github/workflow/status/marshallasch/rhpman/Clang-format/main?style=plastic)
+![ns3 build checker on main](https://img.shields.io/github/workflow/status/marshallasch/rhpman/build-ns3/main?style=plastic)
+![GitHub](https://img.shields.io/github/license/marshallasch/rhpman?style=plastic)
+![Lines of code](https://img.shields.io/tokei/lines/github/marshallasch/rhpman?style=plastic)
+![NS3 version](https://img.shields.io/badge/NS--3-3.32-blueviolet?style=plastic)
+
+
 # rhpman-sim
 
 This NS-3 simulator code module that attempts to implement the RHPMAN scheme
