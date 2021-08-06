@@ -747,7 +747,7 @@ void RhpmanApp::HandlePing(
     m_replicating_nodes.insert(nodeID);
 
     if (m_replicating_nodes.find(nodeID) == m_replicating_nodes.end()) {
-      TransferBuffer(nodeID, false);
+      TransferBuffer(nodeID);
     }
   }
 
@@ -755,7 +755,7 @@ void RhpmanApp::HandlePing(
 // this is optional
 #if defined(__RHPMAN_OPTIONAL_CARRIER_FORWARDING)
   if (profile > CalculateProfile()) {
-    TransferBuffer(nodeID, false);
+    TransferBuffer(nodeID);
   }
 #endif  // __RHPMAN_OPTIONAL_CARRIER_FORWARDING
 }
@@ -907,7 +907,8 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   SendRoleChange(0);
   stats.incStepDown();
 
-  // TODO: when to send the current replica data to the new replica node?
+  // does not transfer storage if it is an election stepdown, nothing was described for this
+  // only hand off it stepping down
 }
 
 // this will send the synchonous data lookup requests to all of the known replica holder nodes
@@ -955,12 +956,21 @@ std::set<uint32_t> RhpmanApp::FilterAddress(const std::set<uint32_t> addresses, 
 }
 
 // call this to send the all of the contents of the buffer to a new node
-void RhpmanApp::TransferBuffer(uint32_t nodeID, bool stepUp) {
-  Ptr<Packet> message = GenerateTransfer(m_buffer.GetAll(), stepUp);
-  SendMessage(Ipv4Address(nodeID), message, Stats::Type::TRANSFER);
-
+void RhpmanApp::TransferBuffer(uint32_t nodeID) {
+  SendStorage(nodeID, StorageType::BUFFER, false);
   // remove items from the buffer once they have been transferer so they cant be forwarded again
   m_buffer.ClearStorage();
+}
+
+void RhpmanApp::TransferStorage(uint32_t nodeID, bool stepUp) {
+  SendStorage(nodeID, StorageType::STORAGE, stepUp);
+}
+
+void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
+  Ptr<Packet> message = GenerateTransfer(
+      type == StorageType::BUFFER ? m_buffer.GetAll() : m_storage.GetAll(),
+      stepUp);
+  SendMessage(Ipv4Address(nodeID), message, Stats::Type::TRANSFER);
 }
 
 // ================================================
@@ -1031,9 +1041,9 @@ void RhpmanApp::ExitCheck() {
   if (m_role != Role::REPLICATING) return;
 
   if (GetEnergyLevel() < m_low_power_threshold) {
-    uint32_t newReplicaNode = 0;  // TODO: figure out what to set this too
+    uint32_t newReplicaNode = GetNextBestReplicaNode();
     MakeNonReplicaHolderNode();
-    TransferBuffer(newReplicaNode, true);
+    TransferStorage(newReplicaNode, true);
   }
 }
 
@@ -1093,6 +1103,20 @@ RhpmanApp::Role RhpmanApp::GetNewRole() {
   }
 
   return Role::REPLICATING;
+}
+
+uint32_t RhpmanApp::GetNextBestReplicaNode() {
+  double fitness = 0;
+  uint32_t node = 0;
+  for (std::map<uint32_t, double>::iterator it = m_peerFitness.begin(); it != m_peerFitness.end();
+       ++it) {
+    if (fitness < it->second) {
+      fitness = it->second;
+      node = it->first;
+    }
+  }
+
+  return node;
 }
 
 // this will remove the nodes information from the probabilistic table

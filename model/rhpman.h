@@ -108,6 +108,8 @@ class RhpmanApp : public Application {
   static void CleanUp();
 
  private:
+  enum StorageType { BUFFER = 0, STORAGE };
+
   // Application lifecycle methods.
 
   void StartApplication() override;
@@ -199,7 +201,9 @@ class RhpmanApp : public Application {
       const std::set<uint32_t> addresses,
       const std::set<uint32_t> exclude);
   std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
-  void TransferBuffer(uint32_t nodeID, bool stepUp);
+  void TransferBuffer(uint32_t nodeID);
+  void TransferStorage(uint32_t nodeID, bool stepUp);
+  void SendStorage(uint32_t nodeID, StorageType type, bool stepUp);
   DataItem* CheckLocalStorage(uint64_t dataID);
 
   Ptr<Socket> SetupSocket(uint16_t port, uint32_t ttl);
@@ -220,6 +224,7 @@ class RhpmanApp : public Application {
   void RefreshRoutingTable();
   std::string GetRoutingTableString();
   uint32_t CountExpectedRecipients(uint32_t hops);
+  uint32_t GetNextBestReplicaNode();
 
   void PowerLossHandler();
   void PowerRechargedHandler();
