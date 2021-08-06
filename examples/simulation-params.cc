@@ -14,6 +14,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
+#define EPSILON 0.00001
+
 #include <inttypes.h>
 #include <cmath>
 #include <utility>
@@ -279,6 +281,11 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   if (optProcessingWeight != 0) {  // if (optProcessingWeight < 0 || optProcessingWeight > 1) {
     std::cerr << "Processing power weight (" << optProcessingWeight << ") is not a probability"
               << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
+  if (fabs((optStorageWeight + optEnergyWeight + optProcessingWeight) - 1) > EPSILON) {
+    std::cerr << "Fitness weights can not sum to greater than one" << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
