@@ -89,8 +89,8 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optPeerTimeout = 12.0_seconds;
   double optRequestTimeout = 0.0_seconds;  // set to 0 to ignore timeouts
 
-  double optStorageWeight = 1.0;
-  double optEnergyWeight = 0.0;
+  double optStorageWeight = 0.5;
+  double optEnergyWeight = 0.5;
   double optProcessingWeight = 0.0;
 
   bool optStaggeredStart = false;
