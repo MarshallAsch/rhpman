@@ -41,8 +41,6 @@ namespace rhpman {
 /// \see SimulationParameters::parse
 class SimulationParameters {
  public:
-  /// Simulation RNG seed.
-  uint32_t seed;
   /// Simulation runtime.
   ns3::Time runtime;
   /// Total nodes used in the simulation.
@@ -95,6 +93,9 @@ class SimulationParameters {
   double processingWeight;
 
   bool staggeredStart;
+
+  double initalPower;
+  double lowPowerThreshold;
 
   uint32_t storageSpace;
   uint32_t bufferSpace;

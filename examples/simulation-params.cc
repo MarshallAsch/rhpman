@@ -14,6 +14,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
+#define EPSILON 0.00001
+
 #include <inttypes.h>
 #include <cmath>
 #include <utility>
@@ -33,9 +35,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optRuntime = 2.0_minutes;
 
   double optWaitTime = 30.0_seconds;
-
-  // Simulation seed.
-  uint32_t optSeed = 1;
 
   // Node parameters.
   uint32_t optTotalNodes = 160;
@@ -92,11 +91,14 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optPeerTimeout = 12.0_seconds;
   double optRequestTimeout = 0.0_seconds;  // set to 0 to ignore timeouts
 
-  double optStorageWeight = 1.0;
-  double optEnergyWeight = 0.0;
+  double optStorageWeight = 0.5;
+  double optEnergyWeight = 0.5;
   double optProcessingWeight = 0.0;
 
   bool optStaggeredStart = false;
+
+  double optInitalPower = 20000;
+  double optLowPowerThreshold = 0.0;
 
   // Animation parameters.
   std::string animationTraceFilePath = "rhpman.xml";
@@ -113,6 +115,15 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
+  //  cmd.AddValue(
+  //      "initalPower",
+  //      "Amount of inital battery power that each node starts with (J)",
+  //      optInitalPower);
+  cmd.AddValue(
+      "lowPowerThreshold",
+      "The battery precentage at which a node will step down as a replication node if it drops "
+      "below this point",
+      optLowPowerThreshold);
   cmd.AddValue(
       "lookupTime",
       "number of seconds to used to generate the delay between data lookup",
@@ -251,12 +262,18 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
-  if (optStorageWeight != 1) {  // if (optStorageWeight < 0 || optStorageWeight > 1) {
+  if (optLowPowerThreshold < 0 || optLowPowerThreshold > 1) {
+    std::cerr << "Low power threshold (" << optLowPowerThreshold << ") is not a percentage"
+              << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
+  if (optStorageWeight < 0 || optStorageWeight > 1) {
     std::cerr << "Storage space weight (" << optStorageWeight << ") is not a probability"
               << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }
-  if (optEnergyWeight != 0) {  // if (optEnergyWeight < 0 || optEnergyWeight > 1) {
+  if (optEnergyWeight < 0 || optEnergyWeight > 1) {
     std::cerr << "Energy level weight (" << optEnergyWeight << ") is not a probability"
               << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
@@ -264,6 +281,11 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   if (optProcessingWeight != 0) {  // if (optProcessingWeight < 0 || optProcessingWeight > 1) {
     std::cerr << "Processing power weight (" << optProcessingWeight << ") is not a probability"
               << std::endl;
+    return std::pair<SimulationParameters, bool>(result, false);
+  }
+
+  if (fabs((optStorageWeight + optEnergyWeight + optProcessingWeight) - 1) > EPSILON) {
+    std::cerr << "Fitness weights can not sum to greater than one" << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
@@ -301,7 +323,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   pbnVelocityGenerator->SetAttribute("Min", DoubleValue(optPbnVelocityMin));
   pbnVelocityGenerator->SetAttribute("Max", DoubleValue(optPbnVelocityMax));
 
-  result.seed = optSeed;
   result.runtime = Seconds(optRuntime);
   result.area = SimulationArea(
       std::pair<double, double>(0.0, 0.0),
@@ -348,6 +369,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   result.storageSpace = optStorageSpace;
   result.bufferSpace = optBufferSpace;
+
+  result.initalPower = optInitalPower;
+  result.lowPowerThreshold = optLowPowerThreshold;
 
   result.staggeredStart = optStaggeredStart;
 

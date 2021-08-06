@@ -60,6 +60,7 @@ message Store {
 
 message Transfer {
     repeated DataItem items = 1;
+    bool stepup = 2;
 }
 
 message DataItem {

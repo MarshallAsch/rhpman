@@ -46,6 +46,10 @@
 #include "ns3/wifi-standards.h"
 #include "ns3/yans-wifi-helper.h"
 
+#include "ns3/energy-module.h"
+#include "ns3/li-ion-energy-source.h"
+#include "ns3/wifi-radio-energy-model-helper.h"
+
 //#include "logging.h"
 #include "ns3/data-access-helper.h"
 #include "ns3/rhpman-helper.h"
@@ -187,8 +191,26 @@ int main(int argc, char* argv[]) {
   wifi.SetStandard(WIFI_STANDARD_80211b);
 
   NS_LOG_UNCOND("Assigning MAC addresses in ad-hoc mode...");
-  auto adhocDevices = wifi.Install(wifiPhy, wifiMac, allAdHocNodes);
+  NetDeviceContainer adhocDevices = wifi.Install(wifiPhy, wifiMac, allAdHocNodes);
   // wifiPhy.EnablePcap("rhpman", adhocDevices);
+
+  /** Energy Model **/
+  /***************************************************************************/
+  /* energy source */
+  NS_LOG_UNCOND("Assigning energy model...");
+
+  LiIonEnergySourceHelper liIonSourceHelper;
+  // configure energy source
+  // liIonSourceHelper.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(params.initalPower));
+  // install source
+  EnergySourceContainer sources = liIonSourceHelper.Install(allAdHocNodes);
+  /* device energy model */
+  WifiRadioEnergyModelHelper radioEnergyHelper;
+  // configure radio energy model
+  // radioEnergyHelper.Set ("TxCurrentA", DoubleValue (0.0174));
+  // install device model
+  DeviceEnergyModelContainer deviceModels = radioEnergyHelper.Install(adhocDevices, sources);
+  /***************************************************************************/
 
   NS_LOG_UNCOND("Setting up Internet stacks...");
   InternetStackHelper internet;
@@ -225,6 +247,7 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("StorageWeight", DoubleValue(params.storageWeight));
   rhpman.SetAttribute("EnergyWeight", DoubleValue(params.energyWeight));
   rhpman.SetAttribute("ProcessingWeight", DoubleValue(params.processingWeight));
+  rhpman.SetAttribute("LowPowerThreshold", DoubleValue(params.lowPowerThreshold));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   if (params.staggeredStart) {

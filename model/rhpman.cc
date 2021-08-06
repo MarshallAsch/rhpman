@@ -14,6 +14,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
+#define EPSILON 0.00001
+
 #include <algorithm>
 #include <map>
 
@@ -33,6 +35,9 @@
 #include "ns3/output-stream-wrapper.h"
 #include "ns3/pointer.h"
 #include "ns3/udp-socket-factory.h"
+
+#include "ns3/energy-module.h"
+#include "ns3/wifi-radio-energy-model.h"
 
 #include "logging.h"
 #include "nsutil.h"
@@ -76,6 +81,13 @@ TypeId RhpmanApp::GetTypeId() {
               "(w_s)",
               DoubleValue(1),
               MakeDoubleAccessor(&RhpmanApp::m_ws),
+              MakeDoubleChecker<double>(0.0, 1.0))
+          .AddAttribute(
+              "LowPowerThreshold",
+              "The battery precentage at which a node will step down as a replication node if it "
+              "drops below this point",
+              DoubleValue(0.0),
+              MakeDoubleAccessor(&RhpmanApp::m_low_power_threshold),
               MakeDoubleChecker<double>(0.0, 1.0))
           .AddAttribute(
               "EnergyWeight",
@@ -182,6 +194,14 @@ void RhpmanApp::StartApplication() {
   NS_LOG_DEBUG("Starting RhpmanApp");
   m_state = State::NOT_STARTED;
 
+  // set powerloss callbacks
+  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  Ptr<WifiRadioEnergyModel> model = energy->FindDeviceEnergyModels("ns3::WifiRadioEnergyModel")
+                                        .Get(0)
+                                        ->GetObject<WifiRadioEnergyModel>();
+  model->SetEnergyDepletionCallback(MakeCallback(&RhpmanApp::PowerLossHandler, this));
+  model->SetEnergyRechargedCallback(MakeCallback(&RhpmanApp::PowerRechargedHandler, this));
+
   if (m_socket_recv == 0) {
     m_socket_recv = SetupSocket(APPLICATION_PORT, 0);
   }
@@ -238,11 +258,14 @@ void RhpmanApp::StopApplication() {
 
   m_state = State::STOPPED;
 
+  std::cerr << "Node: " << GetNode()->GetId() << " has " << GetEnergyLevel() << " battery left\n";
+
   // TODO: Cancel events.
   // std::cout << "stopping \n";
   stats.addPending(m_pendingLookups.size());
   m_election_watchdog_event.Cancel();
   m_replica_announcement_event.Cancel();
+  m_replica_exit_event.Cancel();
   m_ping_event.Cancel();
   m_election_results_event.Cancel();
   m_table_update_event.Cancel();
@@ -454,12 +477,13 @@ Ptr<Packet> RhpmanApp::GenerateModeChange(uint32_t newNode) {
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<DataItem*> items) {
+Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<DataItem*> items, bool stepUp) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
 
   rhpman::packets::Transfer* transfer = message.mutable_transfer();
+  transfer->set_stepup(stepUp);
 
   for (std::vector<DataItem*>::iterator it = items.begin(); it != items.end(); ++it) {
     rhpman::packets::DataItem* item = transfer->add_items();
@@ -521,7 +545,7 @@ static rhpman::packets::Message ParsePacket(const Ptr<Packet> packet) {
 // this will send to all nodes within h hops
 void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type) {
   m_neighborhood_socket->Send(packet);
-  stats.incSent(type);
+  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_neighborhoodHops));
 }
 
 // this will send to all nodes within h_r hops
@@ -533,7 +557,7 @@ void RhpmanApp::BroadcastToElection(Ptr<Packet> packet, Stats::Type type) {
 // this does not have a TTL restriction, use this for targetted messages
 void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type) {
   m_socket_recv->SendTo(packet, 0, InetSocketAddress(dest, APPLICATION_PORT));
-  stats.incSent(type);
+  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_electionNeighborhoodHops));
 }
 
 // ================================================
@@ -601,6 +625,15 @@ void RhpmanApp::ScheduleReplicaHolderAnnouncement() {
   // schedule sending replica holder announcement
   m_replica_announcement_event =
       Simulator::Schedule(m_profileDelay, &RhpmanApp::ScheduleReplicaHolderAnnouncement, this);
+}
+
+void RhpmanApp::ScheduleExitCheck() {
+  if (m_state != State::RUNNING) return;
+
+  ExitCheck();
+
+  // schedule sending replica holder announcement
+  m_replica_exit_event = Simulator::Schedule(m_profileDelay, &RhpmanApp::ScheduleExitCheck, this);
 }
 
 void RhpmanApp::ScheduleElectionCheck() {
@@ -729,7 +762,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
         items.push_back(new DataItem(item.data_id(), item.owner(), item.data()));
       }
 
-      HandleTransfer(items);
+      HandleTransfer(items, message.transfer().stepup());
     } else {
       stats.incReceived(Stats::Type::UNKOWN);
       std::cout << "handling message: other\n";
@@ -747,7 +780,7 @@ void RhpmanApp::HandlePing(uint32_t nodeID, double profile) {
 #if defined(__RHPMAN_OPTIONAL_CARRIER_FORWARDING)
 
   if (profile > CalculateProfile()) {
-    TransferBuffer(nodeID);
+    TransferBuffer(nodeID, false);
   }
 
 #endif  // __RHPMAN_OPTIONAL_CARRIER_FORWARDING
@@ -757,7 +790,7 @@ void RhpmanApp::HandleReplicationAnnouncement(uint32_t nodeID) {
   m_election_watchdog_event.Cancel();
 
   if (m_replicating_nodes.find(nodeID) == m_replicating_nodes.end()) {
-    TransferBuffer(nodeID);
+    TransferBuffer(nodeID, false);
   }
 
   m_replicating_nodes.insert(nodeID);
@@ -810,7 +843,7 @@ void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataI
   RunProbabilisticLookup(requestID, dataID, nodeID);
 }
 
-uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data) {
+uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data, bool stepUp) {
   uint32_t stored = 0;
   for (std::vector<DataItem*>::iterator it = data.begin(); it != data.end(); ++it) {
     if (!(m_role == Role::REPLICATING ? m_storage : m_buffer).StoreItem(new DataItem(*it))) {
@@ -818,6 +851,10 @@ uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data) {
       break;
     }
     stored++;
+  }
+
+  if (stepUp) {
+    MakeReplicaHolderNode();
   }
   return stored;
 }
@@ -900,6 +937,7 @@ void RhpmanApp::MakeReplicaHolderNode() {
   m_role = Role::REPLICATING;
   SendRoleChange(m_address);
   ScheduleReplicaHolderAnnouncement();
+  ScheduleExitCheck();
   stats.incStepUp();
 }
 
@@ -907,6 +945,7 @@ void RhpmanApp::MakeReplicaHolderNode() {
 void RhpmanApp::MakeNonReplicaHolderNode() {
   m_role = Role::NON_REPLICATING;
   m_replica_announcement_event.Cancel();
+  m_replica_exit_event.Cancel();
   SendRoleChange(0);
   stats.incStepDown();
 
@@ -964,8 +1003,8 @@ std::set<uint32_t> RhpmanApp::FilterAddress(const std::set<uint32_t> addresses, 
 }
 
 // call this to send the all of the contents of the buffer to a new node
-void RhpmanApp::TransferBuffer(uint32_t nodeID) {
-  Ptr<Packet> message = GenerateTransfer(m_buffer.GetAll());
+void RhpmanApp::TransferBuffer(uint32_t nodeID, bool stepUp) {
+  Ptr<Packet> message = GenerateTransfer(m_buffer.GetAll(), stepUp);
   SendMessage(Ipv4Address(nodeID), message, Stats::Type::TRANSFER);
 
   // remove items from the buffer once they have been transferer so they cant be forwarded again
@@ -976,17 +1015,39 @@ void RhpmanApp::TransferBuffer(uint32_t nodeID) {
 //  calculation helpers
 // ================================================
 
+double RhpmanApp::GetWeightedStorageSpace() {
+  return m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace);
+}
+
+double RhpmanApp::GetEnergyLevel() {
+  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  return energy->GetEnergyFraction();
+}
+double RhpmanApp::GetWeightedEnergyLevel() { return m_we * GetEnergyLevel(); }
+
 double RhpmanApp::CalculateElectionFitness() {
   double changeDegree = CalculateChangeDegree();
 
   // check to make sure it is not =
-  if (fabs(changeDegree) <= 0.00001) {
+  if (fabs(changeDegree - 0) <= EPSILON) {
     m_myFitness = DBL_MAX;
   } else {
-    m_myFitness = (m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace)) / changeDegree;
+    m_myFitness = (GetWeightedStorageSpace() + GetWeightedEnergyLevel()) / changeDegree;
   }
 
   return m_myFitness;
+}
+
+void RhpmanApp::PowerLossHandler() {
+  stats.incPowerloss();
+  std::cerr << "Node: " << GetNode()->GetId() << " lost power at: " << Simulator::Now().GetSeconds()
+            << "\n";
+}
+
+void RhpmanApp::PowerRechargedHandler() {
+  stats.incPowerRecharge();
+  std::cerr << "Node: " << GetNode()->GetId()
+            << " regained power at: " << Simulator::Now().GetSeconds() << "\n";
 }
 
 // this is the value of P_ij
@@ -1010,6 +1071,18 @@ double RhpmanApp::CalculateColocation() {
 // ================================================
 //  Scheduled event handlers
 // ================================================
+
+void RhpmanApp::ExitCheck() {
+  NS_LOG_FUNCTION(this);
+
+  if (m_role != Role::REPLICATING) return;
+
+  if (GetEnergyLevel() < m_low_power_threshold) {
+    uint32_t newReplicaNode = 0;  // TODO: figure out what to set this too
+    MakeNonReplicaHolderNode();
+    TransferBuffer(newReplicaNode, true);
+  }
+}
 
 // this will call the lookup failed callback for the request
 void RhpmanApp::LookupTimeout(uint64_t requestID, uint64_t dataID) {
@@ -1107,7 +1180,7 @@ DataItem* RhpmanApp::CheckLocalStorage(uint64_t dataID) {
   return NULL;
 }
 
-void RhpmanApp::RefreshRoutingTable() {
+std::string RhpmanApp::GetRoutingTableString() {
   Ptr<Ipv4> ipv4 = GetNode()->GetObject<Ipv4>();
   Ptr<Ipv4RoutingProtocol> table = ipv4->GetRoutingProtocol();
   NS_ASSERT(table);
@@ -1115,8 +1188,14 @@ void RhpmanApp::RefreshRoutingTable() {
   std::ostringstream ss;
   table->PrintRoutingTable(Create<OutputStreamWrapper>(&ss));
 
-  m_peerTable.UpdateTable(ss.str());
+  return ss.str();
 }
+
+uint32_t RhpmanApp::CountExpectedRecipients(uint32_t hops) {
+  return Table::GetNeighbors(GetRoutingTableString(), hops).size();
+}
+
+void RhpmanApp::RefreshRoutingTable() { m_peerTable.UpdateTable(GetRoutingTableString()); }
 
 void RhpmanApp::CleanUp() { google::protobuf::ShutdownProtobufLibrary(); }
 
