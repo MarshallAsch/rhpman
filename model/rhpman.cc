@@ -907,8 +907,8 @@ void RhpmanApp::MakeNonReplicaHolderNode() {
   SendRoleChange(0);
   stats.incStepDown();
 
-  // does not transfer storage if it is an election stepdown, nothing was described for this
-  // only hand off it stepping down
+  uint32_t newReplicaNode = GetNextBestReplicaNode();
+  TransferStorage(newReplicaNode, true);
 }
 
 // this will send the synchonous data lookup requests to all of the known replica holder nodes
@@ -1041,9 +1041,7 @@ void RhpmanApp::ExitCheck() {
   if (m_role != Role::REPLICATING) return;
 
   if (GetEnergyLevel() < m_low_power_threshold) {
-    uint32_t newReplicaNode = GetNextBestReplicaNode();
     MakeNonReplicaHolderNode();
-    TransferStorage(newReplicaNode, true);
   }
 }
 
