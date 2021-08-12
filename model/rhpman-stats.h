@@ -3,7 +3,7 @@
 #ifndef __RHPMAN_STATS_H_
 #define __RHPMAN_STATS_H_
 
-#define TYPE_ENUM_SIZE 9
+#define TYPE_ENUM_SIZE 8
 
 #include "ns3/uinteger.h"
 
@@ -12,12 +12,11 @@ using namespace ns3;
 
 class Stats {
  public:
-  enum Type {
+  enum class Type {
     UNKOWN = 0,
     PING,
     MODE_CHANGE,
     ELECTION_REQUEST,
-    ELECTION_FITNESS,
     STORE,
     LOOKUP,
     LOOKUP_RESPONSE,

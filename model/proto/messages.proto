@@ -11,18 +11,13 @@ message Message {
         Request request = 4;
         Response response = 5;
         ElectionRequest election = 6;
-        ElectionFitness fitness = 7;
-        ModeChange mode_change = 8;
-        Store store = 9;
-        Transfer transfer = 10;
+        ModeChange mode_change = 7;
+        Store store = 8;
+        Transfer transfer = 9;
     }
 }
 
 message ElectionRequest {
-}
-
-message ElectionFitness {
-    double fitness = 1;
 }
 
 message ModeChange {
@@ -32,7 +27,8 @@ message ModeChange {
 
 message Ping {
     double delivery_probability = 1;
-    bool replicating_node = 2;
+    double fitness = 2;
+    bool replicating_node = 3;
 }
 
 message Request {

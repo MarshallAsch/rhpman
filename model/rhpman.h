@@ -65,7 +65,7 @@ using namespace ns3;
 ///     App instances which are not data owners will have negative a DataId.
 class RhpmanApp : public Application {
  public:
-  enum Role { NON_REPLICATING = 0, REPLICATING };
+  enum class Role { NON_REPLICATING = 0, REPLICATING };
 
   /// \brief Identifies the lifecycle state of this app.
   enum class State { NOT_STARTED = 0, RUNNING, STOPPED };
@@ -108,6 +108,8 @@ class RhpmanApp : public Application {
   static void CleanUp();
 
  private:
+  enum StorageType { BUFFER = 0, STORAGE };
+
   // Application lifecycle methods.
 
   void StartApplication() override;
@@ -173,7 +175,6 @@ class RhpmanApp : public Application {
   void SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type);
   void SendStartElection();
   void SendPing();
-  void SendFitness();
   void SendRoleChange(uint32_t newReplicationNode);
   void SendSyncLookup(uint64_t requestID, uint32_t nodeID, uint64_t dataID);
   void SendSyncStore(uint32_t nodeID, DataItem* data);
@@ -184,7 +185,6 @@ class RhpmanApp : public Application {
   void ScheduleElectionWatchdog();
   void ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID);
   void ScheduleProfileTimeout(uint32_t nodeID);
-  void ScheduleReplicaNodeTimeout(uint32_t nodeID);
   void SchedulePing();
   void ScheduleExitCheck();
   void ScheduleRefreshRoutingTable();
@@ -195,14 +195,15 @@ class RhpmanApp : public Application {
   void MakeNonReplicaHolderNode();
   void LookupFromReplicaHolders(uint64_t dataID, uint64_t requestID, uint32_t srcNode);
   uint32_t GetID();
-  static uint64_t GenerateMessageID();
   void ResetFitnesses();
   std::set<uint32_t> GetRecipientAddresses(double sigma);
   std::set<uint32_t> FilterAddresses(
       const std::set<uint32_t> addresses,
       const std::set<uint32_t> exclude);
   std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
-  void TransferBuffer(uint32_t nodeID, bool stepUp);
+  void TransferBuffer(uint32_t nodeID);
+  void TransferStorage(uint32_t nodeID, bool stepUp);
+  void SendStorage(uint32_t nodeID, StorageType type, bool stepUp);
   DataItem* CheckLocalStorage(uint64_t dataID);
 
   Ptr<Socket> SetupSocket(uint16_t port, uint32_t ttl);
@@ -223,6 +224,7 @@ class RhpmanApp : public Application {
   void RefreshRoutingTable();
   std::string GetRoutingTableString();
   uint32_t CountExpectedRecipients(uint32_t hops);
+  uint32_t GetNextBestReplicaNode();
 
   void PowerLossHandler();
   void PowerRechargedHandler();
@@ -238,23 +240,29 @@ class RhpmanApp : public Application {
 
   // message handlers
   void HandleRequest(Ptr<Socket> socket);
-  void HandlePing(uint32_t nodeID, double profile, bool isReplicatingNode);
+  void HandlePing(uint32_t nodeID, double profile, double fitness, bool isReplicatingNode);
   void HandleModeChange(uint32_t oldNode, uint32_t newNode);
   void HandleElectionRequest();
-  void HandleElectionFitness(uint32_t nodeID, double fitness);
   void HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID);
   void HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message);
   uint32_t HandleTransfer(std::vector<DataItem*> data, bool stepUp);
   void HandleResponse(uint64_t requestID, DataItem* data);
 
+  // static helpers
+  static uint64_t GenerateMessageID();
+
   // message generators
-  Ptr<Packet> GenerateLookup(uint64_t messageID, uint64_t dataID, double sigma, uint32_t srcNode);
-  Ptr<Packet> GenerateStore(const DataItem* data);
-  Ptr<Packet> GeneratePing(double profile);
-  Ptr<Packet> GenerateElectionRequest();
-  Ptr<Packet> GenerateModeChange(uint32_t newNode);
-  Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items, bool stepUp);
-  Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
+  static Ptr<Packet> GenerateLookup(
+      uint64_t messageID,
+      uint64_t dataID,
+      double sigma,
+      uint32_t srcNode);
+  static Ptr<Packet> GenerateStore(const DataItem* data);
+  static Ptr<Packet> GeneratePing(double profile, double fitness, bool isReplicating);
+  static Ptr<Packet> GenerateElectionRequest();
+  static Ptr<Packet> GenerateModeChange(uint32_t addrss, uint32_t newNode);
+  static Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items, bool stepUp);
+  static Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
 
   void SuccessfulLookup(DataItem* data);
   void FailedLookup(uint64_t dataID);
@@ -277,10 +285,8 @@ class RhpmanApp : public Application {
 
   std::map<uint32_t, double> m_peerProfiles;
   std::map<uint32_t, EventId> m_profileTimeouts;
-  std::map<uint32_t, EventId> m_replicationNodeTimeouts;
   std::map<uint64_t, EventId> m_lookupTimeouts;
 
-  double m_myFitness;
   std::set<uint32_t> m_replicating_nodes;
 
   std::set<uint64_t> m_received_messages;
