@@ -65,7 +65,7 @@ using namespace ns3;
 ///     App instances which are not data owners will have negative a DataId.
 class RhpmanApp : public Application {
  public:
-  enum Role { NON_REPLICATING = 0, REPLICATING };
+  enum class Role { NON_REPLICATING = 0, REPLICATING };
 
   /// \brief Identifies the lifecycle state of this app.
   enum class State { NOT_STARTED = 0, RUNNING, STOPPED };
