@@ -12,7 +12,7 @@ using namespace ns3;
 
 class Stats {
  public:
-  enum Type {
+  enum class Type {
     UNKOWN = 0,
     PING,
     MODE_CHANGE,

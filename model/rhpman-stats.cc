@@ -38,21 +38,21 @@ Stats::~Stats() {}
 
 std::string Stats::TypeString(Stats::Type type) {
   switch (type) {
-    case PING:
+    case Type::PING:
       return "PING";
-    case MODE_CHANGE:
+    case Type::MODE_CHANGE:
       return "MODE_CHANGE";
-    case ELECTION_REQUEST:
+    case Type::ELECTION_REQUEST:
       return "ELECTION_REQUEST";
-    case STORE:
+    case Type::STORE:
       return "STORE";
-    case LOOKUP:
+    case Type::LOOKUP:
       return "LOOKUP";
-    case LOOKUP_RESPONSE:
+    case Type::LOOKUP_RESPONSE:
       return "LOOKUP_RESPONSE";
-    case TRANSFER:
+    case Type::TRANSFER:
       return "TRANSFER";
-    case UNKOWN:
+    case Type::UNKOWN:
     default:
       return "UNKOWN";
   }
@@ -132,12 +132,12 @@ void Stats::addPending(uint64_t num) { pending += num; }
 // stats related to messages
 void Stats::incSent(Stats::Type type, uint32_t expectedRecipients) {
   totalSent += expectedRecipients;
-  sentCounters[type] += expectedRecipients;
+  sentCounters[static_cast<int>(type)] += expectedRecipients;
 }
 
 void Stats::incReceived(Stats::Type type) {
   totalReceived++;
-  receivedCounters[type]++;
+  receivedCounters[static_cast<int>(type)]++;
 }
 
 void Stats::incDuplicate() { duplicatesReceived++; }
