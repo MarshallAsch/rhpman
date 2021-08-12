@@ -45,9 +45,11 @@ Reproducibility is key in simulation studies, so here's how to build the
 project!
 
  1. This module makes use of [Google protocol buffers] for the network serialization
-    install the protobuf code generator for C++ on your system. 
+    install the `protoc` code generator for C++ on your system. [instructions](https://grpc.io/docs/protoc-installation/)
+  
+ 2. Make sure that you have a C++ compiler that has support for at least c++11, and all of the dependencies to install ns-3 installed on your system (see https://www.nsnam.org/wiki/Installation for ns-3 installation instructions)
 
- 2. Download and build copy of the ns-3.32 all-in-one distribution.
+ 3. Download and build copy of the ns-3.32 all-in-one distribution.
 
     ```sh
     wget https://www.nsnam.org/release/ns-allinone-3.32.tar.bz2
@@ -56,20 +58,20 @@ project!
     python3 ./build.py --enable-examples --enable-tests
     ```
 
- 3. Change directories to the `contrib/` folder of the ns-3.32 source
+ 4. Change directories to the `contrib/` folder of the ns-3.32 source
     distribution.
 
     ```sh
     cd ns-3.32/contrib/
     ```
 
- 4. Clone this repository.
+ 5. Clone this repository.
 
     ```sh
     git clone git@github.com:marshallasch/rhpman.git
     ```
 
- 5. Change directory back to the `ns-3.32` folder of the source distribution
+ 6. Change directory back to the `ns-3.32` folder of the source distribution
    and re configure the module through the `waf` tool. 
 
    ```sh
@@ -77,7 +79,7 @@ project!
    ./waf configure --enable-tests --enable-examples
    ```
 
- 6. Change directory back to the `ns-3.32` folder of the source distribution
+ 7. Change directory back to the `ns-3.32` folder of the source distribution
    and run this simulation through the `waf` tool. This will compile the
    simulation code and start executing the code.
 
