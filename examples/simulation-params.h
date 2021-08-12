@@ -94,7 +94,6 @@ class SimulationParameters {
 
   bool staggeredStart;
 
-  double initalPower;
   double lowPowerThreshold;
 
   uint32_t storageSpace;

@@ -97,7 +97,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
 
   bool optStaggeredStart = false;
 
-  double optInitalPower = 20000;
   double optLowPowerThreshold = 0.0;
 
   // Animation parameters.
@@ -115,10 +114,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
       optPercentageDataOwners);
-  //  cmd.AddValue(
-  //      "initalPower",
-  //      "Amount of inital battery power that each node starts with (J)",
-  //      optInitalPower);
   cmd.AddValue(
       "lowPowerThreshold",
       "The battery precentage at which a node will step down as a replication node if it drops "
@@ -370,7 +365,6 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.storageSpace = optStorageSpace;
   result.bufferSpace = optBufferSpace;
 
-  result.initalPower = optInitalPower;
   result.lowPowerThreshold = optLowPowerThreshold;
 
   result.staggeredStart = optStaggeredStart;

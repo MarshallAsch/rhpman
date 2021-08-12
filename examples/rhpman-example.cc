@@ -201,13 +201,11 @@ int main(int argc, char* argv[]) {
 
   LiIonEnergySourceHelper liIonSourceHelper;
   // configure energy source
-  // liIonSourceHelper.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(params.initalPower));
   // install source
   EnergySourceContainer sources = liIonSourceHelper.Install(allAdHocNodes);
   /* device energy model */
   WifiRadioEnergyModelHelper radioEnergyHelper;
   // configure radio energy model
-  // radioEnergyHelper.Set ("TxCurrentA", DoubleValue (0.0174));
   // install device model
   DeviceEnergyModelContainer deviceModels = radioEnergyHelper.Install(adhocDevices, sources);
   /***************************************************************************/
