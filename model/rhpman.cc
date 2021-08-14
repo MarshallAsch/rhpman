@@ -21,6 +21,7 @@
 
 #include <cfloat>
 #include <limits>
+#include <memory>
 
 #include "ns3/application-container.h"
 #include "ns3/application.h"
@@ -280,7 +281,7 @@ void RhpmanApp::StopApplication() {
 void RhpmanApp::Lookup(uint64_t id) {
   stats.incLookup();
   // check cache
-  DataItem* item = CheckLocalStorage(id);
+  std::shared_ptr<DataItem> item = CheckLocalStorage(id);
   if (item != NULL) {
     return SuccessfulLookup(item);
   }
@@ -294,7 +295,7 @@ void RhpmanApp::Lookup(uint64_t id) {
 
 // this is public and is how new data items are stored in the network
 // if there is no more space in the local cache false is returned, otherwise it is true
-bool RhpmanApp::Save(DataItem* data) {
+bool RhpmanApp::Save(std::shared_ptr<DataItem> data) {
   stats.incSave();
   bool status = m_storage.StoreItem(data);
 
@@ -311,7 +312,9 @@ RhpmanApp::Role RhpmanApp::GetRole() const { return m_role; }
 
 RhpmanApp::State RhpmanApp::GetState() const { return m_state; }
 
-void RhpmanApp::RegisterSuccessCallback(Callback<void, DataItem*> success) { m_success = success; }
+void RhpmanApp::RegisterSuccessCallback(Callback<void, std::shared_ptr<DataItem>> success) {
+  m_success = success;
+}
 
 void RhpmanApp::RegisterfailureCallback(Callback<void, uint64_t> fail) { m_failed = fail; }
 
@@ -417,7 +420,7 @@ Ptr<Packet> RhpmanApp::GenerateLookup(
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GenerateStore(const DataItem* data) {
+Ptr<Packet> RhpmanApp::GenerateStore(const std::shared_ptr<DataItem> data) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
@@ -467,7 +470,7 @@ Ptr<Packet> RhpmanApp::GenerateModeChange(uint32_t address, uint32_t newNode) {
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<DataItem*> items, bool stepUp) {
+Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<std::shared_ptr<DataItem>> items, bool stepUp) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
@@ -486,7 +489,7 @@ Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<DataItem*> items, bool stepU
   return GeneratePacket(message);
 }
 
-Ptr<Packet> RhpmanApp::GenerateResponse(uint64_t responseTo, const DataItem* data) {
+Ptr<Packet> RhpmanApp::GenerateResponse(uint64_t responseTo, const std::shared_ptr<DataItem> data) {
   rhpman::packets::Message message;
   message.set_id(GenerateMessageID());
   message.set_timestamp(Simulator::Now().GetMilliSeconds());
@@ -582,7 +585,7 @@ void RhpmanApp::SendRoleChange(uint32_t newReplicationNode) {
 void RhpmanApp::SendResponse(
     uint64_t requestID,
     uint32_t nodeID,
-    const DataItem* data,
+    const std::shared_ptr<DataItem> data,
     Stats::Type type) {
   Ptr<Packet> message = GenerateResponse(requestID, data);
   SendMessage(Ipv4Address(nodeID), message, type);
@@ -705,7 +708,10 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
     } else if (message.has_store()) {
       stats.incReceived(Stats::Type::STORE);
       rhpman::packets::DataItem item = message.store().data();
-      HandleStore(srcAddress, new DataItem(item.data_id(), item.owner(), item.data()), packet);
+      HandleStore(
+          srcAddress,
+          std::make_shared<DataItem>(item.data_id(), item.owner(), item.data()),
+          packet);
     } else if (message.has_request()) {
       stats.incReceived(Stats::Type::LOOKUP);
       HandleLookup(message.request().requestor(), message.id(), message.request().data_id());
@@ -714,14 +720,14 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       rhpman::packets::DataItem item = message.response().data();
       HandleResponse(
           message.response().request_id(),
-          new DataItem(item.data_id(), item.owner(), item.data()));
+          std::make_shared<DataItem>(item.data_id(), item.owner(), item.data()));
     } else if (message.has_transfer()) {
       stats.incReceived(Stats::Type::TRANSFER);
-      std::vector<DataItem*> items;
+      std::vector<std::shared_ptr<DataItem>> items;
 
       for (auto i = 0; i < message.transfer().items_size(); i++) {
         rhpman::packets::DataItem item = message.transfer().items(i);
-        items.push_back(new DataItem(item.data_id(), item.owner(), item.data()));
+        items.push_back(std::make_shared<DataItem>(item.data_id(), item.owner(), item.data()));
       }
 
       HandleTransfer(items, message.transfer().stepup());
@@ -791,7 +797,7 @@ void RhpmanApp::HandleElectionRequest() {
 }
 
 void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID) {
-  DataItem* res = CheckLocalStorage(dataID);
+  std::shared_ptr<DataItem> res = CheckLocalStorage(dataID);
 
   if (res != NULL) {
     SendResponse(requestID, nodeID, res, Stats::Type::LOOKUP_RESPONSE);
@@ -802,7 +808,7 @@ void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataI
   RunProbabilisticLookup(requestID, dataID, nodeID);
 }
 
-uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data, bool stepUp) {
+uint32_t RhpmanApp::HandleTransfer(std::vector<std::shared_ptr<DataItem>> data, bool stepUp) {
   uint32_t stored = 0;
   for (auto it = data.begin(); it != data.end(); ++it) {
     if (!(m_role == Role::REPLICATING ? m_storage : m_buffer).StoreItem(*it)) {
@@ -818,7 +824,7 @@ uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data, bool stepUp) {
   return stored;
 }
 
-void RhpmanApp::HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message) {
+void RhpmanApp::HandleStore(uint32_t nodeID, std::shared_ptr<DataItem> data, Ptr<Packet> message) {
   // check to see if the node already has the data item in the buffer
   if (CheckLocalStorage(data->getID()) != NULL) return;
 
@@ -839,7 +845,7 @@ void RhpmanApp::HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message
   }
 }
 
-void RhpmanApp::HandleResponse(uint64_t requestID, DataItem* data) {
+void RhpmanApp::HandleResponse(uint64_t requestID, std::shared_ptr<DataItem> data) {
   if (IsResponsePending(requestID)) {
     m_pendingLookups.erase(requestID);
     SuccessfulLookup(data);
@@ -1129,9 +1135,9 @@ void RhpmanApp::ProfileTimeout(uint32_t nodeID) {
 // storage functions
 // ================================================
 
-DataItem* RhpmanApp::CheckLocalStorage(uint64_t dataID) {
+std::shared_ptr<DataItem> RhpmanApp::CheckLocalStorage(uint64_t dataID) {
   // check cache
-  DataItem* item = m_storage.GetItem(dataID);
+  std::shared_ptr<DataItem> item = m_storage.GetItem(dataID);
   if (item != NULL) {
     stats.incCache();
     return item;
@@ -1170,7 +1176,7 @@ void RhpmanApp::RefreshRoutingTable() { m_peerTable.UpdateTable(GetRoutingTableS
 
 void RhpmanApp::CleanUp() { google::protobuf::ShutdownProtobufLibrary(); }
 
-void RhpmanApp::SuccessfulLookup(DataItem* data) {
+void RhpmanApp::SuccessfulLookup(std::shared_ptr<DataItem> data) {
   stats.incSuccess();
   if (!m_success.IsNull()) m_success(data);
 }

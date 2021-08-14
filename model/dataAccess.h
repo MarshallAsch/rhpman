@@ -102,7 +102,7 @@ class DataAccess : public Application {
   void CreateDataItem();
   void lookup();
 
-  static void success(DataItem* data);
+  static void success(std::shared_ptr<DataItem> data);
   static void failed(uint64_t dataID);
 
   Ptr<UniformRandomVariable> m_lookupSelector;

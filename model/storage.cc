@@ -16,10 +16,10 @@ Storage::~Storage() { ClearStorage(); }
 
 // this will do the actual storage. will store the item not a copy
 // true if there was space false otherwise
-bool Storage::StoreItem(DataItem* data) {
+bool Storage::StoreItem(std::shared_ptr<DataItem> data) {
   bool saved = false;
   for (auto i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] == NULL) {
+    if (!m_storage[i]) {
       m_storage[i] = data;
       saved = true;
       break;
@@ -33,16 +33,16 @@ void Storage::Init(uint32_t capacity) {
   m_storageSpace = capacity;
   m_storage.resize(capacity);
   for (auto i = 0; i < capacity; i++) {
-    m_storage[i] = NULL;
+    m_storage[i] = std::shared_ptr<DataItem>(nullptr);
   }
 }
 
 // this will return a pointer to the data item if it is found or NULL if it is not
-DataItem* Storage::GetItem(uint64_t dataID) {
-  DataItem* found = NULL;
+std::shared_ptr<DataItem> Storage::GetItem(uint64_t dataID) {
+  auto found = std::shared_ptr<DataItem>(nullptr);
 
   for (auto i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
+    if (m_storage[i] && m_storage[i]->getID() == dataID) {
       found = m_storage[i];
       break;
     }
@@ -64,8 +64,7 @@ bool Storage::HasItem(uint64_t dataID) const {
 bool Storage::RemoveItem(uint64_t dataID) {
   for (auto i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
-      free(m_storage[i]);
-      m_storage[i] = NULL;
+      m_storage[i] = std::shared_ptr<DataItem>(nullptr);
       return true;
     }
   }
@@ -76,18 +75,17 @@ bool Storage::RemoveItem(uint64_t dataID) {
 // this will empty all data items from storage
 void Storage::ClearStorage() {
   for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL) {
-      delete m_storage[i];
-      m_storage[i] = NULL;
+    if (m_storage[i]) {
+      m_storage[i] = std::shared_ptr<DataItem>(nullptr);
     }
   }
 }
 
-std::vector<DataItem*> Storage::GetAll() const {
-  std::vector<DataItem*> items;
+std::vector<std::shared_ptr<DataItem>> Storage::GetAll() const {
+  std::vector<std::shared_ptr<DataItem>> items;
 
   for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL) items.push_back(m_storage[i]);
+    if (m_storage[i]) items.push_back(m_storage[i]);
   }
 
   return items;
@@ -98,7 +96,7 @@ uint32_t Storage::GetFreeSpace() const {
   uint32_t count = 0;
 
   for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL) {
+    if (m_storage[i]) {
       count++;
     }
   }

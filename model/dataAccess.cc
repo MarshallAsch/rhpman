@@ -19,6 +19,7 @@
 
 #include <cfloat>
 #include <limits>
+#include <memory>
 
 #include "ns3/application-container.h"
 #include "ns3/application.h"
@@ -188,7 +189,7 @@ uint32_t DataAccess::GetID() {
 
 void DataAccess::CreateDataItem() {
   uint8_t* payload = new uint8_t[m_dataSize];
-  DataItem* data = new DataItem(m_dataSize, m_nodeID, payload);
+  auto data = std::make_shared<DataItem>(m_dataSize, m_nodeID, payload);
   delete[] payload;
 
   m_rhpman->Save(data);
@@ -203,7 +204,7 @@ void DataAccess::lookup() {
   m_rhpman->Lookup(selectDataToLookup());
 }
 
-void DataAccess::success(DataItem* data) {}
+void DataAccess::success(std::shared_ptr<DataItem> data) {}
 
 void DataAccess::failed(uint64_t dataID) {}
 

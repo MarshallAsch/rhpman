@@ -16,7 +16,7 @@ class Storage {
   /* data */
 
   uint32_t m_storageSpace;
-  std::vector<DataItem*> m_storage;
+  std::vector<std::shared_ptr<DataItem> > m_storage;
 
  public:
   Storage();
@@ -24,14 +24,14 @@ class Storage {
   ~Storage();
 
   void Init(uint32_t capacity);
-  bool StoreItem(DataItem* data);
-  DataItem* GetItem(uint64_t dataID);
+  bool StoreItem(std::shared_ptr<DataItem> data);
+  std::shared_ptr<DataItem> GetItem(uint64_t dataID);
   bool RemoveItem(uint64_t dataID);
   void ClearStorage();
 
   bool HasItem(uint64_t dataID) const;
 
-  std::vector<DataItem*> GetAll() const;
+  std::vector<std::shared_ptr<DataItem> > GetAll() const;
   uint32_t GetFreeSpace() const;
 };
 

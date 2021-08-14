@@ -89,20 +89,20 @@ class RhpmanApp : public Application {
         m_socket_recv(0),
         m_neighborhood_socket(0),
         m_election_socket(0),
-        m_success(MakeNullCallback<void, DataItem*>()),
+        m_success(MakeNullCallback<void, std::shared_ptr<DataItem> >()),
         m_failed(MakeNullCallback<void, uint64_t>()){};
 
   Role GetRole() const;
   State GetState() const;
 
   void Lookup(uint64_t id);
-  bool Save(DataItem* data);
+  bool Save(std::shared_ptr<DataItem> data);
   void ClearBuffer();
   void ClearStorage();
 
   uint32_t GetFreeSpace() const;
 
-  void RegisterSuccessCallback(Callback<void, DataItem*> success);
+  void RegisterSuccessCallback(Callback<void, std::shared_ptr<DataItem> > success);
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
 
   static void CleanUp();
@@ -141,7 +141,7 @@ class RhpmanApp : public Application {
 
   // callbacks for lookup requests
   // callbacks for  requests
-  Callback<void, DataItem*> m_success;
+  Callback<void, std::shared_ptr<DataItem> > m_success;
   Callback<void, uint64_t> m_failed;
 
   double m_low_power_threshold;
@@ -177,8 +177,12 @@ class RhpmanApp : public Application {
   void SendPing();
   void SendRoleChange(uint32_t newReplicationNode);
   void SendSyncLookup(uint64_t requestID, uint32_t nodeID, uint64_t dataID);
-  void SendSyncStore(uint32_t nodeID, DataItem* data);
-  void SendResponse(uint64_t requestID, uint32_t nodeID, const DataItem* data, Stats::Type type);
+  void SendSyncStore(uint32_t nodeID, std::shared_ptr<DataItem> data);
+  void SendResponse(
+      uint64_t requestID,
+      uint32_t nodeID,
+      const std::shared_ptr<DataItem> data,
+      Stats::Type type);
 
   // schedulers
   void ScheduleElectionCheck();
@@ -204,7 +208,7 @@ class RhpmanApp : public Application {
   void TransferBuffer(uint32_t nodeID);
   void TransferStorage(uint32_t nodeID, bool stepUp);
   void SendStorage(uint32_t nodeID, StorageType type, bool stepUp);
-  DataItem* CheckLocalStorage(uint64_t dataID);
+  std::shared_ptr<DataItem> CheckLocalStorage(uint64_t dataID);
 
   Ptr<Socket> SetupSocket(uint16_t port, uint32_t ttl);
   Ptr<Socket> SetupRcvSocket(uint16_t port);
@@ -244,9 +248,9 @@ class RhpmanApp : public Application {
   void HandleModeChange(uint32_t oldNode, uint32_t newNode);
   void HandleElectionRequest();
   void HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataID);
-  void HandleStore(uint32_t nodeID, DataItem* data, Ptr<Packet> message);
-  uint32_t HandleTransfer(std::vector<DataItem*> data, bool stepUp);
-  void HandleResponse(uint64_t requestID, DataItem* data);
+  void HandleStore(uint32_t nodeID, std::shared_ptr<DataItem> data, Ptr<Packet> message);
+  uint32_t HandleTransfer(std::vector<std::shared_ptr<DataItem> > data, bool stepUp);
+  void HandleResponse(uint64_t requestID, std::shared_ptr<DataItem> data);
 
   // static helpers
   static uint64_t GenerateMessageID();
@@ -257,14 +261,14 @@ class RhpmanApp : public Application {
       uint64_t dataID,
       double sigma,
       uint32_t srcNode);
-  static Ptr<Packet> GenerateStore(const DataItem* data);
+  static Ptr<Packet> GenerateStore(const std::shared_ptr<DataItem> data);
   static Ptr<Packet> GeneratePing(double profile, double fitness, bool isReplicating);
   static Ptr<Packet> GenerateElectionRequest();
   static Ptr<Packet> GenerateModeChange(uint32_t addrss, uint32_t newNode);
-  static Ptr<Packet> GenerateTransfer(std::vector<DataItem*> items, bool stepUp);
-  static Ptr<Packet> GenerateResponse(uint64_t responseTo, const DataItem* data);
+  static Ptr<Packet> GenerateTransfer(std::vector<std::shared_ptr<DataItem> > items, bool stepUp);
+  static Ptr<Packet> GenerateResponse(uint64_t responseTo, const std::shared_ptr<DataItem> data);
 
-  void SuccessfulLookup(DataItem* data);
+  void SuccessfulLookup(std::shared_ptr<DataItem> data);
   void FailedLookup(uint64_t dataID);
 
   // data storage for the node
