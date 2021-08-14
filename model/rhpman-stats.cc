@@ -36,7 +36,7 @@ Stats::Stats() {
 
 Stats::~Stats() {}
 
-std::string Stats::TypeString(Stats::Type type) {
+std::string Stats::TypeString(Stats::Type type) const {
   switch (type) {
     case Type::PING:
       return "PING";
@@ -104,12 +104,12 @@ void Stats::Print(std::string prefix) {
   std::cout << prefix << "TotalReceived\t" << unsigned(totalReceived) << "\n";
   std::cout << prefix << "TotalDuplicates\t" << unsigned(duplicatesReceived) << "\n";
 
-  for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
+  for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
     std::cout << prefix << "TotalSent" << TypeString(static_cast<Stats::Type>(i)) << "\t"
               << unsigned(sentCounters[i]) << "\n";
   }
 
-  for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
+  for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
     std::cout << prefix << "TotalReceived" << TypeString(static_cast<Stats::Type>(i)) << "\t"
               << unsigned(receivedCounters[i]) << "\n";
   }
@@ -147,6 +147,7 @@ void Stats::incStepUp() { stepUps++; }
 void Stats::incStepDown() { stepDowns++; }
 
 void Stats::incPowerloss() { powerLoss++; }
+
 void Stats::incPowerRecharge() { recharged++; }
 
 };  // namespace rhpman

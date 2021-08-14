@@ -26,9 +26,7 @@
 #include "util.h"
 
 #define EPSILON 0.00001
-static bool isEqual(double a, double b) {
-  return fabs(b - a) < EPSILON;
-}
+static bool isEqual(double a, double b) { return fabs(b - a) < EPSILON; }
 
 namespace rhpman {
 // static
@@ -164,7 +162,10 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "wcdc",
       "Weight of degree connectivity in delivery probability calculations (range [0, 1])",
       optWcdc);
-  cmd.AddValue("wcol", "Weight of colocation in delivery probability calculations (range [0, 1])", optWcol);
+  cmd.AddValue(
+      "wcol",
+      "Weight of colocation in delivery probability calculations (range [0, 1])",
+      optWcol);
   cmd.AddValue(
       "profileUpdateDelay",
       "Number of seconds between profile updates",
@@ -216,7 +217,8 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       optPeerTimeout);
   cmd.AddValue(
       "requestTimeout",
-      "The number of seconds to wait before marking a lookup as failed, (0 means that there is no timeout)",
+      "The number of seconds to wait before marking a lookup as failed, (0 means that there is no "
+      "timeout)",
       optRequestTimeout);
   cmd.AddValue(
       "storageWeight",
@@ -228,7 +230,8 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       optEnergyWeight);
   cmd.AddValue(
       "processingWeight",
-      "The available processing power weight used for the election fitness calculation (CURRENTLY THIS MUST BE 0 )",
+      "The available processing power weight used for the election fitness calculation (CURRENTLY "
+      "THIS MUST BE 0 )",
       optProcessingWeight);
 
   cmd.AddValue("routing", "One of either 'DSDV' or 'AODV'", optRoutingProtocol);
@@ -260,7 +263,7 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
     return std::pair<SimulationParameters, bool>(result, false);
   }
 
-    if (!isEqual(optWcol + optWcdc, 1)) {
+  if (!isEqual(optWcol + optWcdc, 1)) {
     std::cerr << "colocation and connectivity weights must sum to one" << std::endl;
     return std::pair<SimulationParameters, bool>(result, false);
   }

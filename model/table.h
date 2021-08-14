@@ -22,8 +22,7 @@ class Table {
  public:
   Table();
   Table(uint16_t num, uint32_t hops);
-  ~Table();
-  double ComputeChangeDegree();
+  double ComputeChangeDegree() const;
   void UpdateTable(const std::string table);
 
   static std::set<uint32_t> GetNeighbors(const std::string table, uint32_t maxHops);

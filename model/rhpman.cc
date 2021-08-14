@@ -305,7 +305,7 @@ bool RhpmanApp::Save(DataItem* data) {
 }
 
 // this is a helper and will return the number of data items that can be stored in local storage
-uint32_t RhpmanApp::GetFreeSpace() { return m_storage.GetFreeSpace(); }
+uint32_t RhpmanApp::GetFreeSpace() const { return m_storage.GetFreeSpace(); }
 
 RhpmanApp::Role RhpmanApp::GetRole() const { return m_role; }
 
@@ -391,7 +391,7 @@ void RhpmanApp::SemiProbabilisticSend(
 }
 
 void RhpmanApp::SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes, Stats::Type type) {
-  for (std::set<uint32_t>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+  for (auto it = nodes.begin(); it != nodes.end(); ++it) {
     SendMessage(Ipv4Address(*it), message, type);
   }
 }
@@ -475,7 +475,7 @@ Ptr<Packet> RhpmanApp::GenerateTransfer(std::vector<DataItem*> items, bool stepU
   rhpman::packets::Transfer* transfer = message.mutable_transfer();
   transfer->set_stepup(stepUp);
 
-  for (std::vector<DataItem*>::iterator it = items.begin(); it != items.end(); ++it) {
+  for (auto it = items.begin(); it != items.end(); ++it) {
     rhpman::packets::DataItem* item = transfer->add_items();
 
     item->set_data_id((*it)->getID());
@@ -719,7 +719,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       stats.incReceived(Stats::Type::TRANSFER);
       std::vector<DataItem*> items;
 
-      for (int i = 0; i < message.transfer().items_size(); i++) {
+      for (auto i = 0; i < message.transfer().items_size(); i++) {
         rhpman::packets::DataItem item = message.transfer().items(i);
         items.push_back(new DataItem(item.data_id(), item.owner(), item.data()));
       }
@@ -804,8 +804,8 @@ void RhpmanApp::HandleLookup(uint32_t nodeID, uint64_t requestID, uint64_t dataI
 
 uint32_t RhpmanApp::HandleTransfer(std::vector<DataItem*> data, bool stepUp) {
   uint32_t stored = 0;
-  for (std::vector<DataItem*>::iterator it = data.begin(); it != data.end(); ++it) {
-    if (!(m_role == Role::REPLICATING ? m_storage : m_buffer).StoreItem(new DataItem(*it))) {
+  for (auto it = data.begin(); it != data.end(); ++it) {
+    if (!(m_role == Role::REPLICATING ? m_storage : m_buffer).StoreItem(*it)) {
       NS_LOG_DEBUG("not enough space to store all the items");
       break;
     }
@@ -927,8 +927,7 @@ uint64_t RhpmanApp::GenerateMessageID() {
 std::set<uint32_t> RhpmanApp::GetRecipientAddresses(double sigma) {
   std::set<uint32_t> addresses;
 
-  for (std::map<uint32_t, double>::iterator it = m_peerProfiles.begin(); it != m_peerProfiles.end();
-       ++it) {
+  for (auto it = m_peerProfiles.begin(); it != m_peerProfiles.end(); ++it) {
     if (it->second >= sigma) addresses.insert(it->first);
   }
 
@@ -940,7 +939,7 @@ std::set<uint32_t> RhpmanApp::FilterAddresses(
     const std::set<uint32_t> exclude) {
   std::set<uint32_t> filtered = addresses;
 
-  for (std::set<uint32_t>::iterator it = exclude.begin(); it != exclude.end(); ++it) {
+  for (auto it = exclude.begin(); it != exclude.end(); ++it) {
     if (filtered.find(*it) != filtered.end()) filtered.erase(*it);
   }
 
@@ -977,17 +976,17 @@ void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
 //  calculation helpers
 // ================================================
 
-double RhpmanApp::GetWeightedStorageSpace() {
+double RhpmanApp::GetWeightedStorageSpace() const {
   return m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace);
 }
 
-double RhpmanApp::GetEnergyLevel() {
+double RhpmanApp::GetEnergyLevel() const {
   Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
   return energy->GetEnergyFraction();
 }
-double RhpmanApp::GetWeightedEnergyLevel() { return m_we * GetEnergyLevel(); }
+double RhpmanApp::GetWeightedEnergyLevel() const { return m_we * GetEnergyLevel(); }
 
-double RhpmanApp::CalculateElectionFitness() {
+double RhpmanApp::CalculateElectionFitness() const {
   double changeDegree = CalculateChangeDegree();
 
   double fitness;
@@ -1014,18 +1013,18 @@ void RhpmanApp::PowerRechargedHandler() {
 }
 
 // this is the value of P_ij
-double RhpmanApp::CalculateProfile() {
+double RhpmanApp::CalculateProfile() const {
   if (m_role == Role::REPLICATING) return 1;
 
   return m_wcdc * CalculateChangeDegree() + m_wcol * CalculateColocation();
 }
 
 // this is the U_cdc value
-double RhpmanApp::CalculateChangeDegree() { return m_peerTable.ComputeChangeDegree(); }
+double RhpmanApp::CalculateChangeDegree() const { return m_peerTable.ComputeChangeDegree(); }
 
 // this is the U_col value
 // it is 1 if there is a replication node within h, 0 otherwise
-double RhpmanApp::CalculateColocation() {
+double RhpmanApp::CalculateColocation() const {
   if (m_role == Role::REPLICATING) return 1;
 
   return m_replicating_nodes.size() == 0 ? 0 : 1;
@@ -1075,13 +1074,13 @@ void RhpmanApp::TriggerElection() {
 }
 
 void RhpmanApp::CancelEventMap(std::map<uint32_t, EventId> events) {
-  for (std::map<uint32_t, EventId>::iterator it = events.begin(); it != events.end(); ++it) {
+  for (auto it = events.begin(); it != events.end(); ++it) {
     it->second.Cancel();
   }
 }
 
 void RhpmanApp::CancelEventMap(std::map<uint64_t, EventId> events) {
-  for (std::map<uint64_t, EventId>::iterator it = events.begin(); it != events.end(); ++it) {
+  for (auto it = events.begin(); it != events.end(); ++it) {
     it->second.Cancel();
   }
 }
@@ -1095,8 +1094,7 @@ void RhpmanApp::CheckElectionResults() {
 
 RhpmanApp::Role RhpmanApp::GetNewRole() {
   double myFitness = CalculateElectionFitness();
-  for (std::map<uint32_t, double>::iterator it = m_peerFitness.begin(); it != m_peerFitness.end();
-       ++it) {
+  for (auto it = m_peerFitness.begin(); it != m_peerFitness.end(); ++it) {
     if (myFitness < it->second) return Role::NON_REPLICATING;
   }
 
@@ -1106,8 +1104,7 @@ RhpmanApp::Role RhpmanApp::GetNewRole() {
 uint32_t RhpmanApp::GetNextBestReplicaNode() {
   double fitness = 0;
   uint32_t node = 0;
-  for (std::map<uint32_t, double>::iterator it = m_peerFitness.begin(); it != m_peerFitness.end();
-       ++it) {
+  for (auto it = m_peerFitness.begin(); it != m_peerFitness.end(); ++it) {
     if (fitness < it->second) {
       fitness = it->second;
       node = it->first;

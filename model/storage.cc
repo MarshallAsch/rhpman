@@ -18,7 +18,7 @@ Storage::~Storage() { ClearStorage(); }
 // true if there was space false otherwise
 bool Storage::StoreItem(DataItem* data) {
   bool saved = false;
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
+  for (auto i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] == NULL) {
       m_storage[i] = data;
       saved = true;
@@ -32,7 +32,7 @@ bool Storage::StoreItem(DataItem* data) {
 void Storage::Init(uint32_t capacity) {
   m_storageSpace = capacity;
   m_storage.resize(capacity);
-  for (uint32_t i = 0; i < capacity; i++) {
+  for (auto i = 0; i < capacity; i++) {
     m_storage[i] = NULL;
   }
 }
@@ -41,7 +41,7 @@ void Storage::Init(uint32_t capacity) {
 DataItem* Storage::GetItem(uint64_t dataID) {
   DataItem* found = NULL;
 
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
+  for (auto i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
       found = m_storage[i];
       break;
@@ -51,8 +51,8 @@ DataItem* Storage::GetItem(uint64_t dataID) {
   return found;
 }
 
-bool Storage::HasItem(uint64_t dataID) {
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
+bool Storage::HasItem(uint64_t dataID) const {
+  for (auto i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
       return true;
     }
@@ -62,7 +62,7 @@ bool Storage::HasItem(uint64_t dataID) {
 
 // return true if the item was removed from storage, false if it was not found
 bool Storage::RemoveItem(uint64_t dataID) {
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
+  for (auto i = 0; i < m_storageSpace; i++) {
     if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
       free(m_storage[i]);
       m_storage[i] = NULL;
@@ -83,7 +83,7 @@ void Storage::ClearStorage() {
   }
 }
 
-std::vector<DataItem*> Storage::GetAll() {
+std::vector<DataItem*> Storage::GetAll() const {
   std::vector<DataItem*> items;
 
   for (uint32_t i = 0; i < m_storageSpace; i++) {
@@ -94,7 +94,7 @@ std::vector<DataItem*> Storage::GetAll() {
 }
 
 // this is a helper and will return the number of data items that can be stored in local storage
-uint32_t Storage::GetFreeSpace() {
+uint32_t Storage::GetFreeSpace() const {
   uint32_t count = 0;
 
   for (uint32_t i = 0; i < m_storageSpace; i++) {

@@ -50,7 +50,7 @@ class Stats {
   void Reset();
 
  private:
-  std::string TypeString(Stats::Type type);
+  std::string TypeString(Stats::Type type) const;
 };
 
 };  // namespace rhpman

@@ -100,7 +100,7 @@ class RhpmanApp : public Application {
   void ClearBuffer();
   void ClearStorage();
 
-  uint32_t GetFreeSpace();
+  uint32_t GetFreeSpace() const;
 
   void RegisterSuccessCallback(Callback<void, DataItem*> success);
   void RegisterfailureCallback(Callback<void, uint64_t> fail);
@@ -108,7 +108,7 @@ class RhpmanApp : public Application {
   static void CleanUp();
 
  private:
-  enum StorageType { BUFFER = 0, STORAGE };
+  enum class StorageType { BUFFER = 0, STORAGE };
 
   // Application lifecycle methods.
 
@@ -230,13 +230,13 @@ class RhpmanApp : public Application {
   void PowerRechargedHandler();
 
   // calculation helpers
-  double GetEnergyLevel();
-  double GetWeightedEnergyLevel();
-  double GetWeightedStorageSpace();
-  double CalculateElectionFitness();
-  double CalculateProfile();
-  double CalculateChangeDegree();
-  double CalculateColocation();
+  double GetEnergyLevel() const;
+  double GetWeightedEnergyLevel() const;
+  double GetWeightedStorageSpace() const;
+  double CalculateElectionFitness() const;
+  double CalculateProfile() const;
+  double CalculateChangeDegree() const;
+  double CalculateColocation() const;
 
   // message handlers
   void HandleRequest(Ptr<Socket> socket);

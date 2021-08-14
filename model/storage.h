@@ -29,10 +29,10 @@ class Storage {
   bool RemoveItem(uint64_t dataID);
   void ClearStorage();
 
-  bool HasItem(uint64_t dataID);
+  bool HasItem(uint64_t dataID) const;
 
-  std::vector<DataItem*> GetAll();
-  uint32_t GetFreeSpace();
+  std::vector<DataItem*> GetAll() const;
+  uint32_t GetFreeSpace() const;
 };
 
 };  // namespace rhpman
