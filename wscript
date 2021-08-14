@@ -29,6 +29,7 @@ def build(bld):
     module_test = bld.create_ns3_module_test_library('rhpman')
     module_test.source = [
         'test/rhpman-test-suite.cc',
+        'test/storage-tests.cc',
         ]
     # Tests encapsulating example programs should be listed here
     if (bld.env['ENABLE_EXAMPLES']):
