@@ -33,6 +33,7 @@
 #define APPLICATION_PORT 5000
 
 #include <map>
+#include <memory>
 #include <set>  // std::set
 
 #include "ns3/application-container.h"

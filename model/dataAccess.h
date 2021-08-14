@@ -25,6 +25,7 @@
 #define __rhpman_data_access_h
 
 #include <map>
+#include <memory>
 #include <set>  // std::set
 
 #include "ns3/application-container.h"

@@ -19,7 +19,6 @@
 
 #include <cfloat>
 #include <limits>
-#include <memory>
 
 #include "ns3/application-container.h"
 #include "ns3/application.h"

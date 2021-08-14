@@ -3,7 +3,9 @@
 #ifndef __rhpman_storage_h
 #define __rhpman_storage_h
 
+#include <memory>
 #include <set>  // std::set
+
 #include "ns3/uinteger.h"
 
 #include "dataItem.h"
