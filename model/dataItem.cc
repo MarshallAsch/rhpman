@@ -22,15 +22,6 @@ DataItem::DataItem(uint32_t dataSize, uint32_t ownerID, const uint8_t* payload) 
   memcpy(bytes, payload, size);
 }
 
-DataItem::DataItem(uint64_t id, uint32_t dataSize, uint32_t ownerID, const uint8_t* payload) {
-  dataID = id;
-  size = dataSize;
-  owner = ownerID;
-  bytes = (uint8_t*)malloc(size * sizeof(uint8_t));
-
-  memcpy(bytes, payload, size);
-}
-
 DataItem::DataItem(uint64_t id, uint32_t ownerID, const std::string payload) {
   dataID = id;
   size = payload.size();

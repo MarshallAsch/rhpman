@@ -21,11 +21,6 @@ class DataItem {
       uint32_t dataSize,
       uint32_t ownerID,
       const uint8_t* payload);  // use this to create the data item
-  DataItem(
-      uint64_t id,
-      uint32_t dataSize,
-      uint32_t ownerID,
-      const uint8_t* payload);  // use this when saving a response
   DataItem(uint64_t id, uint32_t ownerID, const std::string payload);
   ~DataItem();
 

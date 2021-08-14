@@ -6,6 +6,7 @@
 // An essential include is test.h
 #include "ns3/test.h"
 
+#include "dataItem-tests.h"
 #include "storage-tests.h"
 
 // Do not put your test classes in namespace ns3.  You may find it useful
@@ -53,12 +54,18 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
   AddTestCase(new RhpmanTestCase1, TestCase::QUICK);
 
+  // storage tests
   AddTestCase(new DefaultStorage, TestCase::QUICK);
   AddTestCase(new StorageCapacityOne, TestCase::QUICK);
   AddTestCase(new StorageCapacityChange, TestCase::QUICK);
   AddTestCase(new RemoveStoredItem, TestCase::QUICK);
   AddTestCase(new RemoveNonExistantItem, TestCase::QUICK);
   AddTestCase(new ClearStorage, TestCase::QUICK);
+
+  // data item tests
+  AddTestCase(new DataItemDefault, TestCase::QUICK);
+  AddTestCase(new DataItemNoID, TestCase::QUICK);
+  AddTestCase(new DataItemString, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite

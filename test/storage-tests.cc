@@ -21,8 +21,7 @@ ClearStorage::ClearStorage() : TestCase("clear all stored items") {}
 
 void DefaultStorage::DoRun(void) {
   Storage s;
-  uint8_t payload[10];
-  auto data = std::make_shared<DataItem>(10, 50, payload);
+  auto data = std::make_shared<DataItem>(1, 50, "1234567890");
 
   // A wide variety of test macros are available in src/core/test.h
 
@@ -35,10 +34,8 @@ void DefaultStorage::DoRun(void) {
 
 void StorageCapacityOne::DoRun(void) {
   Storage s(1);
-  uint8_t payload1[10];
-  uint8_t payload2[10];
-  auto data = std::make_shared<DataItem>(1, 10, 50, payload1);
-  auto data2 = std::make_shared<DataItem>(2, 10, 60, payload2);
+  auto data = std::make_shared<DataItem>(1, 50, "1234567890");
+  auto data2 = std::make_shared<DataItem>(2, 60, "0987654321");
 
   // A wide variety of test macros are available in src/core/test.h
 
@@ -63,10 +60,8 @@ void StorageCapacityOne::DoRun(void) {
 void StorageCapacityChange::DoRun(void) {
   Storage s(100000);
   s.Init(1);
-  uint8_t payload1[10];
-  uint8_t payload2[10];
-  auto data = std::make_shared<DataItem>(1, 10, 50, payload1);
-  auto data2 = std::make_shared<DataItem>(2, 10, 60, payload2);
+  auto data = std::make_shared<DataItem>(1, 50, "1234567890");
+  auto data2 = std::make_shared<DataItem>(2, 60, "0987654321");
 
   // A wide variety of test macros are available in src/core/test.h
 
@@ -90,8 +85,7 @@ void StorageCapacityChange::DoRun(void) {
 
 void RemoveStoredItem::DoRun(void) {
   Storage s(1);
-  uint8_t payload1[10];
-  auto data = std::make_shared<DataItem>(1, 10, 50, payload1);
+  auto data = std::make_shared<DataItem>(1, 50, "1234567890");
 
   NS_TEST_ASSERT_MSG_EQ(s.GetFreeSpace(), 1, "should have one free space before item gets added");
   NS_TEST_ASSERT_MSG_EQ(s.StoreItem(data), true, "Can store an item when there is space");
@@ -126,10 +120,8 @@ void RemoveNonExistantItem::DoRun(void) {
 
 void ClearStorage::DoRun(void) {
   Storage s(1);
-  uint8_t payload1[10];
-  uint8_t payload2[10];
-  auto data = std::make_shared<DataItem>(1, 10, 50, payload1);
-  auto data2 = std::make_shared<DataItem>(2, 10, 60, payload2);
+  auto data = std::make_shared<DataItem>(1, 50, "1234567890");
+  auto data2 = std::make_shared<DataItem>(2, 60, "0987654321");
 
   // A wide variety of test macros are available in src/core/test.h
 
