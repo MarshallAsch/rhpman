@@ -45,7 +45,8 @@ uint32_t DataItem::getSize() const { return size; }
 uint32_t DataItem::getOwner() const { return owner; }
 
 // Note this Must be freed by the caller, it is a copy of the data item
-uint8_t* DataItem::getPayload() const {
+const uint8_t* DataItem::getPayload() const {
+  return bytes;
   if (size == 0 || bytes == NULL) return NULL;
 
   uint8_t* tmp;

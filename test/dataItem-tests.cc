@@ -2,7 +2,6 @@
 
 #include <cstddef>
 
-
 #include "dataItem-tests.h"
 
 #include "../model/dataItem.h"
@@ -53,7 +52,7 @@ void DataItemString::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(data.getSize(), size, "should have default size of 0");
   NS_TEST_ASSERT_MSG_EQ(data.getOwner(), owner, "should have default owner of 0");
 
-  uint8_t* res = data.getPayload();
+  const uint8_t* res = data.getPayload();
   NS_TEST_ASSERT_MSG_NE(res, 0, "should not be null");
 
   NS_TEST_ASSERT_MSG_EQ(res[0], payload[0], "bytes should match");

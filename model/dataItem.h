@@ -27,7 +27,7 @@ class DataItem {
   uint64_t getID() const;
   uint32_t getSize() const;
   uint32_t getOwner() const;
-  uint8_t* getPayload() const;
+  const uint8_t* getPayload() const;
 };
 
 }  // namespace rhpman
