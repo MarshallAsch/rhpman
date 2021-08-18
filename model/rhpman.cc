@@ -36,7 +36,6 @@
 #include "ns3/pointer.h"
 #include "ns3/udp-socket-factory.h"
 
-#include "ns3/energy-module.h"
 #include "ns3/wifi-radio-energy-model.h"
 
 #include "logging.h"
@@ -194,11 +193,12 @@ void RhpmanApp::StartApplication() {
   NS_LOG_DEBUG("Starting RhpmanApp");
   m_state = State::NOT_STARTED;
 
+  Setup();
   // set powerloss callbacks
-  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
-  Ptr<WifiRadioEnergyModel> model = energy->FindDeviceEnergyModels("ns3::WifiRadioEnergyModel")
-                                        .Get(0)
-                                        ->GetObject<WifiRadioEnergyModel>();
+  Ptr<WifiRadioEnergyModel> model =
+      energySource->FindDeviceEnergyModels("ns3::WifiRadioEnergyModel")
+          .Get(0)
+          ->GetObject<WifiRadioEnergyModel>();
   model->SetEnergyDepletionCallback(MakeCallback(&RhpmanApp::PowerLossHandler, this));
   model->SetEnergyRechargedCallback(MakeCallback(&RhpmanApp::PowerRechargedHandler, this));
 
@@ -216,8 +216,6 @@ void RhpmanApp::StartApplication() {
 
   m_storage.Init(m_storageSpace);
   m_buffer.Init(m_bufferSpace);
-
-  m_address = GetID();
 
   m_peerTable = Table(m_profileDelay.GetSeconds(), m_neighborhoodHops);
   m_state = State::RUNNING;
@@ -977,6 +975,10 @@ void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
   SendMessage(Ipv4Address(nodeID), message, Stats::Type::TRANSFER);
 }
 
+void RhpmanApp::Setup() {
+  energySource = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
+  m_address = GetID();
+}
 // ================================================
 //  calculation helpers
 // ================================================
@@ -985,10 +987,7 @@ double RhpmanApp::GetWeightedStorageSpace() const {
   return m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace);
 }
 
-double RhpmanApp::GetEnergyLevel() const {
-  Ptr<EnergySource> energy = GetNode()->GetObject<EnergySourceContainer>()->Get(0);
-  return energy->GetEnergyFraction();
-}
+double RhpmanApp::GetEnergyLevel() const { return energySource->GetEnergyFraction(); }
 double RhpmanApp::GetWeightedEnergyLevel() const { return m_we * GetEnergyLevel(); }
 
 double RhpmanApp::CalculateElectionFitness() const {
@@ -1186,3 +1185,15 @@ void RhpmanApp::FailedLookup(uint64_t dataID) {
 }
 
 }  // namespace rhpman
+
+std::ostream& operator<<(std::ostream& os, rhpman::RhpmanApp::Role role) {
+  switch (role) {
+    case rhpman::RhpmanApp::Role::REPLICATING:
+      os << "REPLICATING";
+      break;
+    case rhpman::RhpmanApp::Role::NON_REPLICATING:
+      os << "NON_REPLICATING";
+      break;
+  }
+  return os;
+}

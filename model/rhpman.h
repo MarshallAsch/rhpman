@@ -21,8 +21,11 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 ///
-#ifndef __rhpman_h
-#define __rhpman_h
+#ifndef __RHPMAN_APP_H_
+#define __RHPMAN_APP_H_
+
+// DEFINE THIS FOR TESTING ONLY!!!
+#define private public
 
 // Uncomment this to enable the optional carrier forwarding
 #define __RHPMAN_OPTIONAL_CARRIER_FORWARDING
@@ -41,6 +44,8 @@
 #include "ns3/applications-module.h"
 #include "ns3/attribute.h"
 #include "ns3/callback.h"
+#include "ns3/energy-module.h"
+
 //#include "ns3/core-module.h"
 #include "ns3/event-id.h"
 #include "ns3/node-container.h"
@@ -113,14 +118,6 @@ class RhpmanApp : public Application {
 
   // Application lifecycle methods.
 
-  void StartApplication() override;
-  void StopApplication() override;
-
-  // RHPMAN Scheme methods.
-
-  void UpdateProfile();
-  void ExchangeProfiles();
-
   // Member fields.
   State m_state;
   Role m_role;
@@ -155,6 +152,48 @@ class RhpmanApp : public Application {
   Time m_min_election_time;  // this is the earliest time that another election is allowed to be
                              // requested by a node
 
+  EventId m_election_watchdog_event;
+  EventId m_replica_exit_event;
+  EventId m_ping_event;
+  EventId m_election_results_event;
+  EventId m_table_update_event;
+
+  // data storage for the node
+  uint32_t m_storageSpace;
+  uint32_t m_bufferSpace;
+
+  uint32_t m_address;
+
+  Storage m_storage;
+  Storage m_buffer;
+
+  std::set<uint64_t> m_pendingLookups;
+
+  // replication values
+  std::map<uint32_t, double> m_peerFitness;
+
+  std::map<uint32_t, double> m_peerProfiles;
+  std::map<uint32_t, EventId> m_profileTimeouts;
+  std::map<uint64_t, EventId> m_lookupTimeouts;
+  std::set<uint32_t> m_replicating_nodes;
+  std::set<uint64_t> m_received_messages;
+
+  Table m_peerTable;
+
+  Stats stats;
+
+  // things that the node is needed for
+  Ptr<EnergySource> energySource;
+
+  void StartApplication() override;
+  void StopApplication() override;
+
+  void Setup();
+
+  // RHPMAN Scheme methods.
+  void UpdateProfile();
+  void ExchangeProfiles();
+
   // event handlers
   void ExitCheck();
   void LookupTimeout(uint64_t requestID, uint64_t dataID);
@@ -163,12 +202,6 @@ class RhpmanApp : public Application {
   void ProfileTimeout(uint32_t nodeID);
   void ReplicationNodeTimeout(uint32_t nodeID);
   void HandleReplicationAnnouncement(uint32_t nodeID);
-
-  EventId m_election_watchdog_event;
-  EventId m_replica_exit_event;
-  EventId m_ping_event;
-  EventId m_election_results_event;
-  EventId m_table_update_event;
 
   // event triggers
   void BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type);
@@ -271,36 +304,9 @@ class RhpmanApp : public Application {
 
   void SuccessfulLookup(std::shared_ptr<DataItem> data);
   void FailedLookup(uint64_t dataID);
-
-  // data storage for the node
-  uint32_t m_storageSpace;
-  uint32_t m_bufferSpace;
-
-  uint32_t m_address;
-
-  Storage m_storage;
-  Storage m_buffer;
-
-  std::set<uint64_t> m_pendingLookups;
-  // std::map<uint64_t, uint64_t> m_lookupMapping;
-
-  // replication values
-
-  std::map<uint32_t, double> m_peerFitness;
-
-  std::map<uint32_t, double> m_peerProfiles;
-  std::map<uint32_t, EventId> m_profileTimeouts;
-  std::map<uint64_t, EventId> m_lookupTimeouts;
-
-  std::set<uint32_t> m_replicating_nodes;
-
-  std::set<uint64_t> m_received_messages;
-
-  Table m_peerTable;
-
-  Stats stats;
 };
 
 };  // namespace rhpman
+std::ostream& operator<<(std::ostream& os, rhpman::RhpmanApp::Role role);
 
 #endif

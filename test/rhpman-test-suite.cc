@@ -7,6 +7,7 @@
 #include "ns3/test.h"
 
 #include "dataItem-tests.h"
+#include "rhpman-tests.h"
 #include "storage-tests.h"
 #include "table-tests.h"
 
@@ -59,6 +60,27 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new GetNeighborsAODVFilterUpOnly, TestCase::QUICK);
   AddTestCase(new GetNeighborsAODVFilter3Hops, TestCase::QUICK);
   AddTestCase(new GetNeighborsAODVFilter2Hops, TestCase::QUICK);
+
+  // rhpman app tests
+  AddTestCase(new InitalRoleNonReplicating, TestCase::QUICK);
+  AddTestCase(new ColocationIfReplicating, TestCase::QUICK);
+  AddTestCase(new ColocationIfNonReplicatingNoKnownReplicators, TestCase::QUICK);
+  AddTestCase(new ColocationIfNonReplicatingOneKnownReplicators, TestCase::QUICK);
+  AddTestCase(new ColocationIfNonReplicatingMultipleKnownReplicators, TestCase::QUICK);
+  AddTestCase(new InitalChangeDegree, TestCase::QUICK);
+  AddTestCase(new ProfileIfReplicatingNode, TestCase::QUICK);
+  AddTestCase(new ProfileIfNonReplicatingNodeEmptyTable, TestCase::QUICK);
+  AddTestCase(new ProfileIfNonReplicatingNodeKnowsOtherNodes, TestCase::QUICK);
+  AddTestCase(new ProfileIfNonReplicatingNodeKnowsOtherNodesDifferentWeight, TestCase::QUICK);
+  AddTestCase(new WeightedStorageSpaceEmpty, TestCase::QUICK);
+  AddTestCase(new WeightedStorageSpaceFull, TestCase::QUICK);
+  AddTestCase(new WeightedStorageSpaceHalf, TestCase::QUICK);
+  AddTestCase(new WeightedStorageSpaceHalfSmallWeight, TestCase::QUICK);
+  AddTestCase(new SuccessLookupNullCallback, TestCase::QUICK);
+  AddTestCase(new SuccessLookupNonNullCallback, TestCase::QUICK);
+  AddTestCase(new FailedLookupNullCallback, TestCase::QUICK);
+  AddTestCase(new FailedLookupNonNullCallback, TestCase::QUICK);
+  AddTestCase(new GenerateIdTest, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite
