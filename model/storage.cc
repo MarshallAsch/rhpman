@@ -5,10 +5,7 @@
 namespace rhpman {
 using namespace ns3;
 
-Storage::Storage() {
-  m_storageSpace = 0;
-  m_storage.resize(0);
-}
+Storage::Storage() { m_storageSpace = 0; }
 
 Storage::Storage(uint32_t capacity) { Init(capacity); }
 
@@ -17,91 +14,49 @@ Storage::~Storage() { ClearStorage(); }
 // this will do the actual storage. will store the item not a copy
 // true if there was space false otherwise
 bool Storage::StoreItem(std::shared_ptr<DataItem> data) {
-  bool saved = false;
-  for (auto i = 0; i < m_storageSpace; i++) {
-    if (!m_storage[i]) {
-      m_storage[i] = data;
-      saved = true;
-      break;
-    }
-  }
+  // make sure there are not too many items being stored and that the item is not already stored
+  if (m_storage.size() >= m_storageSpace || m_storage.count(data->getID()) == 1) return false;
+  m_storage[data->getID()] = data;
 
-  return saved;
+  return true;
 }
 
 void Storage::Init(uint32_t capacity) {
   m_storageSpace = capacity;
-  m_storage.resize(capacity);
-  for (auto i = 0; i < capacity; i++) {
-    m_storage[i] = std::shared_ptr<DataItem>(nullptr);
-  }
+  ClearStorage();
 }
 
 // this will return a pointer to the data item if it is found or NULL if it is not
 std::shared_ptr<DataItem> Storage::GetItem(uint64_t dataID) {
-  auto found = std::shared_ptr<DataItem>(nullptr);
+  // auto found = std::shared_ptr<DataItem>(nullptr);
 
-  for (auto i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] && m_storage[i]->getID() == dataID) {
-      found = m_storage[i];
-      break;
-    }
-  }
+  return HasItem(dataID) ? m_storage[dataID] : std::shared_ptr<DataItem>(nullptr);
+}
+
+bool Storage::HasItem(uint64_t dataID) const { return m_storage.count(dataID) == 1; }
+
+// return true if the item was removed from storage, false if it was not found
+bool Storage::RemoveItem(uint64_t dataID) {
+  bool found = m_storage.count(dataID) == 1;
+  m_storage.erase(dataID);
 
   return found;
 }
 
-bool Storage::HasItem(uint64_t dataID) const {
-  for (auto i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// return true if the item was removed from storage, false if it was not found
-bool Storage::RemoveItem(uint64_t dataID) {
-  for (auto i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i] != NULL && m_storage[i]->getID() == dataID) {
-      m_storage[i] = std::shared_ptr<DataItem>(nullptr);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // this will empty all data items from storage
-void Storage::ClearStorage() {
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i]) {
-      m_storage[i] = std::shared_ptr<DataItem>(nullptr);
-    }
-  }
-}
+void Storage::ClearStorage() { m_storage.clear(); }
 
 std::vector<std::shared_ptr<DataItem>> Storage::GetAll() const {
   std::vector<std::shared_ptr<DataItem>> items;
 
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i]) items.push_back(m_storage[i]);
+  for (auto& pair : m_storage) {
+    items.push_back(pair.second);
   }
 
   return items;
 }
 
 // this is a helper and will return the number of data items that can be stored in local storage
-uint32_t Storage::GetFreeSpace() const {
-  uint32_t count = 0;
-
-  for (uint32_t i = 0; i < m_storageSpace; i++) {
-    if (m_storage[i]) {
-      count++;
-    }
-  }
-
-  return m_storageSpace - count;
-}
+uint32_t Storage::GetFreeSpace() const { return m_storageSpace - m_storage.size(); }
 
 };  // namespace rhpman

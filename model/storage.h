@@ -18,7 +18,9 @@ class Storage {
   /* data */
 
   uint32_t m_storageSpace;
-  std::vector<std::shared_ptr<DataItem> > m_storage;
+  // std::vector<std::shared_ptr<DataItem> > m_storage;
+
+  std::map<uint64_t, std::shared_ptr<DataItem> > m_storage;
 
  public:
   Storage();

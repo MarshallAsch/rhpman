@@ -43,6 +43,7 @@ void StorageCapacityOne::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(s.StoreItem(data), true, "Can store an item when there is space");
   NS_TEST_ASSERT_MSG_EQ(s.GetFreeSpace(), 0, "should have no free space after it is added");
   NS_TEST_ASSERT_MSG_EQ(s.StoreItem(data2), false, "Can not store an item when there is no space");
+  NS_TEST_ASSERT_MSG_EQ(s.GetFreeSpace(), 0, "should have no free space after it is added");
 
   NS_TEST_ASSERT_MSG_EQ(s.HasItem(1), true, "will have the first item");
   NS_TEST_ASSERT_MSG_EQ(s.HasItem(2), false, "will not have the second item");
@@ -54,6 +55,11 @@ void StorageCapacityOne::DoRun(void) {
       "will not have the second item");
 
   // Use this one for floating point comparisons
+  NS_TEST_ASSERT_MSG_EQ(
+      s.GetAll()[0]->getID(),
+      data->getID(),
+      "Id should match for the first item");
+
   NS_TEST_ASSERT_MSG_EQ(s.GetAll().size(), 1, "Default storage will have only one item");
 }
 
