@@ -48,6 +48,7 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new ChangeDegreeNodeJoining, TestCase::QUICK);
   AddTestCase(new ChangeDegreeNodeJoiningMultiple, TestCase::QUICK);
   AddTestCase(new ChangeDegreeNodeJoinLeaveIntermediate, TestCase::QUICK);
+  AddTestCase(new ChangeDegreeStartUpBehaviour, TestCase::QUICK);
 
   AddTestCase(new GetNeighboursEmpty, TestCase::QUICK);
   AddTestCase(new GetNeighborsDSDVFilterLocal, TestCase::QUICK);

@@ -79,6 +79,16 @@ class ChangeDegreeNodeJoinLeaveIntermediate : public TestCase {
   virtual void DoRun(void);
 };
 
+// This will test the behaviour of the change degree when the table starts initally filling up from
+// empty
+class ChangeDegreeStartUpBehaviour : public TestCase {
+ public:
+  ChangeDegreeStartUpBehaviour();
+
+ private:
+  virtual void DoRun(void);
+};
+
 // This will test the behaviour of getting the neighbors with an empty routing table string
 class GetNeighboursEmpty : public TestCase {
  public:

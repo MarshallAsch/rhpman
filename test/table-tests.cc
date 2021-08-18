@@ -140,6 +140,11 @@ ChangeDegreeNodeJoinLeaveIntermediate::ChangeDegreeNodeJoinLeaveIntermediate()
           "check that the change degree calculation for when nodes join and leave but starts and "
           "stops in the same state") {}
 
+ChangeDegreeStartUpBehaviour::ChangeDegreeStartUpBehaviour()
+    : TestCase(
+          "check that the change degree calculation for when as the table starts filling up when "
+          "initally empty") {}
+
 GetNeighboursEmpty::GetNeighboursEmpty()
     : TestCase(
           "check that getting the neighbors from the routing table string works with an empty "
@@ -239,6 +244,21 @@ void ChangeDegreeNodeJoinLeaveIntermediate::DoRun(void) {
   table.UpdateTable(tableMix);
 
   NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0, 0.0001, "3 - 3 / 3 == 0");
+}
+
+void ChangeDegreeStartUpBehaviour::DoRun(void) {
+  Table table(4, 10);
+  table.UpdateTable(tableMixNodeLeft);
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 1, 0.0001, "2 - 0 / 2 == 1");
+
+  table.UpdateTable(tableMix);
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 1, 0.0001, "3 - 0 / 3 == 1");
+
+  table.UpdateTable(tableMixNodeJoined);
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 1, 0.0001, "4 - 0 / 4 == 1");
+
+  table.UpdateTable(tableMix);
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0.333333, 0.0001, "3 - 2 / 3 == 1");
 }
 
 void GetNeighboursEmpty::DoRun(void) {
