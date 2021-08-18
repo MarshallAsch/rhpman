@@ -2,6 +2,7 @@
 //#include <stdio.h>
 //#include <stdlib.h>
 #include "table.h"
+#include <math.h> /* isnan */
 
 #include <ctype.h>
 #include <iostream>
@@ -68,17 +69,47 @@ static std::vector<std::string> tokenize(const std::string str) {
   return tokens;
 }
 
-static std::vector<std::string> getDestinations(
-    const std::vector<std::string> strings,
+static bool isLoopback(const std::string address) { return address == "127.0.0.1"; }
+
+// note this will only work in network with a mask of 255.255.0.0!!!!!!
+static bool isBroadcast(const std::string address) {
+  return address.find(".255.255") != std::string::npos;
+}
+
+static std::vector<std::string> getDsdvDestinations(
+    const std::vector<std::string> enteries,
     uint32_t maxHops) {
   std::vector<std::string> list;
 
-  for (auto it = strings.begin(); it != strings.end(); ++it) {
-    std::vector<std::string> parts = tokenize(*it);
+  for (auto entry : enteries) {
+    std::vector<std::string> parts = tokenize(entry);
 
     uint32_t hops = (uint32_t)std::stoi(parts[3], nullptr, 10);
 
-    if (hops > 0 && hops <= maxHops) list.push_back(parts[0]);
+    if (isLoopback(parts[0]) || isBroadcast(parts[0])) continue;
+    if (hops <= 0 || hops > maxHops) continue;
+
+    list.push_back(parts[0]);
+  }
+
+  return list;
+}
+
+static std::vector<std::string> getAodvDestinations(
+    const std::vector<std::string> enteries,
+    uint32_t maxHops) {
+  std::vector<std::string> list;
+
+  for (auto entry : enteries) {
+    std::vector<std::string> parts = tokenize(entry);
+
+    uint32_t hops = (uint32_t)std::stoi(parts[5], nullptr, 10);
+
+    if (parts[3] != "UP") continue;
+    if (isLoopback(parts[0]) || isBroadcast(parts[0])) continue;
+    if (hops <= 0 || hops > maxHops) continue;
+
+    list.push_back(parts[0]);
   }
 
   return list;
@@ -91,8 +122,8 @@ static uint32_t convertIpv4(const std::string address) {
 static std::set<uint32_t> createSet(const std::vector<std::string> destinations) {
   std::set<uint32_t> table;
 
-  for (auto it = destinations.begin(); it != destinations.end(); ++it) {
-    table.insert(convertIpv4(*it));
+  for (auto entry : destinations) {
+    table.insert(convertIpv4(entry));
   }
 
   return table;
@@ -101,12 +132,12 @@ static std::set<uint32_t> createSet(const std::vector<std::string> destinations)
 static std::set<uint32_t> setUnion(const std::set<uint32_t> a, const std::set<uint32_t> b) {
   std::set<uint32_t> res;
 
-  for (auto it = a.begin(); it != a.end(); ++it) {
-    res.insert(*it);
+  for (auto item : a) {
+    res.insert(item);
   }
 
-  for (auto it = b.begin(); it != b.end(); ++it) {
-    res.insert(*it);
+  for (auto item : b) {
+    res.insert(item);
   }
   return res;
 }
@@ -114,8 +145,8 @@ static std::set<uint32_t> setUnion(const std::set<uint32_t> a, const std::set<ui
 static std::set<uint32_t> setIntersection(const std::set<uint32_t> a, const std::set<uint32_t> b) {
   std::set<uint32_t> res;
 
-  for (auto it = a.begin(); it != a.end(); ++it) {
-    if (b.find(*it) != b.end()) res.insert(*it);
+  for (auto item : a) {
+    if (b.find(item) != b.end()) res.insert(item);
   }
 
   return res;
@@ -126,7 +157,15 @@ std::set<uint32_t> Table::GetNeighbors(const std::string table, uint32_t maxHops
   std::vector<std::string> trimmed = trimStrings(parts);
   std::vector<std::string> filtered = filterStrings(trimmed);
 
-  return createSet(getDestinations(filtered, maxHops));
+  std::vector<std::string> destinations;
+
+  if (table.find("AODV") != std::string::npos) {
+    destinations = getAodvDestinations(filtered, maxHops);
+  } else if (table.find("DSDV") != std::string::npos) {
+    destinations = getDsdvDestinations(filtered, maxHops);
+  }
+
+  return createSet(destinations);
 }
 
 Table::Table() {
@@ -152,16 +191,22 @@ void Table::nextTable() {
 }
 
 double Table::ComputeChangeDegree() const {
+  // 0 if there are no tables to handle edge case
+  if (numTables == 0 || currentTable >= numTables || lastTable >= numTables) return 0;
+
   uint16_t unionSize = setUnion(tables[currentTable], tables[lastTable]).size();
   uint16_t intersectSize = setIntersection(tables[currentTable], tables[lastTable]).size();
 
-  return (unionSize - intersectSize) / (double)unionSize;
+  double res = (unionSize - intersectSize) / (double)unionSize;
+  return isnan(res) ? 0 : res;
 }
 
 void Table::UpdateTable(const std::string table) {
   nextTable();
   tables[currentTable] = Table::GetNeighbors(table, maxHops);
-  ;
+
+  // std::cout << "========================================\n" << table <<
+  // "===========================================\n";
 }
 
 }  // namespace rhpman

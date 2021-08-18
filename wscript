@@ -31,6 +31,7 @@ def build(bld):
         'test/rhpman-test-suite.cc',
         'test/storage-tests.cc',
         'test/dataItem-tests.cc',
+        'test/table-tests.cc',
         ]
     # Tests encapsulating example programs should be listed here
     if (bld.env['ENABLE_EXAMPLES']):

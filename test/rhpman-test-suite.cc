@@ -8,38 +8,11 @@
 
 #include "dataItem-tests.h"
 #include "storage-tests.h"
+#include "table-tests.h"
 
 // Do not put your test classes in namespace ns3.  You may find it useful
 // to use the using directive to access the ns3 namespace directly
 using namespace ns3;
-
-// This is an example TestCase.
-class RhpmanTestCase1 : public TestCase {
- public:
-  RhpmanTestCase1();
-  virtual ~RhpmanTestCase1();
-
- private:
-  virtual void DoRun(void);
-};
-
-// Add some help text to this case to describe what it is intended to test
-RhpmanTestCase1::RhpmanTestCase1() : TestCase("rhpman test case (does nothing)") {}
-
-// This destructor does nothing but we include it as a reminder that
-// the test case should clean up after itself
-RhpmanTestCase1::~RhpmanTestCase1() {}
-
-//
-// This method is the pure virtual method from class TestCase that every
-// TestCase must implement
-//
-void RhpmanTestCase1::DoRun(void) {
-  // A wide variety of test macros are available in src/core/test.h
-  NS_TEST_ASSERT_MSG_EQ(true, true, "true doesn't equal true for some reason");
-  // Use this one for floating point comparisons
-  NS_TEST_ASSERT_MSG_EQ_TOL(0.01, 0.01, 0.001, "Numbers are not equal within tolerance");
-}
 
 // The TestSuite class names the TestSuite, identifies what type of TestSuite,
 // and enables the TestCases to be run.  Typically, only the constructor for
@@ -52,7 +25,6 @@ class RhpmanTestSuite : public TestSuite {
 
 RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
-  AddTestCase(new RhpmanTestCase1, TestCase::QUICK);
 
   // storage tests
   AddTestCase(new DefaultStorage, TestCase::QUICK);
@@ -66,6 +38,19 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new DataItemDefault, TestCase::QUICK);
   AddTestCase(new DataItemNoID, TestCase::QUICK);
   AddTestCase(new DataItemString, TestCase::QUICK);
+
+  // table tests
+  AddTestCase(new DefaultTableChangeDegree, TestCase::QUICK);
+  AddTestCase(new EmptyTableChangeDegree, TestCase::QUICK);
+  AddTestCase(new GetNeighboursEmpty, TestCase::QUICK);
+  AddTestCase(new GetNeighborsDSDVFilterLocal, TestCase::QUICK);
+  AddTestCase(new GetNeighborsDSDVFilter2Hops, TestCase::QUICK);
+  AddTestCase(new GetNeighborsDSDVFilter0Hops, TestCase::QUICK);
+
+  AddTestCase(new GetNeighborsAODVFilterLocal, TestCase::QUICK);
+  AddTestCase(new GetNeighborsAODVFilterUpOnly, TestCase::QUICK);
+  AddTestCase(new GetNeighborsAODVFilter3Hops, TestCase::QUICK);
+  AddTestCase(new GetNeighborsAODVFilter2Hops, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite
