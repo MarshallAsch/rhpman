@@ -24,6 +24,61 @@ class EmptyTableChangeDegree : public TestCase {
   virtual void DoRun(void);
 };
 
+// This will test the behaviour of a single table that the change degree is correct
+class OneTableChangeDegree : public TestCase {
+ public:
+  OneTableChangeDegree();
+
+ private:
+  virtual void DoRun(void);
+};
+
+// This will test the behaviour of a single table multiple times that the change degree is correct
+class SameTableChangeDegree : public TestCase {
+ public:
+  SameTableChangeDegree();
+
+ private:
+  virtual void DoRun(void);
+};
+
+// This will test the behaviour of the change degree when a node leaves
+class ChangeDegreeNodeLeaving : public TestCase {
+ public:
+  ChangeDegreeNodeLeaving();
+
+ private:
+  virtual void DoRun(void);
+};
+
+// This will test the behaviour of the change degree when a node joins
+class ChangeDegreeNodeJoining : public TestCase {
+ public:
+  ChangeDegreeNodeJoining();
+
+ private:
+  virtual void DoRun(void);
+};
+
+// This will test the behaviour of the change degree when multiple nodes join
+class ChangeDegreeNodeJoiningMultiple : public TestCase {
+ public:
+  ChangeDegreeNodeJoiningMultiple();
+
+ private:
+  virtual void DoRun(void);
+};
+
+// This will test the behaviour of the change degree when a node joins then leaves again between
+// checks
+class ChangeDegreeNodeJoinLeaveIntermediate : public TestCase {
+ public:
+  ChangeDegreeNodeJoinLeaveIntermediate();
+
+ private:
+  virtual void DoRun(void);
+};
+
 // This will test the behaviour of getting the neighbors with an empty routing table string
 class GetNeighboursEmpty : public TestCase {
  public:

@@ -42,6 +42,13 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   // table tests
   AddTestCase(new DefaultTableChangeDegree, TestCase::QUICK);
   AddTestCase(new EmptyTableChangeDegree, TestCase::QUICK);
+  AddTestCase(new OneTableChangeDegree, TestCase::QUICK);
+  AddTestCase(new SameTableChangeDegree, TestCase::QUICK);
+  AddTestCase(new ChangeDegreeNodeLeaving, TestCase::QUICK);
+  AddTestCase(new ChangeDegreeNodeJoining, TestCase::QUICK);
+  AddTestCase(new ChangeDegreeNodeJoiningMultiple, TestCase::QUICK);
+  AddTestCase(new ChangeDegreeNodeJoinLeaveIntermediate, TestCase::QUICK);
+
   AddTestCase(new GetNeighboursEmpty, TestCase::QUICK);
   AddTestCase(new GetNeighborsDSDVFilterLocal, TestCase::QUICK);
   AddTestCase(new GetNeighborsDSDVFilter2Hops, TestCase::QUICK);

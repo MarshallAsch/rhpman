@@ -23,6 +23,34 @@ static std::string tableMix =
     "\n"
     "\n";
 
+static std::string tableMixNodeLeft =
+    "Node: 138, Time: +60s, Local time: +60s, DSDV Routing table\n"
+    "\n"
+    "DSDV Routing table\n"
+    "Destination		Gateway		Interface		HopCount		SeqNum		LifeTime		SettlingTime\n"
+    "10.1.0.138		10.1.0.142		10.1.0.139		2         	4         	+29.973s		+5.000s\n"
+    "10.1.0.142		10.1.0.142		10.1.0.139		1         	6         	+29.967s		+6.252s\n"
+    "10.1.255.255		10.1.255.255		10.1.0.139		0         	8         	-9223371976.855s		"
+    "+0.000s\n"
+    "127.0.0.1		127.0.0.1		127.0.0.1		0         	0         	-9223371976.855s		+0.000s\n"
+    "\n"
+    "\n";
+
+static std::string tableMixNodeJoined =
+    "Node: 138, Time: +60s, Local time: +60s, DSDV Routing table\n"
+    "\n"
+    "DSDV Routing table\n"
+    "Destination		Gateway		Interface		HopCount		SeqNum		LifeTime		SettlingTime\n"
+    "10.1.0.133		10.1.0.133		10.1.0.139		         3	         6	+29.970s		+5.000s\n"
+    "10.1.0.138		10.1.0.142		10.1.0.139		2         	4         	+29.973s		+5.000s\n"
+    "10.1.0.147		10.1.0.147		10.1.0.139		1         	2         	+29.967s		+6.252s\n"
+    "10.1.0.142		10.1.0.142		10.1.0.139		1         	6         	+29.967s		+6.252s\n"
+    "10.1.255.255		10.1.255.255		10.1.0.139		0         	8         	-9223371976.855s		"
+    "+0.000s\n"
+    "127.0.0.1		127.0.0.1		127.0.0.1		0         	0         	-9223371976.855s		+0.000s\n"
+    "\n"
+    "\n";
+
 static std::string tableLong =
     "Node: 137, Time: +60s, Local time: +60s, DSDV Routing table\n"
     "\n"
@@ -97,6 +125,21 @@ DefaultTableChangeDegree::DefaultTableChangeDegree()
     : TestCase("check that the change degree calculation for a default table is 0") {}
 EmptyTableChangeDegree::EmptyTableChangeDegree()
     : TestCase("check that the change degree calculation for an empty table is 0") {}
+OneTableChangeDegree::OneTableChangeDegree()
+    : TestCase("check that the change degree calculation for a single table") {}
+SameTableChangeDegree::SameTableChangeDegree()
+    : TestCase("check that the change degree calculation for the same table twice table") {}
+ChangeDegreeNodeLeaving::ChangeDegreeNodeLeaving()
+    : TestCase("check that the change degree calculation for when a node leaves") {}
+ChangeDegreeNodeJoining::ChangeDegreeNodeJoining()
+    : TestCase("check that the change degree calculation for when a node joins") {}
+ChangeDegreeNodeJoiningMultiple::ChangeDegreeNodeJoiningMultiple()
+    : TestCase("check that the change degree calculation for when multiple nodes join") {}
+ChangeDegreeNodeJoinLeaveIntermediate::ChangeDegreeNodeJoinLeaveIntermediate()
+    : TestCase(
+          "check that the change degree calculation for when nodes join and leave but starts and "
+          "stops in the same state") {}
+
 GetNeighboursEmpty::GetNeighboursEmpty()
     : TestCase(
           "check that getting the neighbors from the routing table string works with an empty "
@@ -107,7 +150,6 @@ GetNeighborsDSDVFilter2Hops::GetNeighborsDSDVFilter2Hops()
     : TestCase(
           "getting the neighbors should remove all localhost addresses from the list and more than "
           "2 hops") {}
-
 GetNeighborsDSDVFilter0Hops::GetNeighborsDSDVFilter0Hops()
     : TestCase(
           "getting the neighbors should remove all localhost addresses from the list and more than "
@@ -117,7 +159,6 @@ GetNeighborsAODVFilterLocal::GetNeighborsAODVFilterLocal()
     : TestCase("getting the neighbors should remove all localhost addresses from an AODV table") {}
 GetNeighborsAODVFilterUpOnly::GetNeighborsAODVFilterUpOnly()
     : TestCase("AODV only include UP table entries") {}
-
 GetNeighborsAODVFilter3Hops::GetNeighborsAODVFilter3Hops()
     : TestCase("AODV only include nodes within 3 hops") {}
 GetNeighborsAODVFilter2Hops::GetNeighborsAODVFilter2Hops()
@@ -140,6 +181,66 @@ void EmptyTableChangeDegree::DoRun(void) {
       "should be 0 and not a divide by 0 exception");
 }
 
+void OneTableChangeDegree::DoRun(void) {
+  Table table(2, 10);
+  table.UpdateTable(tableMix);
+
+  NS_TEST_ASSERT_MSG_EQ(table.ComputeChangeDegree(), 1, "3 - 0 / 3 == 1");
+
+  Table table2(10, 10);
+  table2.UpdateTable(aodvUpDown);
+
+  NS_TEST_ASSERT_MSG_EQ(table2.ComputeChangeDegree(), 1, "2 - 0 / 2 == 1");
+}
+
+void SameTableChangeDegree::DoRun(void) {
+  Table table(2, 10);
+  table.UpdateTable(tableMix);
+  table.UpdateTable(tableMix);
+
+  NS_TEST_ASSERT_MSG_EQ(table.ComputeChangeDegree(), 0, "3 - 3 / 3 == 0");
+
+  Table table2(2, 10);
+  table2.UpdateTable(aodvUpDown);
+  table2.UpdateTable(aodvUpDown);
+
+  NS_TEST_ASSERT_MSG_EQ(table2.ComputeChangeDegree(), 0, "2 - 2 / 2 == 0");
+}
+
+void ChangeDegreeNodeLeaving::DoRun(void) {
+  Table table(2, 10);
+  table.UpdateTable(tableMix);
+  table.UpdateTable(tableMixNodeLeft);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0.333333, 0.0001, "3 - 2 / 3 == 0");
+}
+
+void ChangeDegreeNodeJoining::DoRun(void) {
+  Table table(2, 10);
+  table.UpdateTable(tableMix);
+  table.UpdateTable(tableMixNodeJoined);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0.25, 0.0001, "4 - 3 / 4 == 0");
+}
+
+void ChangeDegreeNodeJoiningMultiple::DoRun(void) {
+  Table table(2, 10);
+  table.UpdateTable(tableMixNodeLeft);
+  table.UpdateTable(tableMixNodeJoined);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0.5, 0.0001, "4 - 2 / 4 == 0");
+}
+
+void ChangeDegreeNodeJoinLeaveIntermediate::DoRun(void) {
+  Table table(4, 10);
+  table.UpdateTable(tableMix);
+  table.UpdateTable(tableMixNodeLeft);
+  table.UpdateTable(tableMixNodeJoined);
+  table.UpdateTable(tableMix);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(table.ComputeChangeDegree(), 0, 0.0001, "3 - 3 / 3 == 0");
+}
+
 void GetNeighboursEmpty::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(
       Table::GetNeighbors("", 2).size(),
@@ -154,11 +255,12 @@ void GetNeighborsDSDVFilterLocal::DoRun(void) {
   std::set<uint32_t> table2 = Table::GetNeighbors(tableMix, 10);
   NS_TEST_ASSERT_MSG_EQ(table2.size(), 3, "localhostEntries should be removed");
 
-  NS_TEST_ASSERT_MSG_EQ(table2.count(167837829), 1, "non local address should be present");
-
   // 10.1.0.133 // 167837829
   // 10.1.0.138 // 167837834
   // 10.1.0.142 // 167837838
+
+  NS_TEST_ASSERT_MSG_EQ(table2.count(167837829), 1, "non local address should be present");
+
   NS_TEST_ASSERT_MSG_EQ(table2.count(167837834), 1, "non local address should be present");
 
   NS_TEST_ASSERT_MSG_EQ(table2.count(167837838), 1, "non local address should be present");
@@ -168,11 +270,11 @@ void GetNeighborsDSDVFilter2Hops::DoRun(void) {
   std::set<uint32_t> table1 = Table::GetNeighbors(tableMix, 2);
   NS_TEST_ASSERT_MSG_EQ(table1.size(), 2, "localhostEntries should be removed");
 
-  NS_TEST_ASSERT_MSG_EQ(table1.count(167837829), 0, "3 hops should be removed");
-
   // 10.1.0.133 // 167837829
   // 10.1.0.138 // 167837834
   // 10.1.0.142 // 167837838
+  NS_TEST_ASSERT_MSG_EQ(table1.count(167837829), 0, "3 hops should be removed");
+
   NS_TEST_ASSERT_MSG_EQ(table1.count(167837834), 1, "non local address should be present");
 
   NS_TEST_ASSERT_MSG_EQ(table1.count(167837838), 1, "non local address should be present");

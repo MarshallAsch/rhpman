@@ -186,8 +186,8 @@ Table::Table(uint16_t num, uint32_t filter) {
 }
 
 void Table::nextTable() {
-  lastTable = currentTable;
   currentTable = (currentTable + 1) % numTables;
+  lastTable = (currentTable + 1) % numTables;
 }
 
 double Table::ComputeChangeDegree() const {
