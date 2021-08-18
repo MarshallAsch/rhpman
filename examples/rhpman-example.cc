@@ -55,10 +55,10 @@
 #include "ns3/rhpman-helper.h"
 #include "ns3/rhpman-stats.h"
 
-#include "nsutil.h"
+#include "../model/nsutil.h"
+#include "../model/util.h"
 #include "simulation-area.h"
 #include "simulation-params.h"
-#include "util.h"
 
 using namespace ns3;
 using namespace rhpman;

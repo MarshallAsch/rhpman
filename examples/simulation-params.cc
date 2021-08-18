@@ -18,12 +18,13 @@
 #include <cmath>
 #include <utility>
 
+#include "ns3/command-line.h"
+#include "ns3/double.h"
 #include "ns3/nstime.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/random-walk-2d-mobility-model.h"
 
 #include "simulation-params.h"
-#include "util.h"
 
 #define EPSILON 0.00001
 static bool isEqual(double a, double b) { return fabs(b - a) < EPSILON; }

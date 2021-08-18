@@ -25,9 +25,9 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/random-walk-2d-mobility-model.h"
 
-#include "nsutil.h"
+#include "../model/nsutil.h"
+#include "../model/util.h"
 #include "simulation-area.h"
-#include "util.h"
 
 namespace rhpman {
 
