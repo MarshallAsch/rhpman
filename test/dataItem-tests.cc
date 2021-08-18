@@ -1,5 +1,8 @@
 
 
+#include <cstddef>
+
+
 #include "dataItem-tests.h"
 
 #include "../model/dataItem.h"
@@ -18,7 +21,7 @@ void DataItemDefault::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(data.getID(), 0, "should have default id of 0");
   NS_TEST_ASSERT_MSG_EQ(data.getSize(), 0, "should have default size of 0");
   NS_TEST_ASSERT_MSG_EQ(data.getOwner(), 0, "should have default owner of 0");
-  NS_TEST_ASSERT_MSG_EQ(data.getPayload(), NULL, "should not have any data by default");
+  NS_TEST_ASSERT_MSG_EQ(data.getPayload(), 0, "should not have any data by default");
 }
 
 void DataItemNoID::DoRun(void) {
@@ -35,7 +38,7 @@ void DataItemNoID::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(data.getSize(), size, "should have default size of 0");
   NS_TEST_ASSERT_MSG_EQ(data.getOwner(), owner, "should have default owner of 0");
   NS_TEST_ASSERT_MSG_NE(data.getPayload(), payload, "should not be the same object");
-  NS_TEST_ASSERT_MSG_NE(data.getPayload(), NULL, "should not be null");
+  NS_TEST_ASSERT_MSG_NE(data.getPayload(), 0, "should not be null");
 
   delete[] payload;
 }
@@ -51,7 +54,7 @@ void DataItemString::DoRun(void) {
   NS_TEST_ASSERT_MSG_EQ(data.getOwner(), owner, "should have default owner of 0");
 
   uint8_t* res = data.getPayload();
-  NS_TEST_ASSERT_MSG_NE(res, NULL, "should not be null");
+  NS_TEST_ASSERT_MSG_NE(res, 0, "should not be null");
 
   NS_TEST_ASSERT_MSG_EQ(res[0], payload[0], "bytes should match");
   NS_TEST_ASSERT_MSG_EQ(res[1], payload[1], "bytes should match");
