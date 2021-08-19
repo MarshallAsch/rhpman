@@ -109,7 +109,7 @@ class RhpmanApp : public Application {
   uint32_t GetFreeSpace() const;
 
   void RegisterSuccessCallback(Callback<void, std::shared_ptr<DataItem> > success);
-  void RegisterfailureCallback(Callback<void, uint64_t> fail);
+  void RegisterFailureCallback(Callback<void, uint64_t> fail);
 
   static void CleanUp();
 
@@ -235,10 +235,6 @@ class RhpmanApp : public Application {
   uint32_t GetID();
   void ResetFitnesses();
   std::set<uint32_t> GetRecipientAddresses(double sigma);
-  std::set<uint32_t> FilterAddresses(
-      const std::set<uint32_t> addresses,
-      const std::set<uint32_t> exclude);
-  std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
   void TransferBuffer(uint32_t nodeID);
   void TransferStorage(uint32_t nodeID, bool stepUp);
   void SendStorage(uint32_t nodeID, StorageType type, bool stepUp);
@@ -288,6 +284,11 @@ class RhpmanApp : public Application {
 
   // static helpers
   static uint64_t GenerateMessageID();
+
+  static std::set<uint32_t> FilterAddresses(
+      const std::set<uint32_t> addresses,
+      const std::set<uint32_t> exclude);
+  static std::set<uint32_t> FilterAddress(const std::set<uint32_t> addresses, uint32_t exclude);
 
   // message generators
   static Ptr<Packet> GenerateLookup(

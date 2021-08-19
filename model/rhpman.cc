@@ -311,7 +311,7 @@ void RhpmanApp::RegisterSuccessCallback(Callback<void, std::shared_ptr<DataItem>
   m_success = success;
 }
 
-void RhpmanApp::RegisterfailureCallback(Callback<void, uint64_t> fail) { m_failed = fail; }
+void RhpmanApp::RegisterFailureCallback(Callback<void, uint64_t> fail) { m_failed = fail; }
 
 void RhpmanApp::ClearBuffer() { m_buffer.ClearStorage(); }
 
@@ -940,8 +940,8 @@ std::set<uint32_t> RhpmanApp::FilterAddresses(
     const std::set<uint32_t> exclude) {
   std::set<uint32_t> filtered = addresses;
 
-  for (auto it = exclude.begin(); it != exclude.end(); ++it) {
-    if (filtered.find(*it) != filtered.end()) filtered.erase(*it);
+  for (auto address : exclude) {
+    if (filtered.find(address) != filtered.end()) filtered.erase(address);
   }
 
   return filtered;

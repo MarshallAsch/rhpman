@@ -63,24 +63,53 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
 
   // rhpman app tests
   AddTestCase(new InitalRoleNonReplicating, TestCase::QUICK);
+
+  // colocation
   AddTestCase(new ColocationIfReplicating, TestCase::QUICK);
   AddTestCase(new ColocationIfNonReplicatingNoKnownReplicators, TestCase::QUICK);
   AddTestCase(new ColocationIfNonReplicatingOneKnownReplicators, TestCase::QUICK);
   AddTestCase(new ColocationIfNonReplicatingMultipleKnownReplicators, TestCase::QUICK);
+
+  // change degree
   AddTestCase(new InitalChangeDegree, TestCase::QUICK);
+
+  // node profile
   AddTestCase(new ProfileIfReplicatingNode, TestCase::QUICK);
   AddTestCase(new ProfileIfNonReplicatingNodeEmptyTable, TestCase::QUICK);
   AddTestCase(new ProfileIfNonReplicatingNodeKnowsOtherNodes, TestCase::QUICK);
   AddTestCase(new ProfileIfNonReplicatingNodeKnowsOtherNodesDifferentWeight, TestCase::QUICK);
+
+  // storage wight
   AddTestCase(new WeightedStorageSpaceEmpty, TestCase::QUICK);
   AddTestCase(new WeightedStorageSpaceFull, TestCase::QUICK);
   AddTestCase(new WeightedStorageSpaceHalf, TestCase::QUICK);
   AddTestCase(new WeightedStorageSpaceHalfSmallWeight, TestCase::QUICK);
+
+  // callback calling
   AddTestCase(new SuccessLookupNullCallback, TestCase::QUICK);
   AddTestCase(new SuccessLookupNonNullCallback, TestCase::QUICK);
   AddTestCase(new FailedLookupNullCallback, TestCase::QUICK);
   AddTestCase(new FailedLookupNonNullCallback, TestCase::QUICK);
+
+  // id generator
   AddTestCase(new GenerateIdTest, TestCase::QUICK);
+
+  // address filtering
+  AddTestCase(new FilterAddressSingleNoAddresses, TestCase::QUICK);
+  AddTestCase(new FilterAddressSingleNotInSet, TestCase::QUICK);
+  AddTestCase(new FilterAddressSingleInSet, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleNoAddressesNoExclude, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleNoAddressesExclude, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleAddressesNoExclude, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleAddressesSingleExclude, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleAddressesSingleExcludeNotInSet, TestCase::QUICK);
+  AddTestCase(new FilterAddressMultipleAddressesSingleExcludeInSetMix, TestCase::QUICK);
+
+  // callback registering
+  AddTestCase(new RegisterSuccessCallback, TestCase::QUICK);
+  AddTestCase(new RegisterSuccessCallbackNull, TestCase::QUICK);
+  AddTestCase(new RegisterFailureCallback, TestCase::QUICK);
+  AddTestCase(new RegisterFailureCallbackNull, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite

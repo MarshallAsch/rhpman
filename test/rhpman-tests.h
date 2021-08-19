@@ -159,4 +159,108 @@ class GenerateIdTest : public TestCase {
   virtual void DoRun(void);
 };
 
+class FilterAddressSingleNoAddresses : public TestCase {
+ public:
+  FilterAddressSingleNoAddresses();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressSingleNotInSet : public TestCase {
+ public:
+  FilterAddressSingleNotInSet();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressSingleInSet : public TestCase {
+ public:
+  FilterAddressSingleInSet();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleNoAddressesNoExclude : public TestCase {
+ public:
+  FilterAddressMultipleNoAddressesNoExclude();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleNoAddressesExclude : public TestCase {
+ public:
+  FilterAddressMultipleNoAddressesExclude();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleAddressesNoExclude : public TestCase {
+ public:
+  FilterAddressMultipleAddressesNoExclude();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleAddressesSingleExclude : public TestCase {
+ public:
+  FilterAddressMultipleAddressesSingleExclude();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleAddressesSingleExcludeNotInSet : public TestCase {
+ public:
+  FilterAddressMultipleAddressesSingleExcludeNotInSet();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class FilterAddressMultipleAddressesSingleExcludeInSetMix : public TestCase {
+ public:
+  FilterAddressMultipleAddressesSingleExcludeInSetMix();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class RegisterSuccessCallback : public TestCase {
+ public:
+  RegisterSuccessCallback();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class RegisterSuccessCallbackNull : public TestCase {
+ public:
+  RegisterSuccessCallbackNull();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class RegisterFailureCallback : public TestCase {
+ public:
+  RegisterFailureCallback();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class RegisterFailureCallbackNull : public TestCase {
+ public:
+  RegisterFailureCallbackNull();
+
+ private:
+  virtual void DoRun(void);
+};
+
 #endif

@@ -103,7 +103,7 @@ void DataAccess::StartApplication() {
   m_rhpman = GetNode()->GetApplication(0)->GetObject<RhpmanApp>();
 
   m_rhpman->RegisterSuccessCallback(MakeCallback(&success));
-  m_rhpman->RegisterfailureCallback(MakeCallback(&failed));
+  m_rhpman->RegisterFailureCallback(MakeCallback(&failed));
   m_nodeID = GetID();
 
   if (m_role == Role::OWNER) CreateDataItem();
