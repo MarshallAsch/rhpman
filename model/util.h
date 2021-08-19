@@ -19,6 +19,7 @@
 #define __util_h
 
 #include <inttypes.h>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -59,5 +60,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
   os << "]";
   return os;
 }
+#define EPSILON 0.00001
+static inline bool isEqual(double a, double b) { return fabs(b - a) < EPSILON; }
 
 #endif

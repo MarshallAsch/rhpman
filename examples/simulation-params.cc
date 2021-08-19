@@ -15,7 +15,6 @@
 /// PERFORMANCE OF THIS SOFTWARE.
 
 #include <inttypes.h>
-#include <cmath>
 #include <utility>
 
 #include "ns3/command-line.h"
@@ -26,8 +25,7 @@
 
 #include "simulation-params.h"
 
-#define EPSILON 0.00001
-static bool isEqual(double a, double b) { return fabs(b - a) < EPSILON; }
+#include "../model/util.h"
 
 namespace rhpman {
 // static

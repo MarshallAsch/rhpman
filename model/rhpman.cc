@@ -14,8 +14,6 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
-#define EPSILON 0.00001
-
 #include <algorithm>
 #include <map>
 
@@ -994,8 +992,7 @@ double RhpmanApp::CalculateElectionFitness() const {
   double changeDegree = CalculateChangeDegree();
 
   double fitness;
-  // check to make sure it is not =
-  if (fabs(changeDegree - 0) <= EPSILON) {
+  if (isEqual(changeDegree, 0)) {
     fitness = DBL_MAX;
   } else {
     fitness = (GetWeightedStorageSpace() + GetWeightedEnergyLevel()) / changeDegree;
