@@ -539,13 +539,13 @@ void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type) {
 // this will send to all nodes within h_r hops
 void RhpmanApp::BroadcastToElection(Ptr<Packet> packet, Stats::Type type) {
   m_election_socket->Send(packet);
-  stats.incSent(type);
+  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_electionNeighborhoodHops));
 }
 
 // this does not have a TTL restriction, use this for targetted messages
 void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type) {
   m_socket_recv->SendTo(packet, 0, InetSocketAddress(dest, APPLICATION_PORT));
-  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_electionNeighborhoodHops));
+  stats.incSent(type);
 }
 
 // ================================================
