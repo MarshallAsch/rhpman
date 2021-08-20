@@ -1,11 +1,12 @@
 
-#define private public
 
 #include "rhpman-tests.h"
+#include "ns3/callback.h"
 
+
+#define private public
 #include "../model/dataItem.h"
 #include "../model/rhpman.h"
-#include "ns3/callback.h"
 
 using namespace ns3;
 using namespace rhpman;
