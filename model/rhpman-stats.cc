@@ -16,10 +16,12 @@ static uint64_t powerLoss;
 static uint64_t recharged;
 
 static uint64_t totalSent;
+static uint64_t totalExpectedRecipients;
 static uint64_t totalReceived;
 static uint64_t duplicatesReceived;
 
 static uint64_t sentCounters[TYPE_ENUM_SIZE];
+static uint64_t recipientCounters[TYPE_ENUM_SIZE];
 static uint64_t receivedCounters[TYPE_ENUM_SIZE];
 
 namespace rhpman {
@@ -74,11 +76,13 @@ void Stats::Reset() {
   recharged = 0;
 
   totalSent = 0;
+  totalExpectedRecipients = 0;
   totalReceived = 0;
   duplicatesReceived = 0;
 
   for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
     sentCounters[i] = 0;
+    recipientCounters[i] = 0;
     receivedCounters[i] = 0;
   }
 }
@@ -101,12 +105,18 @@ void Stats::Print(std::string prefix) {
 
   // message stats
   std::cout << prefix << "TotalSent\t" << unsigned(totalSent) << "\n";
+  std::cout << prefix << "TotalExpectedRecipients\t" << unsigned(totalExpectedRecipients) << "\n";
   std::cout << prefix << "TotalReceived\t" << unsigned(totalReceived) << "\n";
   std::cout << prefix << "TotalDuplicates\t" << unsigned(duplicatesReceived) << "\n";
 
   for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
     std::cout << prefix << "TotalSent" << TypeString(static_cast<Stats::Type>(i)) << "\t"
               << unsigned(sentCounters[i]) << "\n";
+  }
+
+  for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
+    std::cout << prefix << "TotalExpectedReceives" << TypeString(static_cast<Stats::Type>(i)) << "\t"
+              << unsigned(recipientCounters[i]) << "\n";
   }
 
   for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
@@ -131,8 +141,10 @@ void Stats::addPending(uint64_t num) { pending += num; }
 
 // stats related to messages
 void Stats::incSent(Stats::Type type, uint32_t expectedRecipients) {
-  totalSent += expectedRecipients;
-  sentCounters[static_cast<int>(type)] += expectedRecipients;
+  totalSent++;;
+  totalExpectedRecipients += expectedRecipients;
+  sentCounters[static_cast<int>(type)] += 1;
+  recipientCounters[static_cast<int>(type)] += expectedRecipients;
 }
 
 void Stats::incReceived(Stats::Type type) {
