@@ -25,7 +25,6 @@
 #define __RHPMAN_APP_H_
 
 // DEFINE THIS FOR TESTING ONLY!!!
-#define private public
 
 // Uncomment this to enable the optional carrier forwarding
 #define __RHPMAN_OPTIONAL_CARRIER_FORWARDING

@@ -1,4 +1,5 @@
 
+#define private public
 
 #include "rhpman-tests.h"
 
