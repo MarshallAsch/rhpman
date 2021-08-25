@@ -76,7 +76,7 @@ TypeId DataAccess::GetTypeId() {
               "Time to used to generate the delay between data updates (T)",
               TimeValue(120.0_sec),
               MakeTimeAccessor(&DataAccess::m_update_generation_time),
-              MakeTimeChecker(0.1_sec))
+              MakeTimeChecker(0.0_sec))
           .AddAttribute(
               "DataSize",
               "The number of bytes to use as the size for the data items",
@@ -120,9 +120,11 @@ void DataAccess::StartApplication() {
 
   m_state = State::RUNNING;
 
-  // TODO: Schedule events.
   scheduleLookup();
-  // scheduleUpdate();   // not actually implemented for this experiment
+
+  if (m_update_generation_time.GetSeconds() != 0) {
+    scheduleUpdate();
+  }
 }
 
 // override

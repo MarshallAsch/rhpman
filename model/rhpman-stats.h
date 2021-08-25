@@ -49,6 +49,25 @@ class Stats {
   void Print(std::string prefix = "");
   void Reset();
 
+  uint64_t getSave();
+  uint64_t getLookup();
+  uint64_t getSuccess();
+  uint64_t getFailed();
+  uint64_t getLate();
+  uint64_t getCache();
+  uint64_t getPowerloss();
+  uint64_t getPowerRecharge();
+  uint64_t getPending();
+  uint64_t getTotalSent();
+  uint64_t getSent(Type type);
+  uint64_t getReceived(Type type);
+  uint64_t getTotalReceived();
+  uint64_t getExpectedReceive(Type type);
+  uint64_t getTotalExpectedReceive();
+  uint64_t getDuplicate();
+  uint64_t getStepUp();
+  uint64_t getStepDown();
+
  private:
   std::string TypeString(Stats::Type type) const;
 };

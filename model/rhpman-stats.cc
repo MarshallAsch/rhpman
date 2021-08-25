@@ -115,8 +115,8 @@ void Stats::Print(std::string prefix) {
   }
 
   for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
-    std::cout << prefix << "TotalExpectedReceives" << TypeString(static_cast<Stats::Type>(i)) << "\t"
-              << unsigned(recipientCounters[i]) << "\n";
+    std::cout << prefix << "TotalExpectedReceives" << TypeString(static_cast<Stats::Type>(i))
+              << "\t" << unsigned(recipientCounters[i]) << "\n";
   }
 
   for (auto i = 0; i < TYPE_ENUM_SIZE; i++) {
@@ -141,7 +141,8 @@ void Stats::addPending(uint64_t num) { pending += num; }
 
 // stats related to messages
 void Stats::incSent(Stats::Type type, uint32_t expectedRecipients) {
-  totalSent++;;
+  totalSent++;
+  ;
   totalExpectedRecipients += expectedRecipients;
   sentCounters[static_cast<int>(type)] += 1;
   recipientCounters[static_cast<int>(type)] += expectedRecipients;
@@ -152,7 +153,10 @@ void Stats::incReceived(Stats::Type type) {
   receivedCounters[static_cast<int>(type)]++;
 }
 
-void Stats::incDuplicate() { duplicatesReceived++; }
+void Stats::incDuplicate() {
+  totalReceived++;
+  duplicatesReceived++;
+}
 
 void Stats::incStepUp() { stepUps++; }
 
@@ -161,5 +165,28 @@ void Stats::incStepDown() { stepDowns++; }
 void Stats::incPowerloss() { powerLoss++; }
 
 void Stats::incPowerRecharge() { recharged++; }
+
+uint64_t Stats::getSave() { return saves; }
+uint64_t Stats::getLookup() { return lookups; }
+uint64_t Stats::getSuccess() { return lookupSuccess; }
+uint64_t Stats::getFailed() { return lookupFailed; }
+uint64_t Stats::getLate() { return lookupLate; }
+uint64_t Stats::getCache() { return cacheHits; }
+uint64_t Stats::getPowerloss() { return powerLoss; }
+uint64_t Stats::getPowerRecharge() { return recharged; }
+uint64_t Stats::getPending() { return pending; }
+uint64_t Stats::getTotalSent() { return totalSent; }
+uint64_t Stats::getSent(Type type) { return sentCounters[static_cast<int>(type)]; }
+
+uint64_t Stats::getExpectedReceive(Type type) { return recipientCounters[static_cast<int>(type)]; }
+
+uint64_t Stats::getTotalExpectedReceive() { return totalExpectedRecipients; }
+
+uint64_t Stats::getReceived(Type type) { return receivedCounters[static_cast<int>(type)]; }
+
+uint64_t Stats::getTotalReceived() { return totalReceived; }
+uint64_t Stats::getDuplicate() { return duplicatesReceived; }
+uint64_t Stats::getStepUp() { return stepUps; }
+uint64_t Stats::getStepDown() { return stepDowns; }
 
 };  // namespace rhpman

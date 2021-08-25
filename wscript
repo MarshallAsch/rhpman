@@ -51,8 +51,6 @@ def build(bld):
         'model/dataAccess.h',
         'helper/rhpman-helper.h',
         'helper/data-access-helper.h',
-       # 'model/proto/messages.proto',
-      #  'model/messages.pb.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
