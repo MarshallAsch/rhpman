@@ -216,6 +216,8 @@ void RhpmanApp::StartApplication() {
   m_buffer.Init(m_bufferSpace);
 
   m_peerTable = Table(m_profileDelay.GetSeconds(), m_neighborhoodHops);
+
+  m_min_ping_time = Simulator::Now();
   m_state = State::RUNNING;
 
   // TODO: Schedule events.
@@ -559,6 +561,8 @@ void RhpmanApp::SendStartElection() {
 }
 
 void RhpmanApp::SendPing() {
+  if (m_min_ping_time > Simulator::Now()) return;
+
   Ptr<Packet> message =
       GeneratePing(CalculateProfile(), CalculateElectionFitness(), m_role == Role::REPLICATING);
 
@@ -567,6 +571,8 @@ void RhpmanApp::SendPing() {
   } else {
     BroadcastToNeighbors(message, Stats::Type::PING);
   }
+
+  m_min_ping_time = Simulator::Now() + Seconds(1);
 }
 
 // this will take the IP address of the new node to become a replicating node
@@ -881,7 +887,7 @@ void RhpmanApp::RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint
 void RhpmanApp::RunElection() {
   m_min_election_time = Simulator::Now() + m_election_cooldown;
 
-  SendPing();
+  SendPing();  // this is scheduled to calculate node fitnesses
   ScheduleElectionCheck();
 }
 

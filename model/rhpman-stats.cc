@@ -38,7 +38,7 @@ Stats::Stats() {
 
 Stats::~Stats() {}
 
-std::string Stats::TypeString(Stats::Type type) const {
+std::string Stats::TypeString(Stats::Type type) {
   switch (type) {
     case Type::PING:
       return "PING";

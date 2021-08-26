@@ -70,7 +70,7 @@ TypeId DataAccess::GetTypeId() {
               "Time to used to generate the delay between data lookups (T)",
               TimeValue(30.0_sec),
               MakeTimeAccessor(&DataAccess::m_request_generation_time),
-              MakeTimeChecker(0.1_sec))
+              MakeTimeChecker(0.0_sec))
           .AddAttribute(
               "UpdateTime",
               "Time to used to generate the delay between data updates (T)",
@@ -120,7 +120,9 @@ void DataAccess::StartApplication() {
 
   m_state = State::RUNNING;
 
-  scheduleLookup();
+  if (m_request_generation_time.GetSeconds() != 0) {
+    scheduleLookup();
+  }
 
   if (m_update_generation_time.GetSeconds() != 0) {
     scheduleUpdate();

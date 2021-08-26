@@ -150,6 +150,7 @@ class RhpmanApp : public Application {
   Time m_election_cooldown;
   Time m_min_election_time;  // this is the earliest time that another election is allowed to be
                              // requested by a node
+  Time m_min_ping_time;
 
   EventId m_election_watchdog_event;
   EventId m_replica_exit_event;

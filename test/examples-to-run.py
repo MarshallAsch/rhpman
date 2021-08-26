@@ -8,8 +8,10 @@
 #
 # See test.py for more information.
 cpp_examples = [
-    ("trigger-timeouts-example", "True", "False"),
-    ("no-timeouts-example", "True", "False"),
+    ("trigger-timeouts-example", True, "False"),
+    ("no-timeouts-example", True, "False"),
+    ("ping-count-example", True, "False"),
+    ("collisions-example", True, "False"),
 
 ]
 

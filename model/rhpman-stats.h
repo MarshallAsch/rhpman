@@ -68,8 +68,7 @@ class Stats {
   uint64_t getStepUp();
   uint64_t getStepDown();
 
- private:
-  std::string TypeString(Stats::Type type) const;
+  static std::string TypeString(Stats::Type type);
 };
 
 };  // namespace rhpman
