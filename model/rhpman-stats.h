@@ -35,16 +35,16 @@ class Stats {
   void incCache();
   void incPowerloss();
   void incPowerRecharge();
-
-  void addPending(uint64_t num);
-
-  // stats related to messages
-  void incSent(Type type, uint32_t expectedRecipients = 1);
-  void incReceived(Type type);
   void incDuplicate();
 
   void incStepUp();
   void incStepDown();
+
+  void addPending(uint64_t num);
+
+  // stats related to messages
+  void addSent(Type type, uint32_t expectedRecipients = 1);
+  void incReceived(Type type);
 
   void Print(std::string prefix = "");
   void Reset();

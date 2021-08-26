@@ -533,19 +533,19 @@ static rhpman::packets::Message ParsePacket(const Ptr<Packet> packet) {
 // this will send to all nodes within h hops
 void RhpmanApp::BroadcastToNeighbors(Ptr<Packet> packet, Stats::Type type) {
   m_neighborhood_socket->Send(packet);
-  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_neighborhoodHops));
+  stats.addSent(type, RhpmanApp::CountExpectedRecipients(m_neighborhoodHops));
 }
 
 // this will send to all nodes within h_r hops
 void RhpmanApp::BroadcastToElection(Ptr<Packet> packet, Stats::Type type) {
   m_election_socket->Send(packet);
-  stats.incSent(type, RhpmanApp::CountExpectedRecipients(m_electionNeighborhoodHops));
+  stats.addSent(type, RhpmanApp::CountExpectedRecipients(m_electionNeighborhoodHops));
 }
 
 // this does not have a TTL restriction, use this for targetted messages
 void RhpmanApp::SendMessage(Ipv4Address dest, Ptr<Packet> packet, Stats::Type type) {
   m_socket_recv->SendTo(packet, 0, InetSocketAddress(dest, APPLICATION_PORT));
-  stats.incSent(type);
+  stats.addSent(type);
 }
 
 // ================================================

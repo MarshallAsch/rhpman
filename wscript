@@ -30,6 +30,7 @@ def build(bld):
     module_test.source = [
         'test/rhpman-test-suite.cc',
         'test/storage-tests.cc',
+        'test/stats-tests.cc',
         'test/dataItem-tests.cc',
         'test/table-tests.cc',
         'test/rhpman-tests.cc',

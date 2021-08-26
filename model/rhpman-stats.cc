@@ -140,9 +140,8 @@ void Stats::incCache() { cacheHits++; }
 void Stats::addPending(uint64_t num) { pending += num; }
 
 // stats related to messages
-void Stats::incSent(Stats::Type type, uint32_t expectedRecipients) {
+void Stats::addSent(Stats::Type type, uint32_t expectedRecipients) {
   totalSent++;
-  ;
   totalExpectedRecipients += expectedRecipients;
   sentCounters[static_cast<int>(type)] += 1;
   recipientCounters[static_cast<int>(type)] += expectedRecipients;

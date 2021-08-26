@@ -8,6 +8,7 @@
 
 #include "dataItem-tests.h"
 #include "rhpman-tests.h"
+#include "stats-tests.h"
 #include "storage-tests.h"
 #include "table-tests.h"
 
@@ -110,6 +111,146 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new RegisterSuccessCallbackNull, TestCase::QUICK);
   AddTestCase(new RegisterFailureCallback, TestCase::QUICK);
   AddTestCase(new RegisterFailureCallbackNull, TestCase::QUICK);
+
+  // stats tests
+  AddTestCase(new StatsTestResetCounters, TestCase::QUICK);
+  AddTestCase(new TypeStringValidValues, TestCase::QUICK);
+  AddTestCase(new StatsPrintDefaultPrefix, TestCase::QUICK);
+  AddTestCase(new StatsPrintWithPrefix, TestCase::QUICK);
+
+  // stats inital value checks
+  AddTestCase(new InitalSaveValue, TestCase::QUICK);
+  AddTestCase(new InitalLookupValue, TestCase::QUICK);
+  AddTestCase(new InitalSuccessValue, TestCase::QUICK);
+  AddTestCase(new InitalFailedValue, TestCase::QUICK);
+  AddTestCase(new InitalLateValue, TestCase::QUICK);
+  AddTestCase(new InitalTotalPendingValue, TestCase::QUICK);
+  AddTestCase(new InitalTotalSentValue, TestCase::QUICK);
+  AddTestCase(new InitalTotalReceivedValue, TestCase::QUICK);
+  AddTestCase(new InitalTotalExpectedReceiveValue, TestCase::QUICK);
+  AddTestCase(new InitalDuplicateValue, TestCase::QUICK);
+  AddTestCase(new InitalStepUpValue, TestCase::QUICK);
+  AddTestCase(new InitalStepDownValue, TestCase::QUICK);
+  AddTestCase(new InitalCacheHitValue, TestCase::QUICK);
+  AddTestCase(new InitalPowerLossValue, TestCase::QUICK);
+  AddTestCase(new InitalPowerRechargedValue, TestCase::QUICK);
+  AddTestCase(new InitalSentTypeValue, TestCase::QUICK);
+  AddTestCase(new InitalReceivedTypeValue, TestCase::QUICK);
+  AddTestCase(new InitalExpectedTypeValue, TestCase::QUICK);
+
+  // stats increment once
+  AddTestCase(new StatsIncrementSaveOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLookupOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSuccessOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementFailedOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLateOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementCacheHitOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerLossOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerRechargedOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementDuplicateMessageOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepUpOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepDownOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsAddPendingOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferMultipleOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedUnknownOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedPingOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedModeChangeOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedElectionRequestOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedStoreOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupnOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupResponseOnlyOnce, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedTransferOnlyOnce, TestCase::QUICK);
+
+  // stats increment multiple times
+  AddTestCase(new StatsIncrementSaveMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLookupMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSuccessMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementFailedMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLateMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementCacheHitMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerLossMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerRechargedMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementDuplicateMessageMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepUpMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepDownMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsAddPendingMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferMultipleMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedUnknownMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedPingMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedModeChangeMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedElectionRequestMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedStoreMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupnMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupResponseMultipleTimes, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedTransferMultipleTimes, TestCase::QUICK);
+
+  // stats increment should affect the same counts from multiple instances
+  AddTestCase(new StatsIncrementSaveStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLookupStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSuccessStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementFailedStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementLateStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementCacheHitStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerLossStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementPowerRechargedStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementDuplicateMessageStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepUpStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementElectionStepDownStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsAddPendingStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentUnknownMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentPingMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentModeChangeMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentElectionRequestMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentStoreMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentLookupResponseMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementSentTransferMultipleStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedUnknownStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedPingStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedModeChangeStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedElectionRequestStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedStoreStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupnStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedLookupResponseStaticValues, TestCase::QUICK);
+  AddTestCase(new StatsIncrementReceivedTransferStaticValues, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite
