@@ -1,16 +1,15 @@
 
 
 ////// Simulation test cases:
-// lookup timeouts do not triggered when they are set to a 0 value.
+// test to make sure that the correct number of ping messages get sent
 
-/// \file no-timeouts-example.cc
+/// \file ping-count-example.cc
 /// \author Marshall Asch <masch@uoguelph.ca>
-/// \brief The purpose of this example is to run the RHPMAN scheme on 10 nodes
-///        that are outside of communication range with eachother. There is one
-///        data item and all nodes will try to access it every second, with a
-///        0 second lookup timeout, which should dissable timeouts.
-///        In this test there should be very few success's, zero timeouts, and
-///        a very large number of pending lookups when the simulation finishes.
+/// \brief The purpose of this example is to run the RHPMAN scheme on 2 nodes
+///        that are within communication range with eachother. There are no
+///        data items.
+///        In this test there should be the correct number of ping messages being
+///        sent and received by the nodes. The nodes join the network within 1 second of eachother.
 ///
 /// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
@@ -74,7 +73,7 @@ int main(int argc, char* argv[]) {
 
   /* Create nodes, network topology, and start simulation. */
   NodeContainer allAdHocNodes;
-  allAdHocNodes.Create(10);
+  allAdHocNodes.Create(2);
 
   MobilityHelper mobilityHelper;
 
@@ -102,7 +101,7 @@ int main(int argc, char* argv[]) {
   // They do not assume any propagation loss model, so we use a constant
   // propagation loss model which amounts to having connectivity withing the
   // radius, and having no connectivity outside the radius.
-  wifiChannel.AddPropagationLoss("ns3::RangePropagationLossModel", "MaxRange", DoubleValue(5));
+  wifiChannel.AddPropagationLoss("ns3::RangePropagationLossModel", "MaxRange", DoubleValue(20));
 
   wifiPhy.SetChannel(wifiChannel.Create());
 
@@ -160,16 +159,20 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("LowPowerThreshold", DoubleValue(0.2));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
-  rhpmanApps.Start(Seconds(0));
+  Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
+  jitter->SetAttribute("Min", DoubleValue(0));
+  jitter->SetAttribute("Max", DoubleValue(1.0));
+  rhpmanApps.StartWithJitter(Seconds(0), jitter);
+  // rhpmanApps.Start(Seconds(0));
 
   rhpmanApps.Stop(Seconds(100));
 
   // Install the RHPMAN Scheme onto each node.
   DataAccessHelper dataAccess;
-  dataAccess.SetAttribute("RequestTime", TimeValue(Seconds(1)));
+  dataAccess.SetAttribute("RequestTime", TimeValue(Seconds(0)));
   dataAccess.SetAttribute("UpdateTime", TimeValue(Seconds(0)));
   dataAccess.SetAttribute("DataSize", UintegerValue(512));
-  dataAccess.SetDataOwners(1);
+  dataAccess.SetDataOwners(0);
 
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
   accessApps.Start(Seconds(0));
@@ -183,17 +186,18 @@ int main(int argc, char* argv[]) {
   NS_LOG_UNCOND("Done.");
 
   // check to make sure that the failed lookup count is greater than 0
-  NS_ASSERT_MSG(stats.getSave() == 1, "only one data item should have been created in the system");
-  NS_ASSERT_MSG(stats.getLookup() > 100, "There should be a large number of data lookups");
-  NS_ASSERT_MSG(stats.getFailed() == 0, "There should be no data failures");
-  NS_ASSERT_MSG(stats.getPending() > 100, "There should be a large number of pending data lookups");
-  NS_ASSERT_MSG(stats.getSuccess() > 1, "There should be some successes");
-  NS_ASSERT_MSG(stats.getSuccess() < stats.getLookup(), "not all should be success");
-  NS_ASSERT_MSG(stats.getPending() < stats.getLookup(), "not all should be pending");
-  NS_ASSERT_MSG(stats.getPending() > stats.getSuccess(), "Should be more pending than success");
-
-  NS_ASSERT_MSG(stats.getTotalExpectedReceive() == 0, "expect none to receive any mssages");
-  NS_ASSERT_MSG(stats.getTotalReceived() == 0, "expect none to receive any mssages");
+  NS_ASSERT_MSG(stats.getSave() == 0, "no data items should have been created in the system");
+  NS_ASSERT_MSG(stats.getLookup() == 0, "No lookups should have happened");
+  NS_ASSERT_MSG(
+      stats.getSent(Stats::Type::PING) == 40,
+      "there should have been 40 ping messages sent");
+  NS_ASSERT_MSG(
+      stats.getReceived(Stats::Type::PING) == 39,
+      "there should have been around 39 ping messages received, because the first one should be "
+      "sent before the second node joins");
+  NS_ASSERT_MSG(
+      stats.getExpectedReceive(Stats::Type::PING) == 40,
+      "there should have been 30 ping messages should have been expected");
 
   RhpmanApp::CleanUp();
 

@@ -263,4 +263,28 @@ class RegisterFailureCallbackNull : public TestCase {
   virtual void DoRun(void);
 };
 
+class GetFreeSpaceEmpty : public TestCase {
+ public:
+  GetFreeSpaceEmpty();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class GetFreeSpaceFull : public TestCase {
+ public:
+  GetFreeSpaceFull();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class GetFreeSpaceHalf : public TestCase {
+ public:
+  GetFreeSpaceHalf();
+
+ private:
+  virtual void DoRun(void);
+};
+
 #endif

@@ -12,6 +12,7 @@ cpp_examples = [
     ("no-timeouts-example", True, "False"),
     ("ping-count-example", True, "False"),
     ("collisions-example", True, "False"),
+    ("stable-network-one-election-example", True, "False"),
 
 ]
 
@@ -22,3 +23,6 @@ cpp_examples = [
 #
 # See test.py for more information.
 python_examples = []
+
+
+

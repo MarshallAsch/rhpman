@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("ProfileUpdateDelay", TimeValue(Seconds(5)));
   rhpman.SetAttribute("ElectionCooldown", TimeValue(Seconds(5)));
   rhpman.SetAttribute("ElectionPeriod", TimeValue(Seconds(5)));
-  rhpman.SetAttribute("PeerTimeout", TimeValue(Seconds(5)));
+  rhpman.SetAttribute("PeerTimeout", TimeValue(Seconds(10)));
   rhpman.SetAttribute("RequestTimeout", TimeValue(Seconds(5)));
   rhpman.SetAttribute("StorageWeight", DoubleValue(0.5));
   rhpman.SetAttribute("EnergyWeight", DoubleValue(0.5));

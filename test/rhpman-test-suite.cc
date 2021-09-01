@@ -65,6 +65,11 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   // rhpman app tests
   AddTestCase(new InitalRoleNonReplicating, TestCase::QUICK);
 
+  // free space checks
+  AddTestCase(new GetFreeSpaceEmpty, TestCase::QUICK);
+  AddTestCase(new GetFreeSpaceFull, TestCase::QUICK);
+  AddTestCase(new GetFreeSpaceHalf, TestCase::QUICK);
+
   // colocation
   AddTestCase(new ColocationIfReplicating, TestCase::QUICK);
   AddTestCase(new ColocationIfNonReplicatingNoKnownReplicators, TestCase::QUICK);

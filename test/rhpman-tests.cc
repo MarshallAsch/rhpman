@@ -82,6 +82,12 @@ RegisterFailureCallback::RegisterFailureCallback()
     : TestCase("registering a failure callback with a valid function") {}
 RegisterFailureCallbackNull::RegisterFailureCallbackNull()
     : TestCase("removing a registered failure callback") {}
+GetFreeSpaceEmpty::GetFreeSpaceEmpty()
+    : TestCase("Checking the storage space when there are no items stored") {}
+GetFreeSpaceFull::GetFreeSpaceFull()
+    : TestCase("checking the storage space when there is no more space") {}
+GetFreeSpaceHalf::GetFreeSpaceHalf()
+    : TestCase("checking the storage space when there is some space left") {}
 
 /////////  actual test functions here
 
@@ -275,6 +281,35 @@ void WeightedStorageSpaceHalfSmallWeight::DoRun(void) {
       0.25,
       0.00001,
       "Node with nothing stored will have a value of 25%");
+}
+
+void GetFreeSpaceEmpty::DoRun(void) {
+  RhpmanApp rhpman;
+  rhpman.m_storageSpace = 10;
+  rhpman.m_storage.Init(10);
+
+  NS_TEST_ASSERT_MSG_EQ(rhpman.GetFreeSpace(), 10, "Node should have the total space free");
+}
+
+void GetFreeSpaceFull::DoRun(void) {
+  RhpmanApp rhpman;
+  rhpman.m_storageSpace = 2;
+  rhpman.m_storage.Init(2);
+
+  rhpman.m_storage.StoreItem(std::make_shared<DataItem>(1, 50, "1234567890"));
+  rhpman.m_storage.StoreItem(std::make_shared<DataItem>(2, 60, "0987654321"));
+
+  NS_TEST_ASSERT_MSG_EQ(rhpman.GetFreeSpace(), 0, "Node should have no available space ");
+}
+
+void GetFreeSpaceHalf::DoRun(void) {
+  RhpmanApp rhpman;
+  rhpman.m_storageSpace = 2;
+  rhpman.m_storage.Init(2);
+
+  rhpman.m_storage.StoreItem(std::make_shared<DataItem>(1, 50, "1234567890"));
+
+  NS_TEST_ASSERT_MSG_EQ(rhpman.GetFreeSpace(), 1, "Node should have some storage space free");
 }
 
 void SuccessLookupNullCallback::DoRun(void) {

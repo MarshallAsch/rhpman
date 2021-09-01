@@ -152,7 +152,7 @@ TypeId RhpmanApp::GetTypeId() {
               "PeerTimeout",
               "Time to wait between last hearing from a node and removing them from the list of "
               "neighbors or replicating nodes (T)",
-              TimeValue(5.0_sec),
+              TimeValue(12.0_sec),
               MakeTimeAccessor(&RhpmanApp::m_peer_timeout),
               MakeTimeChecker(0.1_sec))
           .AddAttribute(
@@ -647,8 +647,10 @@ void RhpmanApp::ScheduleLookupTimeout(uint64_t requestID, uint64_t dataID) {
 void RhpmanApp::ScheduleProfileTimeout(uint32_t nodeID) {
   if (m_state != State::RUNNING) return;
 
-  EventId e = m_profileTimeouts[nodeID];
-  e.Cancel();
+  // EventId e = m_profileTimeouts[nodeID];
+  // e.Cancel();
+
+  m_profileTimeouts[nodeID].Cancel();
 
   m_profileTimeouts[nodeID] =
       Simulator::Schedule(m_peer_timeout, &RhpmanApp::ProfileTimeout, this, nodeID);
@@ -734,7 +736,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       HandleTransfer(items, message.transfer().stepup());
     } else {
       stats.incReceived(Stats::Type::UNKOWN);
-      std::cout << "handling message: other\n";
+      std::cerr << "handling message: other\n";
       NS_LOG_WARN("unknown message type");
     }
   }
@@ -776,11 +778,7 @@ void RhpmanApp::HandleModeChange(uint32_t oldNode, uint32_t newNode) {
     m_replicating_nodes.insert(newNode);
   } else if (newNode == 0) {
     m_replicating_nodes.erase(oldNode);
-
-    if (m_replicating_nodes.size() == 0) {
-      TriggerElection();
-    }
-
+    TriggerElection();
   } else {
     m_replicating_nodes.erase(oldNode);
     m_replicating_nodes.insert(newNode);
@@ -1074,6 +1072,11 @@ void RhpmanApp::TriggerElection() {
     return;
   }
 
+  if (m_role == Role::REPLICATING && m_replicating_nodes.size() > 0) {
+    NS_LOG_DEBUG("Still have replicating nodes in list, dont run election");
+    return;
+  }
+
   NS_LOG_DEBUG("Cant connect to any replicating nodes, triggering an election");
 
   SendStartElection();
@@ -1127,9 +1130,7 @@ void RhpmanApp::ProfileTimeout(uint32_t nodeID) {
   m_peerFitness.erase(nodeID);
   m_replicating_nodes.erase(nodeID);
 
-  if (m_replicating_nodes.size() == 0) {
-    TriggerElection();
-  }
+  TriggerElection();
 }
 
 // ================================================
