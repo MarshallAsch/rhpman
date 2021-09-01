@@ -59,4 +59,9 @@ std::vector<std::shared_ptr<DataItem>> Storage::GetAll() const {
 // this is a helper and will return the number of data items that can be stored in local storage
 uint32_t Storage::GetFreeSpace() const { return m_storageSpace - m_storage.size(); }
 
+uint32_t Storage::Count() const { return m_storage.size(); }
+
+double Storage::PercentUsed() const { return Count() / (double)m_storageSpace; }
+double Storage::PercentFree() const { return GetFreeSpace() / (double)m_storageSpace; }
+
 };  // namespace rhpman

@@ -37,6 +37,10 @@ class Storage {
 
   std::vector<std::shared_ptr<DataItem> > GetAll() const;
   uint32_t GetFreeSpace() const;
+  uint32_t Count() const;
+
+  double PercentUsed() const;
+  double PercentFree() const;
 };
 
 };  // namespace rhpman

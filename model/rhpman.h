@@ -32,6 +32,10 @@
 // uncomment to enable the optional checking the data items in the buffer when doing a lookup
 #define __RHPMAN_OPTIONAL_CHECK_BUFFER
 
+// uncomment to enable not sending unnecessary messages, ie. dont send transfer if there are no
+// items
+//#define __RHPMAN_OPTIONAL_DONT_SEND_EMPTY_TRANSFERS
+
 #define APPLICATION_PORT 5000
 
 #include <map>

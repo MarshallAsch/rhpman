@@ -971,6 +971,11 @@ void RhpmanApp::TransferStorage(uint32_t nodeID, bool stepUp) {
 }
 
 void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
+#ifdef __RHPMAN_OPTIONAL_DONT_SEND_EMPTY_TRANSFERS
+  if (type == StorageType::BUFFER && m_buffer.Count() == 0) return;
+  if (type == StorageType::STORAGE && m_storage.Count() == 0) return;
+#endif
+
   Ptr<Packet> message = GenerateTransfer(
       type == StorageType::BUFFER ? m_buffer.GetAll() : m_storage.GetAll(),
       stepUp);
@@ -985,9 +990,7 @@ void RhpmanApp::Setup() {
 //  calculation helpers
 // ================================================
 
-double RhpmanApp::GetWeightedStorageSpace() const {
-  return m_ws * (m_storage.GetFreeSpace() / (double)m_storageSpace);
-}
+double RhpmanApp::GetWeightedStorageSpace() const { return m_ws * m_storage.PercentFree(); }
 
 double RhpmanApp::GetEnergyLevel() const { return energySource->GetEnergyFraction(); }
 double RhpmanApp::GetWeightedEnergyLevel() const { return m_we * GetEnergyLevel(); }

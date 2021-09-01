@@ -57,4 +57,68 @@ class ClearStorage : public TestCase {
   virtual void DoRun(void);
 };
 
+class StoragePercentUsedEmpty : public TestCase {
+ public:
+  StoragePercentUsedEmpty();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentUsedHalf : public TestCase {
+ public:
+  StoragePercentUsedHalf();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentUsedMost : public TestCase {
+ public:
+  StoragePercentUsedMost();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentUsedFull : public TestCase {
+ public:
+  StoragePercentUsedFull();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentFreeEmpty : public TestCase {
+ public:
+  StoragePercentFreeEmpty();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentFreeHalf : public TestCase {
+ public:
+  StoragePercentFreeHalf();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentFreeMost : public TestCase {
+ public:
+  StoragePercentFreeMost();
+
+ private:
+  virtual void DoRun(void);
+};
+
+class StoragePercentFreeFull : public TestCase {
+ public:
+  StoragePercentFreeFull();
+
+ private:
+  virtual void DoRun(void);
+};
+
 #endif

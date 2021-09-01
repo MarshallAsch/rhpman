@@ -36,6 +36,15 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new RemoveNonExistantItem, TestCase::QUICK);
   AddTestCase(new ClearStorage, TestCase::QUICK);
 
+  AddTestCase(new StoragePercentUsedEmpty, TestCase::QUICK);
+  AddTestCase(new StoragePercentUsedHalf, TestCase::QUICK);
+  AddTestCase(new StoragePercentUsedMost, TestCase::QUICK);
+  AddTestCase(new StoragePercentUsedFull, TestCase::QUICK);
+  AddTestCase(new StoragePercentFreeEmpty, TestCase::QUICK);
+  AddTestCase(new StoragePercentFreeHalf, TestCase::QUICK);
+  AddTestCase(new StoragePercentFreeMost, TestCase::QUICK);
+  AddTestCase(new StoragePercentFreeFull, TestCase::QUICK);
+
   // data item tests
   AddTestCase(new DataItemDefault, TestCase::QUICK);
   AddTestCase(new DataItemNoID, TestCase::QUICK);
