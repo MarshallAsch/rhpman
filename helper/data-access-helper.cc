@@ -1,7 +1,7 @@
-/// \file rhpman.cc
-/// \author Keefer Rourke <krourke@uoguelph.ca>
+/// \file data-access-helper.cc
+/// \author Marshall Asch <masch@uoguelph.ca>
 ///
-/// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>
+/// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
 /// purpose with or without fee is hereby granted, provided that the above
 /// copyright notice and this permission notice appear in all copies.
@@ -68,11 +68,9 @@ ApplicationContainer DataAccessHelper::Install(NodeContainer nodes) {
     Ptr<Node> node = nodes.Get(i);
     if (std::find(dataOwnerIds.begin(), dataOwnerIds.end(), i) != dataOwnerIds.end()) {
       m_factory.Set("Role", EnumValue(DataAccess::Role::OWNER));
-      // m_factory.Set("DataId", IntegerValue(i));
     }
     apps.Add(createAndInstallApp(node));
     m_factory.Set("Role", EnumValue(DataAccess::Role::CONSUMER_ONLY));
-    // m_factory.Set("DataId", IntegerValue(-1));
   }
   return apps;
 }

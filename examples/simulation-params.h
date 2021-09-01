@@ -15,8 +15,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef __simulation_params_h
-#define __simulation_params_h
+#ifndef __RHPMAN_SIMULATION_PARAMS_H
+#define __RHPMAN_SIMULATION_PARAMS_H
 
 #include <inttypes.h>
 #include <utility>

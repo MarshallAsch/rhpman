@@ -1,4 +1,4 @@
-/// \file grid-divider.cc
+/// \file simulation-area.cc
 /// \author Keefer Rourke <krourke@uoguelph.ca>
 ///
 /// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>

@@ -17,8 +17,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef __rhpman_logging_h_
-#define __rhpman_logging_h_
+#ifndef __RHPMAN_LOGGING_H
+#define __RHPMAN_LOGGING_H
 
 //#include "ns3/core-module.h"
 

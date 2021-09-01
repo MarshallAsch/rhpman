@@ -17,8 +17,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 ///
-#ifndef __simulation_area_h
-#define __simulation_area_h
+#ifndef __RHPMAN_SIMULATION_AREA_H
+#define __RHPMAN_SIMULATION_AREA_H
 
 #include <iostream>
 #include <sstream>

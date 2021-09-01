@@ -1,7 +1,8 @@
 
 
 ////// Simulation test cases:
-// test to make sure that the correct number of ping messages get sent
+// test to make sure that the correct number of ping messages get sent when
+// there are transmission collisions
 
 /// \file collisions-example.cc
 /// \author Marshall Asch <masch@uoguelph.ca>

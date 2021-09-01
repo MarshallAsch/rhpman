@@ -1,10 +1,9 @@
 #!/bin/bash
 
 
-
 ./test.py -s rhpman --text=results
 res=$?
 
-
-mv results.txt /output
+mkdir -p /output
+mv results.txt /output/results.txt
 exit $res

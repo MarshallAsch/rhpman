@@ -15,8 +15,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef __util_h
-#define __util_h
+#ifndef __RHPMAN_UTIL_H
+#define __RHPMAN_UTIL_H
 
 #include <inttypes.h>
 #include <cmath>

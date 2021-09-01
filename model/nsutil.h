@@ -16,8 +16,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef __nsutil_h
-#define __nsutil_h
+#ifndef __RHPMAN_NSUTIL_H
+#define __RHPMAN_NSUTIL_H
 
 #include <algorithm>
 #include <cctype>

@@ -1,7 +1,9 @@
 /// \file rhpman.cc
 /// \author Keefer Rourke <krourke@uoguelph.ca>
+/// \author Marshall Asch <masch@uoguelph.ca>
 ///
 /// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>
+/// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
 /// purpose with or without fee is hereby granted, provided that the above
 /// copyright notice and this permission notice appear in all copies.

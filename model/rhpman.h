@@ -1,5 +1,6 @@
 /// \file rhpman.h
 /// \author Keefer Rourke <krourke@uoguelph.ca>
+/// \author Marshall Asch <masch@uoguelph.ca>
 /// \brief Declarations for the a simulation that attempts to reproduce the
 ///     RHPMAN scheme and performance evaluation from Shi and Chen 2014.
 ///
@@ -9,6 +10,7 @@
 ///        Jul. 2014.
 ///
 /// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>
+/// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
 /// purpose with or without fee is hereby granted, provided that the above
 /// copyright notice and this permission notice appear in all copies.
@@ -21,10 +23,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 ///
-#ifndef __RHPMAN_APP_H_
-#define __RHPMAN_APP_H_
-
-// DEFINE THIS FOR TESTING ONLY!!!
+#ifndef __RHPMAN_APP_H
+#define __RHPMAN_APP_H
 
 // Uncomment this to enable the optional carrier forwarding
 #define __RHPMAN_OPTIONAL_CARRIER_FORWARDING

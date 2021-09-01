@@ -1,7 +1,9 @@
-/// \file rhpman.h
+/// \file rhpman-helper.h
 /// \author Keefer Rourke <krourke@uoguelph.ca>
-/// \brief Declarations for the a simulation that attempts to reproduce the
-///     RHPMAN scheme and performance evaluation from Shi and Chen 2014.
+/// \author Marshall Asch <masch@uoguelph.ca>
+/// \brief A helper to install the rhpman data replication application on the nodes to run
+///        the simulation. This application needs to be installed seperately from the application
+///        that will use the storage scheme to store and retrieve information.
 ///
 ///     *References*:
 ///      - K. Shi and H. Chen, "RHPMAN: Replication in highly partitioned mobile
@@ -9,6 +11,7 @@
 ///        Jul. 2014.
 ///
 /// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>
+/// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
 /// purpose with or without fee is hereby granted, provided that the above
 /// copyright notice and this permission notice appear in all copies.
@@ -21,8 +24,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 ///
-#ifndef __rhpman_helper_h
-#define __rhpman_helper_h
+#ifndef __RHPMAN_HELPER_H
+#define __RHPMAN_HELPER_H
 
 #include <map>
 

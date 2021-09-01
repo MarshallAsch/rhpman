@@ -1,14 +1,14 @@
-/// \file rhpman.h
-/// \author Keefer Rourke <krourke@uoguelph.ca>
-/// \brief Declarations for the a simulation that attempts to reproduce the
-///     RHPMAN scheme and performance evaluation from Shi and Chen 2014.
+/// \file dataAccss.h
+/// \author Marshall Asch <masch@uoguelph.ca>
+/// \brief The application that is handles creating, and looking up data items
+///        to run the RHPMAN simulations.
 ///
 ///     *References*:
 ///      - K. Shi and H. Chen, "RHPMAN: Replication in highly partitioned mobile
 ///        ad hoc networks," International Journal of Distributed Sensor Networks
 ///        Jul. 2014.
 ///
-/// Copyright (c) 2020 by Keefer Rourke <krourke@uoguelph.ca>
+/// Copyright (c) 2021 by Marshall Asch <masch@uoguelph.ca>
 /// Permission to use, copy, modify, and/or distribute this software for any
 /// purpose with or without fee is hereby granted, provided that the above
 /// copyright notice and this permission notice appear in all copies.
@@ -21,8 +21,8 @@
 /// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 /// PERFORMANCE OF THIS SOFTWARE.
 ///
-#ifndef __rhpman_data_access_h
-#define __rhpman_data_access_h
+#ifndef __RHPMAN_DATA_ACCESS_H
+#define __RHPMAN_DATA_ACCESS_H
 
 #include <map>
 #include <memory>
