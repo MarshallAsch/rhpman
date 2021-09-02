@@ -13,6 +13,8 @@ cpp_examples = [
     ("ping-count-example", True, "False"),
     ("collisions-example", True, "False"),
     ("stable-network-one-election-example", True, "False"),
+    ("battery-runtime-example", True, "False"),
+    ("low-battery-runtime-example", True, "False"),
 
 ]
 
@@ -23,6 +25,3 @@ cpp_examples = [
 #
 # See test.py for more information.
 python_examples = []
-
-
-
