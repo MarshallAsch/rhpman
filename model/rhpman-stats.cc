@@ -37,6 +37,11 @@ static uint64_t totalExpectedRecipients;
 static uint64_t totalReceived;
 static uint64_t duplicatesReceived;
 
+static double min_query_delay;
+static double max_query_delay;
+static double avg_query_delay;
+static double num_query_responses;
+
 static uint64_t sentCounters[TYPE_ENUM_SIZE];
 static uint64_t recipientCounters[TYPE_ENUM_SIZE];
 static uint64_t receivedCounters[TYPE_ENUM_SIZE];
@@ -97,6 +102,11 @@ void Stats::Reset() {
   totalReceived = 0;
   duplicatesReceived = 0;
 
+  min_query_delay = 0;
+  max_query_delay = 0;
+  avg_query_delay = 0;
+  num_query_responses = 0;
+
   for (size_t i = 0; i < TYPE_ENUM_SIZE; i++) {
     sentCounters[i] = 0;
     recipientCounters[i] = 0;
@@ -119,6 +129,10 @@ void Stats::Print(std::string prefix) {
 
   std::cout << prefix << "TotalPowerloss\t" << unsigned(powerLoss) << "\n";
   std::cout << prefix << "TotalPowerRecharge\t" << unsigned(recharged) << "\n";
+
+  std::cout << prefix << "MinQueryDelay\t" << min_query_delay << "\n";
+  std::cout << prefix << "MaxQueryDelay\t" << max_query_delay << "\n";
+  std::cout << prefix << "AvgQueryDelay\t" << avg_query_delay << "\n";
 
   // message stats
   std::cout << prefix << "TotalSent\t" << unsigned(totalSent) << "\n";
@@ -182,27 +196,46 @@ void Stats::incPowerloss() { powerLoss++; }
 
 void Stats::incPowerRecharge() { recharged++; }
 
-uint64_t Stats::getSave() { return saves; }
-uint64_t Stats::getLookup() { return lookups; }
-uint64_t Stats::getSuccess() { return lookupSuccess; }
-uint64_t Stats::getFailed() { return lookupFailed; }
-uint64_t Stats::getLate() { return lookupLate; }
-uint64_t Stats::getCache() { return cacheHits; }
-uint64_t Stats::getPowerloss() { return powerLoss; }
-uint64_t Stats::getPowerRecharge() { return recharged; }
-uint64_t Stats::getPending() { return pending; }
-uint64_t Stats::getTotalSent() { return totalSent; }
-uint64_t Stats::getSent(Type type) { return sentCounters[static_cast<int>(type)]; }
+void Stats::queryDelay(double time) {
+  if (num_query_responses == 0 || time < min_query_delay) {
+    min_query_delay = time;
+  }
 
-uint64_t Stats::getExpectedReceive(Type type) { return recipientCounters[static_cast<int>(type)]; }
+  if (num_query_responses == 0 || time > max_query_delay) {
+    max_query_delay = time;
+  }
 
-uint64_t Stats::getTotalExpectedReceive() { return totalExpectedRecipients; }
+  avg_query_delay = ((avg_query_delay * num_query_responses) + time) / (num_query_responses + 1);
+  num_query_responses++;
+}
 
-uint64_t Stats::getReceived(Type type) { return receivedCounters[static_cast<int>(type)]; }
+uint64_t Stats::getSave() const { return saves; }
+uint64_t Stats::getLookup() const { return lookups; }
+uint64_t Stats::getSuccess() const { return lookupSuccess; }
+uint64_t Stats::getFailed() const { return lookupFailed; }
+uint64_t Stats::getLate() const { return lookupLate; }
+uint64_t Stats::getCache() const { return cacheHits; }
+uint64_t Stats::getPowerloss() const { return powerLoss; }
+uint64_t Stats::getPowerRecharge() const { return recharged; }
+uint64_t Stats::getPending() const { return pending; }
+uint64_t Stats::getTotalSent() const { return totalSent; }
+uint64_t Stats::getSent(Type type) const { return sentCounters[static_cast<int>(type)]; }
 
-uint64_t Stats::getTotalReceived() { return totalReceived; }
-uint64_t Stats::getDuplicate() { return duplicatesReceived; }
-uint64_t Stats::getStepUp() { return stepUps; }
-uint64_t Stats::getStepDown() { return stepDowns; }
+uint64_t Stats::getExpectedReceive(Type type) const {
+  return recipientCounters[static_cast<int>(type)];
+}
+
+uint64_t Stats::getTotalExpectedReceive() const { return totalExpectedRecipients; }
+
+uint64_t Stats::getReceived(Type type) const { return receivedCounters[static_cast<int>(type)]; }
+
+uint64_t Stats::getTotalReceived() const { return totalReceived; }
+uint64_t Stats::getDuplicate() const { return duplicatesReceived; }
+uint64_t Stats::getStepUp() const { return stepUps; }
+uint64_t Stats::getStepDown() const { return stepDowns; }
+
+double Stats::GetMinQueryDelay() const { return min_query_delay; }
+double Stats::GetMaxQueryDelay() const { return max_query_delay; }
+double Stats::GetAvgQueryDelay() const { return avg_query_delay; }
 
 };  // namespace rhpman

@@ -265,6 +265,12 @@ RhpmanTestSuite::RhpmanTestSuite() : TestSuite("rhpman", UNIT) {
   AddTestCase(new StatsIncrementReceivedLookupnStaticValues, TestCase::QUICK);
   AddTestCase(new StatsIncrementReceivedLookupResponseStaticValues, TestCase::QUICK);
   AddTestCase(new StatsIncrementReceivedTransferStaticValues, TestCase::QUICK);
+
+  AddTestCase(new StatsQueryDelayDefault, TestCase::QUICK);
+  AddTestCase(new StatsQueryDelayOne, TestCase::QUICK);
+  AddTestCase(new StatsQueryDelayHigher, TestCase::QUICK);
+  AddTestCase(new StatsQueryDelayLower, TestCase::QUICK);
+  AddTestCase(new StatsQueryDelayMultiple, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite

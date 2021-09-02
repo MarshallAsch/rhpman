@@ -58,6 +58,8 @@ class Stats {
 
   void addPending(uint64_t num);
 
+  void queryDelay(double time);
+
   // stats related to messages
   void addSent(Type type, uint32_t expectedRecipients = 1);
   void incReceived(Type type);
@@ -65,24 +67,27 @@ class Stats {
   void Print(std::string prefix = "");
   void Reset();
 
-  uint64_t getSave();
-  uint64_t getLookup();
-  uint64_t getSuccess();
-  uint64_t getFailed();
-  uint64_t getLate();
-  uint64_t getCache();
-  uint64_t getPowerloss();
-  uint64_t getPowerRecharge();
-  uint64_t getPending();
-  uint64_t getTotalSent();
-  uint64_t getSent(Type type);
-  uint64_t getReceived(Type type);
-  uint64_t getTotalReceived();
-  uint64_t getExpectedReceive(Type type);
-  uint64_t getTotalExpectedReceive();
-  uint64_t getDuplicate();
-  uint64_t getStepUp();
-  uint64_t getStepDown();
+  uint64_t getSave() const;
+  uint64_t getLookup() const;
+  uint64_t getSuccess() const;
+  uint64_t getFailed() const;
+  uint64_t getLate() const;
+  uint64_t getCache() const;
+  uint64_t getPowerloss() const;
+  uint64_t getPowerRecharge() const;
+  uint64_t getPending() const;
+  uint64_t getTotalSent() const;
+  uint64_t getSent(Type type) const;
+  uint64_t getReceived(Type type) const;
+  uint64_t getTotalReceived() const;
+  uint64_t getExpectedReceive(Type type) const;
+  uint64_t getTotalExpectedReceive() const;
+  uint64_t getDuplicate() const;
+  uint64_t getStepUp() const;
+  uint64_t getStepDown() const;
+  double GetMinQueryDelay() const;
+  double GetMaxQueryDelay() const;
+  double GetAvgQueryDelay() const;
 
   static std::string TypeString(Stats::Type type);
 };

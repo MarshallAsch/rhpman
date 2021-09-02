@@ -1068,4 +1068,49 @@ class StatsIncrementReceivedTransferStaticValues : public TestCase {
   virtual void DoSetup(void);
 };
 
+class StatsQueryDelayDefault : public TestCase {
+ public:
+  StatsQueryDelayDefault();
+
+ private:
+  virtual void DoRun(void);
+  virtual void DoSetup(void);
+};
+
+class StatsQueryDelayOne : public TestCase {
+ public:
+  StatsQueryDelayOne();
+
+ private:
+  virtual void DoRun(void);
+  virtual void DoSetup(void);
+};
+
+class StatsQueryDelayHigher : public TestCase {
+ public:
+  StatsQueryDelayHigher();
+
+ private:
+  virtual void DoRun(void);
+  virtual void DoSetup(void);
+};
+
+class StatsQueryDelayLower : public TestCase {
+ public:
+  StatsQueryDelayLower();
+
+ private:
+  virtual void DoRun(void);
+  virtual void DoSetup(void);
+};
+
+class StatsQueryDelayMultiple : public TestCase {
+ public:
+  StatsQueryDelayMultiple();
+
+ private:
+  virtual void DoRun(void);
+  virtual void DoSetup(void);
+};
+
 #endif

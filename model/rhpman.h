@@ -182,6 +182,8 @@ class RhpmanApp : public Application {
   std::map<uint32_t, double> m_peerProfiles;
   std::map<uint32_t, EventId> m_profileTimeouts;
   std::map<uint64_t, EventId> m_lookupTimeouts;
+  std::map<uint64_t, Time> m_queryTimes;
+
   std::set<uint32_t> m_replicating_nodes;
   std::set<uint64_t> m_received_messages;
 
@@ -258,6 +260,7 @@ class RhpmanApp : public Application {
   bool CheckDuplicateMessage(uint64_t messageID);
   bool IsResponsePending(uint64_t requestID);
   void DestroySocket(Ptr<Socket> socket);
+  double GetTimeSinceRequest(uint64_t requestID);
 
   void SemiProbabilisticSend(Ptr<Packet> message, uint32_t srcAddr, double sigma, Stats::Type type);
   void SendToNodes(Ptr<Packet> message, const std::set<uint32_t> nodes, Stats::Type type);

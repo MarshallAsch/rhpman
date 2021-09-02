@@ -287,6 +287,7 @@ void RhpmanApp::Lookup(uint64_t id) {
 
   // run semi probabilistic lookup
   uint64_t requestID = GenerateMessageID();
+  m_queryTimes[requestID] = Simulator::Now();
   RunProbabilisticLookup(requestID, id, m_address);
 
   ScheduleLookupTimeout(requestID, id);
@@ -846,8 +847,17 @@ void RhpmanApp::HandleStore(uint32_t nodeID, std::shared_ptr<DataItem> data, Ptr
   }
 }
 
+double RhpmanApp::GetTimeSinceRequest(uint64_t requestID) {
+  Time requestTime = m_queryTimes[requestID];
+  m_queryTimes.erase(requestID);
+  Time now = Simulator::Now();
+
+  return (now - requestTime).GetSeconds();
+}
+
 void RhpmanApp::HandleResponse(uint64_t requestID, std::shared_ptr<DataItem> data) {
   if (IsResponsePending(requestID)) {
+    stats.queryDelay(GetTimeSinceRequest(requestID));
     m_pendingLookups.erase(requestID);
     SuccessfulLookup(data);
   } else {

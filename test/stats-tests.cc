@@ -480,6 +480,23 @@ StatsIncrementReceivedTransferStaticValues::StatsIncrementReceivedTransferStatic
           "Check that incrementing the received transfer stats counter in multiple instances has "
           "the correct value") {}
 
+StatsQueryDelayDefault::StatsQueryDelayDefault()
+    : TestCase("Check that the query delay calculations are correct when there are no values"){};
+StatsQueryDelayOne::StatsQueryDelayOne()
+    : TestCase("Check that the query delay calculations are correct when there is one value"){};
+StatsQueryDelayHigher::StatsQueryDelayHigher()
+    : TestCase(
+          "Check that the query delay calculations are correct when there is one value then a "
+          "higher one"){};
+StatsQueryDelayLower::StatsQueryDelayLower()
+    : TestCase(
+          "Check that the query delay calculations are correct when there is one value then a "
+          "lower one"){};
+StatsQueryDelayMultiple::StatsQueryDelayMultiple()
+    : TestCase(
+          "Check that the query delay calculations are correct when there is one value then "
+          "multiple"){};
+
 static const std::string defaultStatsString =
     "TotalSaves\t0\n"
     "TotalLookups\t0\n"
@@ -492,6 +509,9 @@ static const std::string defaultStatsString =
     "TotalStepDowns\t0\n"
     "TotalPowerloss\t0\n"
     "TotalPowerRecharge\t0\n"
+    "MinQueryDelay\t0\n"
+    "MaxQueryDelay\t0\n"
+    "AvgQueryDelay\t0\n"
     "TotalSent\t0\n"
     "TotalExpectedRecipients\t0\n"
     "TotalReceived\t0\n"
@@ -533,6 +553,9 @@ static const std::string prefixedStatsString =
     "FinalTotalStepDowns\t0\n"
     "FinalTotalPowerloss\t0\n"
     "FinalTotalPowerRecharge\t0\n"
+    "FinalMinQueryDelay\t0\n"
+    "FinalMaxQueryDelay\t0\n"
+    "FinalAvgQueryDelay\t0\n"
     "FinalTotalSent\t0\n"
     "FinalTotalExpectedRecipients\t0\n"
     "FinalTotalReceived\t0\n"
@@ -17293,6 +17316,921 @@ void StatsIncrementReceivedTransferStaticValues::DoRun(void) {
       "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
 }
 
+void StatsQueryDelayDefault::DoRun(void) {
+  Stats stats;
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMinQueryDelay(),
+      0,
+      0.0001,
+      "expected min query delay to be 0");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMaxQueryDelay(),
+      0,
+      0.0001,
+      "expected max query delay to be 0");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetAvgQueryDelay(),
+      0,
+      0.0001,
+      "expected average query delay to b 0");
+
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSave(),
+      0,
+      "expected Save value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLookup(),
+      0,
+      "expected Lookup value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSuccess(),
+      0,
+      "expected Success value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getFailed(),
+      0,
+      "expected Failed value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLate(),
+      0,
+      "expected Late value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPending(),
+      0,
+      "expected TotalPending value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalSent(),
+      0,
+      "expected TotalSent value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalReceived(),
+      0,
+      "expected TotalReceived value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalExpectedReceive(),
+      0,
+      "expected TotalExpectedReceive value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getDuplicate(),
+      0,
+      "expected Duplicate value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepUp(),
+      0,
+      "expected StepUp value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepDown(),
+      0,
+      "expected StepDown value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getCache(),
+      0,
+      "expected CacheHit value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerloss(),
+      0,
+      "expected PowerLoss value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerRecharge(),
+      0,
+      "expected PowerRecharged value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::UNKOWN),
+      0,
+      "expected SentType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::PING),
+      0,
+      "expected SentType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::MODE_CHANGE),
+      0,
+      "expected SentType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected SentType ELECTION_REQUEST value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::STORE),
+      0,
+      "expected SentType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP),
+      0,
+      "expected SentType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected SentType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::TRANSFER),
+      0,
+      "expected SentType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::UNKOWN),
+      0,
+      "expected ReceivedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::PING),
+      0,
+      "expected ReceivedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ReceivedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ReceivedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::STORE),
+      0,
+      "expected ReceivedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP),
+      0,
+      "expected ReceivedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ReceivedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::TRANSFER),
+      0,
+      "expected ReceivedType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::UNKOWN),
+      0,
+      "expected ExpectedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::PING),
+      0,
+      "expected ExpectedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ExpectedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ExpectedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::STORE),
+      0,
+      "expected ExpectedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP),
+      0,
+      "expected ExpectedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ExpectedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::TRANSFER),
+      0,
+      "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
+}
+
+void StatsQueryDelayOne::DoRun(void) {
+  Stats stats;
+  Stats stats1;
+
+  stats1.queryDelay(20.5);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMinQueryDelay(),
+      20.5,
+      0.0001,
+      "expected min query delay to be 20.5");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMaxQueryDelay(),
+      20.5,
+      0.0001,
+      "expected max query delay to be 20.5");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetAvgQueryDelay(),
+      20.5,
+      0.0001,
+      "expected average query delay to be 20.5");
+
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSave(),
+      0,
+      "expected Save value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLookup(),
+      0,
+      "expected Lookup value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSuccess(),
+      0,
+      "expected Success value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getFailed(),
+      0,
+      "expected Failed value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLate(),
+      0,
+      "expected Late value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPending(),
+      0,
+      "expected TotalPending value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalSent(),
+      0,
+      "expected TotalSent value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalReceived(),
+      0,
+      "expected TotalReceived value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalExpectedReceive(),
+      0,
+      "expected TotalExpectedReceive value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getDuplicate(),
+      0,
+      "expected Duplicate value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepUp(),
+      0,
+      "expected StepUp value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepDown(),
+      0,
+      "expected StepDown value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getCache(),
+      0,
+      "expected CacheHit value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerloss(),
+      0,
+      "expected PowerLoss value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerRecharge(),
+      0,
+      "expected PowerRecharged value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::UNKOWN),
+      0,
+      "expected SentType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::PING),
+      0,
+      "expected SentType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::MODE_CHANGE),
+      0,
+      "expected SentType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected SentType ELECTION_REQUEST value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::STORE),
+      0,
+      "expected SentType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP),
+      0,
+      "expected SentType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected SentType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::TRANSFER),
+      0,
+      "expected SentType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::UNKOWN),
+      0,
+      "expected ReceivedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::PING),
+      0,
+      "expected ReceivedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ReceivedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ReceivedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::STORE),
+      0,
+      "expected ReceivedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP),
+      0,
+      "expected ReceivedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ReceivedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::TRANSFER),
+      0,
+      "expected ReceivedType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::UNKOWN),
+      0,
+      "expected ExpectedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::PING),
+      0,
+      "expected ExpectedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ExpectedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ExpectedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::STORE),
+      0,
+      "expected ExpectedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP),
+      0,
+      "expected ExpectedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ExpectedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::TRANSFER),
+      0,
+      "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
+}
+
+void StatsQueryDelayHigher::DoRun(void) {
+  Stats stats;
+  Stats stats1;
+  Stats stats2;
+
+  stats1.queryDelay(20.5);
+  stats2.queryDelay(100);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMinQueryDelay(),
+      20.5,
+      0.0001,
+      "expected min query delay to be 20.5");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMaxQueryDelay(),
+      100,
+      0.0001,
+      "expected max query delay to be 100");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetAvgQueryDelay(),
+      60.25,
+      0.0001,
+      "expected average query delay to be 60.25");
+
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSave(),
+      0,
+      "expected Save value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLookup(),
+      0,
+      "expected Lookup value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSuccess(),
+      0,
+      "expected Success value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getFailed(),
+      0,
+      "expected Failed value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLate(),
+      0,
+      "expected Late value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPending(),
+      0,
+      "expected TotalPending value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalSent(),
+      0,
+      "expected TotalSent value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalReceived(),
+      0,
+      "expected TotalReceived value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalExpectedReceive(),
+      0,
+      "expected TotalExpectedReceive value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getDuplicate(),
+      0,
+      "expected Duplicate value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepUp(),
+      0,
+      "expected StepUp value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepDown(),
+      0,
+      "expected StepDown value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getCache(),
+      0,
+      "expected CacheHit value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerloss(),
+      0,
+      "expected PowerLoss value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerRecharge(),
+      0,
+      "expected PowerRecharged value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::UNKOWN),
+      0,
+      "expected SentType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::PING),
+      0,
+      "expected SentType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::MODE_CHANGE),
+      0,
+      "expected SentType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected SentType ELECTION_REQUEST value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::STORE),
+      0,
+      "expected SentType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP),
+      0,
+      "expected SentType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected SentType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::TRANSFER),
+      0,
+      "expected SentType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::UNKOWN),
+      0,
+      "expected ReceivedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::PING),
+      0,
+      "expected ReceivedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ReceivedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ReceivedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::STORE),
+      0,
+      "expected ReceivedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP),
+      0,
+      "expected ReceivedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ReceivedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::TRANSFER),
+      0,
+      "expected ReceivedType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::UNKOWN),
+      0,
+      "expected ExpectedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::PING),
+      0,
+      "expected ExpectedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ExpectedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ExpectedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::STORE),
+      0,
+      "expected ExpectedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP),
+      0,
+      "expected ExpectedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ExpectedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::TRANSFER),
+      0,
+      "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
+}
+
+void StatsQueryDelayLower::DoRun(void) {
+  Stats stats;
+  Stats stats1;
+  Stats stats2;
+
+  stats1.queryDelay(20.5);
+  stats2.queryDelay(8);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMinQueryDelay(),
+      8,
+      0.0001,
+      "expected min query delay to be 8");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMaxQueryDelay(),
+      20.5,
+      0.0001,
+      "expected max query delay to be 20.5");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetAvgQueryDelay(),
+      14.25,
+      0.0001,
+      "expected average query delay to be 14.25");
+
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSave(),
+      0,
+      "expected Save value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLookup(),
+      0,
+      "expected Lookup value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSuccess(),
+      0,
+      "expected Success value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getFailed(),
+      0,
+      "expected Failed value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLate(),
+      0,
+      "expected Late value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPending(),
+      0,
+      "expected TotalPending value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalSent(),
+      0,
+      "expected TotalSent value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalReceived(),
+      0,
+      "expected TotalReceived value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalExpectedReceive(),
+      0,
+      "expected TotalExpectedReceive value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getDuplicate(),
+      0,
+      "expected Duplicate value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepUp(),
+      0,
+      "expected StepUp value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepDown(),
+      0,
+      "expected StepDown value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getCache(),
+      0,
+      "expected CacheHit value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerloss(),
+      0,
+      "expected PowerLoss value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerRecharge(),
+      0,
+      "expected PowerRecharged value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::UNKOWN),
+      0,
+      "expected SentType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::PING),
+      0,
+      "expected SentType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::MODE_CHANGE),
+      0,
+      "expected SentType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected SentType ELECTION_REQUEST value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::STORE),
+      0,
+      "expected SentType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP),
+      0,
+      "expected SentType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected SentType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::TRANSFER),
+      0,
+      "expected SentType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::UNKOWN),
+      0,
+      "expected ReceivedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::PING),
+      0,
+      "expected ReceivedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ReceivedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ReceivedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::STORE),
+      0,
+      "expected ReceivedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP),
+      0,
+      "expected ReceivedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ReceivedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::TRANSFER),
+      0,
+      "expected ReceivedType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::UNKOWN),
+      0,
+      "expected ExpectedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::PING),
+      0,
+      "expected ExpectedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ExpectedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ExpectedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::STORE),
+      0,
+      "expected ExpectedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP),
+      0,
+      "expected ExpectedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ExpectedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::TRANSFER),
+      0,
+      "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
+}
+
+void StatsQueryDelayMultiple::DoRun(void) {
+  Stats stats;
+  Stats stats1;
+  Stats stats2;
+  Stats stats3;
+
+  stats1.queryDelay(20.5);
+  stats2.queryDelay(100);
+  stats3.queryDelay(8);
+
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMinQueryDelay(),
+      8,
+      0.0001,
+      "expected min query delay to be 8");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetMaxQueryDelay(),
+      100,
+      0.0001,
+      "expected max query delay to be 100");
+  NS_TEST_ASSERT_MSG_EQ_TOL(
+      stats.GetAvgQueryDelay(),
+      42.833333,
+      0.0001,
+      "expected average query delay to be 42.833");
+
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSave(),
+      0,
+      "expected Save value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLookup(),
+      0,
+      "expected Lookup value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSuccess(),
+      0,
+      "expected Success value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getFailed(),
+      0,
+      "expected Failed value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getLate(),
+      0,
+      "expected Late value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPending(),
+      0,
+      "expected TotalPending value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalSent(),
+      0,
+      "expected TotalSent value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalReceived(),
+      0,
+      "expected TotalReceived value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getTotalExpectedReceive(),
+      0,
+      "expected TotalExpectedReceive value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getDuplicate(),
+      0,
+      "expected Duplicate value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepUp(),
+      0,
+      "expected StepUp value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getStepDown(),
+      0,
+      "expected StepDown value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getCache(),
+      0,
+      "expected CacheHit value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerloss(),
+      0,
+      "expected PowerLoss value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getPowerRecharge(),
+      0,
+      "expected PowerRecharged value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::UNKOWN),
+      0,
+      "expected SentType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::PING),
+      0,
+      "expected SentType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::MODE_CHANGE),
+      0,
+      "expected SentType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected SentType ELECTION_REQUEST value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::STORE),
+      0,
+      "expected SentType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP),
+      0,
+      "expected SentType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected SentType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getSent(Stats::Type::TRANSFER),
+      0,
+      "expected SentType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::UNKOWN),
+      0,
+      "expected ReceivedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::PING),
+      0,
+      "expected ReceivedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ReceivedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ReceivedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::STORE),
+      0,
+      "expected ReceivedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP),
+      0,
+      "expected ReceivedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ReceivedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getReceived(Stats::Type::TRANSFER),
+      0,
+      "expected ReceivedType TRANSFER value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::UNKOWN),
+      0,
+      "expected ExpectedType UNKOWN value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::PING),
+      0,
+      "expected ExpectedType PING value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::MODE_CHANGE),
+      0,
+      "expected ExpectedType MODE_CHANGE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::ELECTION_REQUEST),
+      0,
+      "expected ExpectedType ELECTION_REQUEST value to be 0 after seperate objects get "
+      "incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::STORE),
+      0,
+      "expected ExpectedType STORE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP),
+      0,
+      "expected ExpectedType LOOKUP value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::LOOKUP_RESPONSE),
+      0,
+      "expected ExpectedType LOOKUP_RESPONSE value to be 0 after seperate objects get incremented");
+  NS_TEST_ASSERT_MSG_EQ(
+      stats.getExpectedReceive(Stats::Type::TRANSFER),
+      0,
+      "expected ExpectedType TRANSFER value to be 0 after seperate objects get incremented");
+}
+
 ////////////////////////
 /// setup function for each test should make sure that the
 /// stats object is rest before the test begins
@@ -17812,6 +18750,27 @@ void StatsPrintDefaultPrefix::DoSetup(void) {
 }
 
 void StatsPrintWithPrefix::DoSetup(void) {
+  Stats stats;
+  stats.Reset();
+}
+
+void StatsQueryDelayDefault::DoSetup(void) {
+  Stats stats;
+  stats.Reset();
+}
+void StatsQueryDelayOne::DoSetup(void) {
+  Stats stats;
+  stats.Reset();
+}
+void StatsQueryDelayHigher::DoSetup(void) {
+  Stats stats;
+  stats.Reset();
+}
+void StatsQueryDelayLower::DoSetup(void) {
+  Stats stats;
+  stats.Reset();
+}
+void StatsQueryDelayMultiple::DoSetup(void) {
   Stats stats;
   stats.Reset();
 }
