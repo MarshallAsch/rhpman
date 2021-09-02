@@ -192,7 +192,6 @@ int main(int argc, char* argv[]) {
   NS_ASSERT_MSG(stats.getStepDown() == 0, "no nodes should step down as replica holder nodes");
   NS_ASSERT_MSG(stats.getSent(Stats::Type::ELECTION_REQUEST) == 0, "there should be no elections");
 
-
   RhpmanApp::CleanUp();
 
   return EX_OK;

@@ -1011,12 +1011,20 @@ double RhpmanApp::CalculateElectionFitness() const {
 }
 
 void RhpmanApp::PowerLossHandler() {
+  // this call back will be called over and over again while there is no power
+  // only handle the event once
+  if (!m_lowBattery) return;
+  m_lowBattery = false;
+
   stats.incPowerloss();
   std::cerr << "Node: " << GetNode()->GetId() << " lost power at: " << Simulator::Now().GetSeconds()
             << "\n";
 }
 
 void RhpmanApp::PowerRechargedHandler() {
+  if (m_lowBattery) return;
+  m_lowBattery = true;
+
   stats.incPowerRecharge();
   std::cerr << "Node: " << GetNode()->GetId()
             << " regained power at: " << Simulator::Now().GetSeconds() << "\n";

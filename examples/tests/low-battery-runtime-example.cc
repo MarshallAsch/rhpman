@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
   rhpmanApps.StartWithJitter(Seconds(0), jitter);
   // rhpmanApps.Start(Seconds(0));
 
-  rhpmanApps.Stop(Seconds(36000));
+  rhpmanApps.Stop(Seconds(27000));
 
   // Install the RHPMAN Scheme onto each node.
   DataAccessHelper dataAccess;
@@ -176,22 +176,21 @@ int main(int argc, char* argv[]) {
 
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
   accessApps.Start(Seconds(0));
-  accessApps.Stop(Seconds(36000));
+  accessApps.Stop(Seconds(27000));
 
   Stats stats;
 
-  Simulator::Stop(36001.0_sec);
+  Simulator::Stop(27001.0_sec);  // lost power at 26946.4
   Simulator::Run();
   Simulator::Destroy();
   NS_LOG_UNCOND("Done.");
 
-  NS_ASSERT_MSG(stats.getPowerloss() == 0, "No Nodes should have run out of power");
+  NS_ASSERT_MSG(stats.getPowerloss() == 10, "No Nodes should have run out of power");
   NS_ASSERT_MSG(
       stats.getStepUp() == 10,
       "one node should step up as an elected node, and it should not change");
   NS_ASSERT_MSG(stats.getStepDown() == 0, "no nodes should step down as replica holder nodes");
   NS_ASSERT_MSG(stats.getSent(Stats::Type::ELECTION_REQUEST) == 0, "there should be no elections");
-
 
   RhpmanApp::CleanUp();
 

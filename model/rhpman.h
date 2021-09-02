@@ -99,7 +99,8 @@ class RhpmanApp : public Application {
         m_neighborhood_socket(0),
         m_election_socket(0),
         m_success(MakeNullCallback<void, std::shared_ptr<DataItem> >()),
-        m_failed(MakeNullCallback<void, uint64_t>()){};
+        m_failed(MakeNullCallback<void, uint64_t>()),
+        m_lowBattery(false){};
 
   Role GetRole() const;
   State GetState() const;
@@ -144,6 +145,8 @@ class RhpmanApp : public Application {
   // callbacks for  requests
   Callback<void, std::shared_ptr<DataItem> > m_success;
   Callback<void, uint64_t> m_failed;
+
+  bool m_lowBattery;
 
   double m_low_power_threshold;
 
