@@ -258,6 +258,7 @@ class RhpmanApp : public Application {
   void CancelEventMap(std::map<uint64_t, EventId> events);
   void RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint32_t srcNode);
   bool CheckDuplicateMessage(uint64_t messageID);
+  void FlagIgnoreMessage(uint64_t messageID);
   bool IsResponsePending(uint64_t requestID);
   void DestroySocket(Ptr<Socket> socket);
   double GetTimeSinceRequest(uint64_t requestID);

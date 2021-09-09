@@ -282,12 +282,14 @@ void RhpmanApp::Lookup(uint64_t id) {
   // check cache
   std::shared_ptr<DataItem> item = CheckLocalStorage(id);
   if (item != NULL) {
+    stats.incCache();
     return SuccessfulLookup(item);
   }
 
   // run semi probabilistic lookup
   uint64_t requestID = GenerateMessageID();
   m_queryTimes[requestID] = Simulator::Now();
+  FlagIgnoreMessage(requestID);
   RunProbabilisticLookup(requestID, id, m_address);
 
   ScheduleLookupTimeout(requestID, id);
@@ -694,6 +696,7 @@ void RhpmanApp::HandleRequest(Ptr<Socket> socket) {
       stats.incDuplicate();
       return;
     }
+    FlagIgnoreMessage(message.id());
 
     // switch based on message type
     if (message.has_ping()) {
@@ -875,11 +878,10 @@ bool RhpmanApp::IsResponsePending(uint64_t requestID) {
 
 bool RhpmanApp::CheckDuplicateMessage(uint64_t messageID) {
   // true if it is in the list
-  bool status = m_received_messages.find(messageID) != m_received_messages.end();
-  m_received_messages.insert(messageID);
-
-  return status;
+  return m_received_messages.find(messageID) != m_received_messages.end();
 }
+
+void RhpmanApp::FlagIgnoreMessage(uint64_t messageID) { m_received_messages.insert(messageID); }
 
 void RhpmanApp::RunProbabilisticLookup(uint64_t requestID, uint64_t dataID, uint32_t srcNode) {
   // ask replica holder nodes
@@ -1164,7 +1166,6 @@ std::shared_ptr<DataItem> RhpmanApp::CheckLocalStorage(uint64_t dataID) {
   // check cache
   std::shared_ptr<DataItem> item = m_storage.GetItem(dataID);
   if (item != NULL) {
-    stats.incCache();
     return item;
   }
 
@@ -1173,7 +1174,6 @@ std::shared_ptr<DataItem> RhpmanApp::CheckLocalStorage(uint64_t dataID) {
   // check the data items in the buffer
   item = m_buffer.GetItem(dataID);
   if (item != NULL) {
-    stats.incCache();
     return item;
   }
 

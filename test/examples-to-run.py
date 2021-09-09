@@ -15,6 +15,7 @@ cpp_examples = [
     ("stable-network-one-election-example", True, "False"),
     ("battery-runtime-example", True, "False"),
     ("low-battery-runtime-example", True, "False"),
+    ("stable-network-lookup-success-example", True, "False"),
 
 ]
 
