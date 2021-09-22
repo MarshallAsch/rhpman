@@ -7,13 +7,13 @@
 #
 #   Note this script is not designed to be run from this directory this is here so that it can be shared with the rest
 #   of the lab group as an example. This should be run from outside of the ns3 folder, currently in an example folder
-# 
+#
 #  /
 #      ns-3-allinone/
 #          .....
 #      experiment/
 #          simulation.py
-# 
+#
 #   This script should be run from the experiment directory
 #
 
@@ -22,12 +22,22 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 
-ns_path = '../ns-3-allinone/ns-3.32'
-script = 'rhpman-example'
-campaign_dir = './rhpman_fitness'
-figure_dir = './fig'
 
-campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=10)
+experimentName = 'rhpman_v3'
+ns_path = '../allinone2/ns-3.32'
+script = 'rhpman-example'
+
+
+campaign_dir = os.path.join(os.getcwd(), experimentName)
+figure_dir = os.path.join(os.getcwd(), experimentName, 'figures')
+
+
+if not os.path.exists(figure_dir):
+    os.makedirs(figure_dir)
+
+
+campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=13)
+
 
 
 def getNumNodes(param):
@@ -86,7 +96,7 @@ param_combination = {
     'routing': ['dsdv'],
     'travellerWalkDist': [0],
     'requestTimeout': [0],
-    'peerTimeout': [6],
+    'peerTimeout': [12],
     'electionPeriod': [6],
     'electionCooldown': lambda p: p['electionPeriod'],
 
@@ -95,7 +105,6 @@ param_combination = {
     'processingWeight': [0],
     'staggeredStart': [True, False],
     'lowPowerThreshold': [0.4]
-
 }
 
 carrying_params = {
@@ -137,7 +146,7 @@ carrying_params = {
     'routing': ['dsdv'],
     'travellerWalkDist': [0],
     'requestTimeout': [0],
-    'peerTimeout': [6],
+    'peerTimeout': [12],
     'electionPeriod': [6],
     'electionCooldown': lambda p: p['electionPeriod'],
 
@@ -187,7 +196,7 @@ forwarding_params = {
     'routing': ['dsdv'],
     'travellerWalkDist': [0],
     'requestTimeout': [0],
-    'peerTimeout': [6],
+    'peerTimeout': [12],
     'electionPeriod': [6],
     'electionCooldown': lambda p: p['electionPeriod'],
 
@@ -234,7 +243,7 @@ totalnodes_params = {
     'routing': ['dsdv'],
     'travellerWalkDist': [0],
     'requestTimeout': [0],
-    'peerTimeout': [6],
+    'peerTimeout': [12],
     'electionPeriod': [6],
     'electionCooldown': lambda p: p['electionPeriod'],
 
@@ -284,7 +293,7 @@ hops_params = {
     'routing': ['dsdv'],
     'travellerWalkDist': [0],
     'requestTimeout': [0],
-    'peerTimeout': [6],
+    'peerTimeout': [12],
     'electionPeriod': [6],
     'electionCooldown': lambda p: p['electionPeriod'],
 
@@ -312,8 +321,8 @@ campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=Fals
 
 @sem.utils.output_labels([
     'successRatio',
-    'InitalTotalSaves', 'InitalTotalLookups', 'InitalTotalSuccess', 'InitalTotalFailed', 'InitalTotalLate', 'InitalTotalCacheHits', 'InitalTotalPending', 'InitalTotalStepUp', 'InitalTotalStepDowns', 'InitalTotalPowerloss', 'InitalTotalPowerRecharge', 'InitalTotalSent', 'InitalTotalReceived', 'InitalTotalDuplicates', 'InitalTotalSentUNKOWN', 'InitalTotalSentPING', 'InitalTotalSentMODE_CHANGE', 'InitalTotalSentELECTION_REQUEST', 'InitalTotalSentSTORE', 'InitalTotalSentLOOKUP', 'InitalTotalSentLOOKUP_RESPONSE', 'InitalTotalSentTRANSFER', 'InitalTotalReceivedUNKOWN', 'InitalTotalReceivedPING', 'InitalTotalReceivedMODE_CHANGE', 'InitalTotalReceivedELECTION_REQUEST', 'InitalTotalReceivedSTORE', 'InitalTotalReceivedLOOKUP', 'InitalTotalReceivedLOOKUP_RESPONSE', 'InitalTotalReceivedTRANSFER',
-    'FinalTotalSaves', 'FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending', 'FinalTotalStepUp', 'FinalTotalStepDowns', 'FinalTotalPowerloss', 'FinalTotalPowerRecharge', 'FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates', 'FinalTotalSentUNKOWN', 'FinalTotalSentPING', 'FinalTotalSentMODE_CHANGE', 'FinalTotalSentELECTION_REQUEST', 'FinalTotalSentSTORE', 'FinalTotalSentLOOKUP', 'FinalTotalSentLOOKUP_RESPONSE', 'FinalTotalSentTRANSFER', 'FinalTotalReceivedUNKOWN', 'FinalTotalReceivedPING', 'FinalTotalReceivedMODE_CHANGE', 'FinalTotalReceivedELECTION_REQUEST', 'FinalTotalReceivedSTORE', 'FinalTotalReceivedLOOKUP', 'FinalTotalReceivedLOOKUP_RESPONSE', 'FinalTotalReceivedTRANSFER'
+    'InitalTotalSaves', 'InitalTotalLookups', 'InitalTotalSuccess', 'InitalTotalFailed', 'InitalTotalLate', 'InitalTotalCacheHits', 'InitalTotalPending', 'InitalTotalStepUp', 'InitalTotalStepDowns', 'InitalTotalPowerloss', 'InitalTotalPowerRecharge', 'InitalMinQueryDelay', 'InitalMaxQueryDelay', 'InitalAvgQueryDelay', 'InitalTotalSent', 'InitalTotalExpectedRecipients', 'InitalTotalReceived', 'InitalTotalDuplicates', 'InitalTotalSentUNKOWN', 'InitalTotalSentPING', 'InitalTotalSentMODE_CHANGE', 'InitalTotalSentELECTION_REQUEST', 'InitalTotalSentSTORE', 'InitalTotalSentLOOKUP', 'InitalTotalSentLOOKUP_RESPONSE', 'InitalTotalSentTRANSFER', 'InitalTotalExpectedReceivesUNKOWN', 'InitalTotalExpectedReceivesPING', 'InitalTotalExpectedReceivesMODE_CHANGE', 'InitalTotalExpectedReceivesELECTION_REQUEST', 'InitalTotalExpectedReceivesSTORE', 'InitalTotalExpectedReceivesLOOKUP', 'InitalTotalExpectedReceivesLOOKUP_RESPONSE', 'InitalTotalExpectedReceivesTRANSFER', 'InitalTotalReceivedUNKOWN', 'InitalTotalReceivedPING', 'InitalTotalReceivedMODE_CHANGE', 'InitalTotalReceivedELECTION_REQUEST', 'InitalTotalReceivedSTORE', 'InitalTotalReceivedLOOKUP', 'InitalTotalReceivedLOOKUP_RESPONSE', 'InitalTotalReceivedTRANSFER',
+    'FinalTotalSaves', 'FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending', 'FinalTotalStepUp', 'FinalTotalStepDowns', 'FinalTotalPowerloss', 'FinalTotalPowerRecharge', 'FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay', 'FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates', 'FinalTotalSentUNKOWN', 'FinalTotalSentPING', 'FinalTotalSentMODE_CHANGE', 'FinalTotalSentELECTION_REQUEST', 'FinalTotalSentSTORE', 'FinalTotalSentLOOKUP', 'FinalTotalSentLOOKUP_RESPONSE', 'FinalTotalSentTRANSFER', 'FinalTotalExpectedReceivesUNKOWN', 'FinalTotalExpectedReceivesPING', 'FinalTotalExpectedReceivesMODE_CHANGE', 'FinalTotalExpectedReceivesELECTION_REQUEST', 'FinalTotalExpectedReceivesSTORE', 'FinalTotalExpectedReceivesLOOKUP', 'FinalTotalExpectedReceivesLOOKUP_RESPONSE', 'FinalTotalExpectedReceivesTRANSFER', 'FinalTotalReceivedUNKOWN', 'FinalTotalReceivedPING', 'FinalTotalReceivedMODE_CHANGE', 'FinalTotalReceivedELECTION_REQUEST', 'FinalTotalReceivedSTORE', 'FinalTotalReceivedLOOKUP', 'FinalTotalReceivedLOOKUP_RESPONSE', 'FinalTotalReceivedTRANSFER'
     ])
 @sem.utils.only_load_some_files(['stdout'])
 def get_all(result):
@@ -332,7 +341,7 @@ sns.catplot(data=hopData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'hops_traffic_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'hops_traffic.pdf'))
 
 sns.catplot(data=hopData,
             x='hops',
@@ -340,7 +349,31 @@ sns.catplot(data=hopData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'hops_success_ratio_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'hops_success_ratio.pdf'))
+
+
+
+sns.catplot(data=hopData,
+            x='hops',
+            y='FinalMinQueryDelay',
+            col='staggeredStart',
+            kind='point'
+            )
+sns.catplot(data=hopData,
+            x='hops',
+            y='FinalMaxQueryDelay',
+            col='staggeredStart',
+            kind='point'
+            )
+sns.catplot(data=hopData,
+            x='hops',
+            y='FinalAvgQueryDelay',
+            col='staggeredStart',
+            kind='point'
+            )
+
+
+plt.savefig(os.path.join(figure_dir, 'hops_query_delay.pdf'))
 
 
 nodesData = campaign.get_results_as_dataframe(get_all, params=totalnodes_params)
@@ -350,7 +383,7 @@ sns.catplot(data=nodesData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'nodes_traffic_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'nodes_traffic.pdf'))
 
 sns.catplot(data=nodesData,
             x='totalNodes',
@@ -358,7 +391,7 @@ sns.catplot(data=nodesData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'nodes_success_ratio_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'nodes_success_ratio.pdf'))
 
 
 
@@ -369,7 +402,7 @@ sns.catplot(data=carryingData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'carrying_traffic_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'carrying_traffic.pdf'))
 
 sns.catplot(data=carryingData,
             x='carryingThreshold',
@@ -377,7 +410,7 @@ sns.catplot(data=carryingData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'carrying_success_ratio_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'carrying_success_ratio.pdf'))
 
 
 forwardingData = campaign.get_results_as_dataframe(get_all, params=forwarding_params)
@@ -387,7 +420,7 @@ sns.catplot(data=forwardingData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'forwarding_traffic_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'forwarding_traffic.pdf'))
 
 sns.catplot(data=forwardingData,
             x='forwardingThreshold',
@@ -395,4 +428,4 @@ sns.catplot(data=forwardingData,
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'forwarding_success_ratio_energy_fix_a.pdf'))
+plt.savefig(os.path.join(figure_dir, 'forwarding_success_ratio.pdf'))
