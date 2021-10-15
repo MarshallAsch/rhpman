@@ -21,24 +21,32 @@ import sem
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import requests
 
 
-experimentName = 'rhpman_v3'
+experimentName = 'rhpman_v4'
+
 ns_path = '../allinone2/ns-3.32'
 script = 'rhpman-example'
+discord_url = os.environ.get('DISCORD_URL')
 
 
 campaign_dir = os.path.join(os.getcwd(), experimentName)
-figure_dir = os.path.join(os.getcwd(), experimentName, 'figures')
+figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
 
 
 if not os.path.exists(figure_dir):
     os.makedirs(figure_dir)
 
 
-campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=13)
+campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
 
 
+def sendNotification(message):
+    if discord_url is not None:
+        requests.post(discord_url, json={"content": message})
+    else:
+        print(message)
 
 def getNumNodes(param):
     return param['totalNodes']
@@ -305,9 +313,11 @@ hops_params = {
 }
 
 
+sendNotification("Starting simulations")
 
 campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=False)
 
+sendNotification("Simulations have finished running")
 
 
 #print(campaign.get_space(param_space=param_combination, runs=30))
@@ -394,7 +404,6 @@ sns.catplot(data=nodesData,
 plt.savefig(os.path.join(figure_dir, 'nodes_success_ratio.pdf'))
 
 
-
 carryingData = campaign.get_results_as_dataframe(get_all, params=carrying_params)
 sns.catplot(data=carryingData,
             x='carryingThreshold',
@@ -429,3 +438,6 @@ sns.catplot(data=forwardingData,
             kind='point'
             )
 plt.savefig(os.path.join(figure_dir, 'forwarding_success_ratio.pdf'))
+
+
+sendNotification("All the plots have been produced")
