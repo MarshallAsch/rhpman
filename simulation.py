@@ -293,5 +293,17 @@ createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
 createPlot('forwardingThreshold', 'successRatio', forwarding_params)
 createDelayPlot('forwardingThreshold', forwarding_params)
 
+createPlot('optionCarrierForwarding', 'FinalTotalSent', forwarding_params)
+createPlot('optionCarrierForwarding', 'successRatio', forwarding_params)
+createDelayPlot('optionCarrierForwarding', forwarding_params)
+
+createPlot('optionalCheckBuffer', 'FinalTotalSent', forwarding_params)
+createPlot('optionalCheckBuffer', 'successRatio', forwarding_params)
+createDelayPlot('optionalCheckBuffer', forwarding_params)
+
+createPlot('optionalNoEmptyTransfers', 'FinalTotalSent', forwarding_params)
+createPlot('optionalNoEmptyTransfers', 'successRatio', forwarding_params)
+createDelayPlot('optionalNoEmptyTransfers', forwarding_params)
+
 
 sendNotification("All the plots have been produced")
