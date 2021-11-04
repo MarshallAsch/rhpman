@@ -100,7 +100,10 @@ class RhpmanApp : public Application {
         m_election_socket(0),
         m_success(MakeNullCallback<void, std::shared_ptr<DataItem> >()),
         m_failed(MakeNullCallback<void, uint64_t>()),
-        m_lowBattery(false){};
+        m_lowBattery(false),
+        m_optionCarrierForwarding(false),
+        m_optionalCheckBuffer(false),
+        m_optionalNoEmptyTransfers(false){};
 
   Role GetRole() const;
   State GetState() const;
@@ -147,6 +150,10 @@ class RhpmanApp : public Application {
   Callback<void, uint64_t> m_failed;
 
   bool m_lowBattery;
+
+  bool m_optionCarrierForwarding;
+  bool m_optionalCheckBuffer;
+  bool m_optionalNoEmptyTransfers;
 
   double m_low_power_threshold;
 

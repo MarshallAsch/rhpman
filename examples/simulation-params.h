@@ -93,6 +93,9 @@ class SimulationParameters {
   double processingWeight;
 
   bool staggeredStart;
+  bool optionCarrierForwarding;
+  bool optionalCheckBuffer;
+  bool optionalNoEmptyTransfers;
 
   double lowPowerThreshold;
 

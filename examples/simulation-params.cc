@@ -98,6 +98,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   double optProcessingWeight = 0.0;
 
   bool optStaggeredStart = false;
+  bool optOptionCarrierForwarding = false;
+  bool optOptionalCheckBuffer = false;
+  bool optOptionalNoEmptyTransfers = false;
 
   double optLowPowerThreshold = 0.0;
 
@@ -112,6 +115,18 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
       "staggeredStart",
       "If the application starting should be staggered across the different nodes",
       optStaggeredStart);
+  cmd.AddValue(
+      "optionCarrierForwarding",
+      "to enable the optional carrier forwarding",
+      optOptionCarrierForwarding);
+  cmd.AddValue(
+      "optionalCheckBuffer",
+      "to enable the optional checking the data items in the buffer when doing a lookup",
+      optOptionalCheckBuffer);
+  cmd.AddValue(
+      "optionalNoEmptyTransfers",
+      "to enable not sending unnecessary messages, ie. dont send transfer if there are no items",
+      optOptionalNoEmptyTransfers);
   cmd.AddValue(
       "percentDataOwners",
       "Percent of nodes who have original data to deciminate",
@@ -380,6 +395,9 @@ std::pair<SimulationParameters, bool> SimulationParameters::parse(int argc, char
   result.lowPowerThreshold = optLowPowerThreshold;
 
   result.staggeredStart = optStaggeredStart;
+  result.optionCarrierForwarding = optOptionCarrierForwarding;
+  result.optionalCheckBuffer = optOptionalCheckBuffer;
+  result.optionalNoEmptyTransfers = optOptionalNoEmptyTransfers;
 
   result.netanimTraceFilePath = animationTraceFilePath;
 

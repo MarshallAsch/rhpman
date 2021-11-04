@@ -180,7 +180,25 @@ TypeId RhpmanApp::GetTypeId() {
               "a callback to be called when a data lookup times out",
               CallbackValue(),
               MakeCallbackAccessor(&RhpmanApp::m_failed),
-              MakeCallbackChecker());
+              MakeCallbackChecker())
+          .AddAttribute(
+              "OptionCarrierForwarding",
+              "",
+              BooleanValue(false),
+              MakeBooleanAccessor(&RhpmanApp::m_optionCarrierForwarding),
+              MakeBooleanChecker())
+          .AddAttribute(
+              "OptionalCheckBuffer",
+              "",
+              BooleanValue(false),
+              MakeBooleanAccessor(&RhpmanApp::m_optionalCheckBuffer),
+              MakeBooleanChecker())
+          .AddAttribute(
+              "OptionalNoEmptyTransfers",
+              "",
+              BooleanValue(false),
+              MakeBooleanAccessor(&RhpmanApp::m_optionalNoEmptyTransfers),
+              MakeBooleanChecker());
   return id;
 }
 
@@ -766,13 +784,11 @@ void RhpmanApp::HandlePing(
     }
   }
 
-// if the peer has a higher value then the current node, send items in the buffer to that node
-// this is optional
-#if defined(__RHPMAN_OPTIONAL_CARRIER_FORWARDING)
-  if (profile > CalculateProfile()) {
+  // if the peer has a higher value then the current node, send items in the buffer to that node
+  // this is optional
+  if (m_optionCarrierForwarding && profile > CalculateProfile()) {
     TransferBuffer(nodeID);
   }
-#endif  // __RHPMAN_OPTIONAL_CARRIER_FORWARDING
 }
 
 // this will handle updating the nodes in the replication node list
@@ -985,10 +1001,11 @@ void RhpmanApp::TransferStorage(uint32_t nodeID, bool stepUp) {
 }
 
 void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
-#ifdef __RHPMAN_OPTIONAL_DONT_SEND_EMPTY_TRANSFERS
-  if (type == StorageType::BUFFER && m_buffer.Count() == 0) return;
-  if (type == StorageType::STORAGE && m_storage.Count() == 0) return;
-#endif
+
+  if (m_optionalNoEmptyTransfers) {
+    if (type == StorageType::BUFFER && m_buffer.Count() == 0) return;
+    if (type == StorageType::STORAGE && m_storage.Count() == 0) return;
+  }
 
   Ptr<Packet> message = GenerateTransfer(
       type == StorageType::BUFFER ? m_buffer.GetAll() : m_storage.GetAll(),
@@ -1169,16 +1186,13 @@ std::shared_ptr<DataItem> RhpmanApp::CheckLocalStorage(uint64_t dataID) {
     return item;
   }
 
-#if defined(__RHPMAN_OPTIONAL_CHECK_BUFFER)
-
-  // check the data items in the buffer
-  item = m_buffer.GetItem(dataID);
-  if (item != NULL) {
-    return item;
+  if (m_optionalCheckBuffer){
+    // check the data items in the buffer
+    item = m_buffer.GetItem(dataID);
+    if (item != NULL) {
+      return item;
+    }
   }
-
-#endif  // __RHPMAN_OPTIONAL_CHECK_BUFFER
-
   return NULL;
 }
 

@@ -23,7 +23,7 @@ import requests
 import copy
 
 
-experimentName = 'rhpman_v4'
+experimentName = 'rhpman_v5'
 
 ns_path = '../allinone2/ns-3.32'
 script = 'rhpman-example'
@@ -31,7 +31,7 @@ discord_url = os.environ.get('DISCORD_URL')
 
 
 campaign_dir = os.path.join(os.getcwd(), experimentName)
-figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp')
+figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
 
 
 if not os.path.exists(figure_dir):
@@ -62,6 +62,25 @@ def getForwardingThreshold(param):
     else:
         return [0.6]
 
+def getOptionCarrierForwarding(param):
+    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True:
+        return [True, False]
+    else:
+        return [False]
+
+def getOptionalCheckBuffer(param):
+    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True and param['optionCarrierForwarding'] == False:
+        return [True, False]
+    else:
+        return [False]
+
+def getOptionalNoEmptyTransfers(param):
+    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True and param['optionCarrierForwarding'] == False and param['optionalCheckBuffer'] == False:
+        return [True, False]
+    else:
+        return [False]
+
+
 
 param_combination = {
     'runTime': [2400],
@@ -72,17 +91,17 @@ param_combination = {
     'profileUpdateDelay': [6],
 
     'totalNodes': [160, 200], #[40, 80, 120, 160, 200],
-    'storageSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-    'bufferSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
+    'storageSpace': lambda p: p['totalNodes'],
+    'bufferSpace': lambda p: p['totalNodes'],
 
     'wcdc': [0.5],
     'wcol': [0.5],
 
-    'hops': lambda p: [2] if p['totalNodes'] != 160 else [1, 2, 3, 4, 5], # [2]
+    'hops': lambda p: [2] if p['totalNodes'] != 160 else [1, 2, 3, 4, 5],
     'replicationHops': [4],
 
-    'carryingThreshold': getCarryingThreshold, # lambda p: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], # [0.4], #
-    'forwardingThreshold': getForwardingThreshold,  #[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], # [0.6], #
+    'carryingThreshold': getCarryingThreshold,
+    'forwardingThreshold': getForwardingThreshold,
 
     'percentDataOwners': [10],
     'areaWidth': [1000],
@@ -109,8 +128,13 @@ param_combination = {
     'storageWeight': [ 0.5 ],
     'energyWeight': [ 0.5 ],
     'processingWeight': [0],
+    'lowPowerThreshold': [0.4],
+
+    # optional parameters
     'staggeredStart': [True, False],
-    'lowPowerThreshold': [0.4]
+    'optionCarrierForwarding': getOptionCarrierForwarding,
+    'optionalCheckBuffer': getOptionalCheckBuffer,
+    'optionalNoEmptyTransfers': getOptionalNoEmptyTransfers,
 }
 
 # change the params for the carrying
@@ -230,7 +254,7 @@ def explainFailures():
 
 sendNotification("Starting simulations")
 
-campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=False)
+campaign.run_missing_simulations(param_combination, runs=1, stop_on_errors=False)
 
 sendNotification("Simulations have finished running")
 

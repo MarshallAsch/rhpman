@@ -248,6 +248,9 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("EnergyWeight", DoubleValue(params.energyWeight));
   rhpman.SetAttribute("ProcessingWeight", DoubleValue(params.processingWeight));
   rhpman.SetAttribute("LowPowerThreshold", DoubleValue(params.lowPowerThreshold));
+  rhpman.SetAttribute("OptionCarrierForwarding", BooleanValue(params.optionCarrierForwarding));
+  rhpman.SetAttribute("OptionalCheckBuffer", BooleanValue(params.optionalCheckBuffer));
+  rhpman.SetAttribute("OptionalNoEmptyTransfers", BooleanValue(params.optionalNoEmptyTransfers));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
   if (params.staggeredStart) {
