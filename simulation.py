@@ -147,7 +147,7 @@ hops_params['forwardingThreshold'] = 0.6
 @sem.utils.only_load_some_files(['stdout'])
 def get_all(result):
     if result['output']['stdout'] == "":
-        return [float(-1)]
+        return []
     lines = result['output']['stdout'].strip().split('\n')
     res = { r.split('\t')[0]: float(r.split('\t')[1]) for r in lines}
     successRatio = res['FinalTotalSuccess'] / (res['FinalTotalFailed'] + res['FinalTotalPending'])
@@ -156,6 +156,7 @@ def get_all(result):
 
 def createPlot(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna()
     sns.catplot(data=data,
                 x=xName,
                 y=yName,
@@ -167,6 +168,7 @@ def createPlot(xName, yName, param):
 
 def createDelayPlot(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
     d2=pd.melt(d1, id_vars=[xName, 'staggeredStart'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
     sns.catplot(data=d2,
             x=xName,
@@ -205,6 +207,27 @@ def countFailures():
 
     print(f'There were {numFailed} simulations that crashed, this makes up {numFailed/total*100:.2f}% of the simulation runs')
 
+
+def errorTypeCheck(run):
+    if run['params']['totalNodes'] != 160:
+        type = 'totalNodes'
+    elif run['params']['hops'] != 2:
+        type = 'Hops'
+    elif run['params']['carryingThreshold'] != 0.4:
+        type = 'carryingThreshold'
+    elif run['params']['forwardingThreshold'] != 0.6:
+        type = 'forwardingThreshold'
+    else:
+        type = 'generic'
+    if run['params']['staggeredStart'] == True:
+        type = f'{type}+staggeredStart'
+    return type
+
+def explainFailures():
+    res = campaign.db.get_complete_results()
+    print([ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ])
+
+
 sendNotification("Starting simulations")
 
 campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=False)
@@ -222,6 +245,7 @@ sendNotification("Simulations have finished running")
 
 getRuntimeInfo()
 countFailures()
+explainFailures()
 
 
 ## Generate all the figures
