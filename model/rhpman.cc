@@ -1001,7 +1001,6 @@ void RhpmanApp::TransferStorage(uint32_t nodeID, bool stepUp) {
 }
 
 void RhpmanApp::SendStorage(uint32_t nodeID, StorageType type, bool stepUp) {
-
   if (m_optionalNoEmptyTransfers) {
     if (type == StorageType::BUFFER && m_buffer.Count() == 0) return;
     if (type == StorageType::STORAGE && m_storage.Count() == 0) return;
@@ -1186,7 +1185,7 @@ std::shared_ptr<DataItem> RhpmanApp::CheckLocalStorage(uint64_t dataID) {
     return item;
   }
 
-  if (m_optionalCheckBuffer){
+  if (m_optionalCheckBuffer) {
     // check the data items in the buffer
     item = m_buffer.GetItem(dataID);
     if (item != NULL) {
