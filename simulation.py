@@ -17,6 +17,7 @@ import sem
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import os
 import requests
 import copy
@@ -177,6 +178,16 @@ def createDelayPlot(xName, param):
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay.pdf'))
 
 
+def getRuntimeInfo():
+    res = campaign.db.get_complete_results()
+    times = [ r['meta']['elapsed_time'] for r in res ]
+    total = sum(times)
+    minTime = min(times)
+    maxTime = max(times)
+    avg = np.mean(times)
+    print(f'Simulations took: avg={avg}s\ttotal={total}\tmin={minTime}\tmax={maxTime}')
+
+
 
 sendNotification("Starting simulations")
 
@@ -193,6 +204,7 @@ sendNotification("Simulations have finished running")
 #    return float(r['output']['stdout'].split('\n')[2].split('\t')[1])
 
 
+getRuntimeInfo()
 
 
 ## Generate all the figures
