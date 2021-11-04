@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-
-#
-# This was run using commit cf4e71d
-#
 #
 #   Note this script is not designed to be run from this directory this is here so that it can be shared with the rest
 #   of the lab group as an example. This should be run from outside of the ns3 folder, currently in an example folder
@@ -20,8 +16,10 @@
 import sem
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pandas as pd
 import os
 import requests
+import copy
 
 
 experimentName = 'rhpman_v4'
@@ -32,7 +30,7 @@ discord_url = os.environ.get('DISCORD_URL')
 
 
 campaign_dir = os.path.join(os.getcwd(), experimentName)
-figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
+figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp')
 
 
 if not os.path.exists(figure_dir):
@@ -56,7 +54,6 @@ def getCarryingThreshold(param):
         return [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     else:
         return [0.4]
-
 
 def getForwardingThreshold(param):
     if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4:
@@ -115,217 +112,29 @@ param_combination = {
     'lowPowerThreshold': [0.4]
 }
 
-carrying_params = {
-    'runTime': [2400],
-    'waitTime': [600],
-    'lookupTime': [30],
-    'updateTime': [120],
-    'dataSize': [512],
-    'profileUpdateDelay': [6],
+# change the params for the carrying
+carrying_params = copy.deepcopy(param_combination)
+carrying_params['totalNodes'] = 160
+carrying_params['hops'] = 2
+carrying_params['forwardingThreshold'] = 0.6
 
-    'totalNodes': [160],
-    'storageSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-    'bufferSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
+# change the params for the forwarding
+forwarding_params = copy.deepcopy(param_combination)
+forwarding_params['totalNodes'] = 160
+forwarding_params['hops'] = 2
+forwarding_params['carryingThreshold'] = 0.4
 
-    'wcdc': [0.5],
-    'wcol': [0.5],
+# change the params for the change in number of nodes
+totalnodes_params = copy.deepcopy(param_combination)
+totalnodes_params['hops'] = 2
+totalnodes_params['carryingThreshold'] = 0.4
+totalnodes_params['forwardingThreshold'] = 0.6
 
-    'hops': [2],
-    'replicationHops': [4],
-
-    'carryingThreshold': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], # [0.4], #
-    'forwardingThreshold': [0.6],
-
-    'percentDataOwners': [10],
-    'areaWidth': [1000],
-    'areaLength': [1000],
-
-    'gridRows': [4],
-    'gridCols': [4],
-    'wifiRadius': [100],
-    'partitionNodes': [8],
-
-    'travellerVelocity': [20],
-    'travellerWalkMode': ['time'],
-    'travellerWalkTime': [100],
-    'pbnVelocityMin': [1],
-    'pbnVelocityMax': [10],
-    'pbnVelocityChangeAfter': [100],
-    'routing': ['dsdv'],
-    'travellerWalkDist': [0],
-    'requestTimeout': [0],
-    'peerTimeout': [12],
-    'electionPeriod': [6],
-    'electionCooldown': lambda p: p['electionPeriod'],
-
-    'storageWeight': [ 0.5 ],
-    'energyWeight': [ 0.5 ],
-    'processingWeight': [0],
-    'staggeredStart': [True, False],
-    'lowPowerThreshold': [0.4]
-}
-
-forwarding_params = {
-    'runTime': [2400],
-    'waitTime': [600],
-    'lookupTime': [30],
-    'updateTime': [120],
-    'dataSize': [512],
-    'profileUpdateDelay': [6],
-
-    'totalNodes': [160],
-    'storageSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-    'bufferSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-
-    'wcdc': [0.5],
-    'wcol': [0.5],
-
-    'hops': [2],
-    'replicationHops': [4],
-
-    'carryingThreshold': [0.4], #
-    'forwardingThreshold': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-
-    'percentDataOwners': [10],
-    'areaWidth': [1000],
-    'areaLength': [1000],
-
-    'gridRows': [4],
-    'gridCols': [4],
-    'wifiRadius': [100],
-    'partitionNodes': [8],
-
-    'travellerVelocity': [20],
-    'travellerWalkMode': ['time'],
-    'travellerWalkTime': [100],
-    'pbnVelocityMin': [1],
-    'pbnVelocityMax': [10],
-    'pbnVelocityChangeAfter': [100],
-    'routing': ['dsdv'],
-    'travellerWalkDist': [0],
-    'requestTimeout': [0],
-    'peerTimeout': [12],
-    'electionPeriod': [6],
-    'electionCooldown': lambda p: p['electionPeriod'],
-
-    'storageWeight': [ 0.5 ],
-    'energyWeight': [ 0.5 ],
-    'processingWeight': [0],
-    'staggeredStart': [True, False],
-    'lowPowerThreshold': [0.4],
-}
-
-totalnodes_params = {
-    'runTime': [2400],
-    'waitTime': [600],
-    'lookupTime': [30],
-    'updateTime': [120],
-    'dataSize': [512],
-    'profileUpdateDelay': [6],
-
-    'totalNodes': [160, 200], #[40, 80, 120, 160, 200],
-    'storageSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-    'bufferSpace': lambda p: p['totalNodes'], # [40], #getNumNodes,
-
-    'wcdc': [0.5],
-    'wcol': [0.5],
-
-    'hops': [2],
-    'replicationHops': [4],
-
-    'percentDataOwners': [10],
-    'areaWidth': [1000],
-    'areaLength': [1000],
-
-    'gridRows': [4],
-    'gridCols': [4],
-    'wifiRadius': [100],
-    'partitionNodes': [8],
-
-    'travellerVelocity': [20],
-    'travellerWalkMode': ['time'],
-    'travellerWalkTime': [100],
-    'pbnVelocityMin': [1],
-    'pbnVelocityMax': [10],
-    'pbnVelocityChangeAfter': [100],
-    'routing': ['dsdv'],
-    'travellerWalkDist': [0],
-    'requestTimeout': [0],
-    'peerTimeout': [12],
-    'electionPeriod': [6],
-    'electionCooldown': lambda p: p['electionPeriod'],
-
-    'storageWeight': [ 0.5 ],
-    'energyWeight': [ 0.5 ],
-    'processingWeight': [0],
-    'staggeredStart': [True, False],
-    'lowPowerThreshold': [0.4],
-}
-
-hops_params = {
-    'runTime': [2400],
-    'waitTime': [600],
-    'lookupTime': [30],
-    'updateTime': [120],
-    'dataSize': [512],
-    'profileUpdateDelay': [6],
-
-    'totalNodes': [160],
-    'storageSpace': lambda p: p['totalNodes'],
-    'bufferSpace': lambda p: p['totalNodes'],
-
-    'wcdc': [0.5],
-    'wcol': [0.5],
-
-    'hops':  [1, 2, 3, 4, 5], # [2]
-    'replicationHops': [4],
-
-    'carryingThreshold': [0.4],
-    'forwardingThreshold': [0.6],
-
-    'percentDataOwners': [10],
-    'areaWidth': [1000],
-    'areaLength': [1000],
-
-    'gridRows': [4],
-    'gridCols': [4],
-    'wifiRadius': [100],
-    'partitionNodes': [8],
-
-    'travellerVelocity': [20],
-    'travellerWalkMode': ['time'],
-    'travellerWalkTime': [100],
-    'pbnVelocityMin': [1],
-    'pbnVelocityMax': [10],
-    'pbnVelocityChangeAfter': [100],
-    'routing': ['dsdv'],
-    'travellerWalkDist': [0],
-    'requestTimeout': [0],
-    'peerTimeout': [12],
-    'electionPeriod': [6],
-    'electionCooldown': lambda p: p['electionPeriod'],
-
-    'storageWeight': [ 0.5 ],
-    'energyWeight': [ 0.5 ],
-    'processingWeight': [0],
-    'staggeredStart': [True, False],
-    'lowPowerThreshold': [0.4]
-}
-
-
-sendNotification("Starting simulations")
-
-campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=False)
-
-sendNotification("Simulations have finished running")
-
-
-#print(campaign.get_space(param_space=param_combination, runs=30))
-
-#exit(0)
-
-#def getMessages(r):
-#    return float(r['output']['stdout'].split('\n')[2].split('\t')[1])
+# change the params for the hops
+hops_params = copy.deepcopy(param_combination)
+hops_params['totalNodes'] = 160
+hops_params['carryingThreshold'] = 0.4
+hops_params['forwardingThreshold'] = 0.6
 
 
 
@@ -344,100 +153,64 @@ def get_all(result):
     return [successRatio] + [float(r.split('\t')[1]) for r in lines]
 
 
-hopData = campaign.get_results_as_dataframe(get_all, params=hops_params)
-sns.catplot(data=hopData,
-            x='hops',
-            y='FinalTotalSent',
+def createPlot(xName, yName, param):
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    sns.catplot(data=data,
+                x=xName,
+                y=yName,
+                hue='staggeredStart',
+                kind='point'
+                )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
+
+
+def createDelayPlot(xName, param):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
             col='staggeredStart',
             kind='point'
             )
-plt.savefig(os.path.join(figure_dir, 'hops_traffic.pdf'))
-
-sns.catplot(data=hopData,
-            x='hops',
-            y='successRatio',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'hops_success_ratio.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay.pdf'))
 
 
 
-sns.catplot(data=hopData,
-            x='hops',
-            y='FinalMinQueryDelay',
-            col='staggeredStart',
-            kind='point'
-            )
-sns.catplot(data=hopData,
-            x='hops',
-            y='FinalMaxQueryDelay',
-            col='staggeredStart',
-            kind='point'
-            )
-sns.catplot(data=hopData,
-            x='hops',
-            y='FinalAvgQueryDelay',
-            col='staggeredStart',
-            kind='point'
-            )
+sendNotification("Starting simulations")
+
+campaign.run_missing_simulations(param_combination, runs=30, stop_on_errors=False)
+
+sendNotification("Simulations have finished running")
 
 
-plt.savefig(os.path.join(figure_dir, 'hops_query_delay.pdf'))
+#print(campaign.get_space(param_space=param_combination, runs=30))
+
+#exit(0)
+
+#def getMessages(r):
+#    return float(r['output']['stdout'].split('\n')[2].split('\t')[1])
 
 
-nodesData = campaign.get_results_as_dataframe(get_all, params=totalnodes_params)
-sns.catplot(data=nodesData,
-            x='totalNodes',
-            y='FinalTotalSent',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'nodes_traffic.pdf'))
-
-sns.catplot(data=nodesData,
-            x='totalNodes',
-            y='successRatio',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'nodes_success_ratio.pdf'))
 
 
-carryingData = campaign.get_results_as_dataframe(get_all, params=carrying_params)
-sns.catplot(data=carryingData,
-            x='carryingThreshold',
-            y='FinalTotalSent',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'carrying_traffic.pdf'))
+## Generate all the figures
+createPlot('hops', 'FinalTotalSent', hops_params)
+createPlot('hops', 'successRatio', hops_params)
+createDelayPlot('hops', hops_params)
 
-sns.catplot(data=carryingData,
-            x='carryingThreshold',
-            y='successRatio',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'carrying_success_ratio.pdf'))
+createPlot('totalNodes', 'FinalTotalSent', totalnodes_params)
+createPlot('totalNodes', 'successRatio', totalnodes_params)
+createDelayPlot('totalNodes', totalnodes_params)
 
+createPlot('carryingThreshold', 'FinalTotalSent', carrying_params)
+createPlot('carryingThreshold', 'successRatio', carrying_params)
+createDelayPlot('carryingThreshold', carrying_params)
 
-forwardingData = campaign.get_results_as_dataframe(get_all, params=forwarding_params)
-sns.catplot(data=forwardingData,
-            x='forwardingThreshold',
-            y='FinalTotalSent',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'forwarding_traffic.pdf'))
-
-sns.catplot(data=forwardingData,
-            x='forwardingThreshold',
-            y='successRatio',
-            col='staggeredStart',
-            kind='point'
-            )
-plt.savefig(os.path.join(figure_dir, 'forwarding_success_ratio.pdf'))
+createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
+createPlot('forwardingThreshold', 'successRatio', forwarding_params)
+createDelayPlot('forwardingThreshold', forwarding_params)
 
 
 sendNotification("All the plots have been produced")
