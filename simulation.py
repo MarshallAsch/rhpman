@@ -23,6 +23,7 @@ import requests
 import copy
 
 
+num_runs = 30
 experimentName = 'rhpman_v5'
 
 ns_path = '../allinone2/ns-3.32'
@@ -229,7 +230,7 @@ def countFailures():
     numFailed = len(failed)
     total = len(res)
 
-    print(f'There were {numFailed} simulations that crashed, this makes up {numFailed/total*100:.2f}% of the simulation runs')
+    return f'There were {numFailed} simulations that crashed, this makes up {numFailed/total*100:.2f}% of the simulation runs'
 
 
 def errorTypeCheck(run):
@@ -252,23 +253,26 @@ def explainFailures():
     print([ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ])
 
 
-sendNotification("Starting simulations")
 
-campaign.run_missing_simulations(param_combination, runs=1, stop_on_errors=False)
+#################
+#
+#   Run the simulations
+#
+#################
+
+
+countToRun = len(sem.manager.list_param_combinations(param_combination)) * num_runs
+sendNotification(f'Starting simulations, {countToRun} simulations to run')
+
+campaign.run_missing_simulations(param_combination, runs=num_runs, stop_on_errors=False)
 
 sendNotification("Simulations have finished running")
+sendNotification(countFailures())
 
 
-#print(campaign.get_space(param_space=param_combination, runs=30))
-
-#exit(0)
-
-#def getMessages(r):
-#    return float(r['output']['stdout'].split('\n')[2].split('\t')[1])
-
-
+## print some of the information about the run
 getRuntimeInfo()
-countFailures()
+print(countFailures())
 explainFailures()
 
 
