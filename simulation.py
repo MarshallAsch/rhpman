@@ -178,16 +178,32 @@ def createDelayPlot(xName, param):
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay.pdf'))
 
 
-def getRuntimeInfo():
+def getTimes(condition=lambda r: True):
     res = campaign.db.get_complete_results()
-    times = [ r['meta']['elapsed_time'] for r in res ]
-    total = sum(times)
-    minTime = min(times)
-    maxTime = max(times)
-    avg = np.mean(times)
-    print(f'Simulations took: avg={avg}s\ttotal={total}\tmin={minTime}\tmax={maxTime}')
+    times = [ r['meta']['elapsed_time'] for r in res if condition(r)]
+    return {
+        'total': sum(times),
+        'min': min(times),
+        'max': max(times),
+        'avg': np.mean(times)
+    }
+
+def getRuntimeInfo():
+    times = getTimes()
+    print(f"Running all Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}")
+
+    times = getTimes(lambda r: r['meta']['exitcode'] == 0)
+    print(f"Running success Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}")
 
 
+def countFailures():
+    res = campaign.db.get_complete_results()
+    failed = [ r for r in res if r['meta']['exitcode'] != 0 ]
+
+    numFailed = len(failed)
+    total = len(res)
+
+    print(f'There were {numFailed} simulations that crashed, this makes up {numFailed/total*100:.2f}% of the simulation runs')
 
 sendNotification("Starting simulations")
 
@@ -205,6 +221,7 @@ sendNotification("Simulations have finished running")
 
 
 getRuntimeInfo()
+countFailures()
 
 
 ## Generate all the figures
