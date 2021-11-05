@@ -23,7 +23,7 @@ import requests
 import copy
 
 
-num_runs = 30
+num_runs = 10
 experimentName = 'rhpman_v5'
 
 ns_path = '../allinone2/ns-3.32'
@@ -143,25 +143,66 @@ carrying_params = copy.deepcopy(param_combination)
 carrying_params['totalNodes'] = 160
 carrying_params['hops'] = 2
 carrying_params['forwardingThreshold'] = 0.6
+carrying_params['optionCarrierForwarding'] = False
+carrying_params['optionalCheckBuffer'] = False
+carrying_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the forwarding
 forwarding_params = copy.deepcopy(param_combination)
 forwarding_params['totalNodes'] = 160
 forwarding_params['hops'] = 2
 forwarding_params['carryingThreshold'] = 0.4
+forwarding_params['optionCarrierForwarding'] = False
+forwarding_params['optionalCheckBuffer'] = False
+forwarding_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the change in number of nodes
 totalnodes_params = copy.deepcopy(param_combination)
 totalnodes_params['hops'] = 2
 totalnodes_params['carryingThreshold'] = 0.4
 totalnodes_params['forwardingThreshold'] = 0.6
+totalnodes_params['optionCarrierForwarding'] = False
+totalnodes_params['optionalCheckBuffer'] = False
+totalnodes_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the hops
 hops_params = copy.deepcopy(param_combination)
 hops_params['totalNodes'] = 160
 hops_params['carryingThreshold'] = 0.4
 hops_params['forwardingThreshold'] = 0.6
+hops_params['optionCarrierForwarding'] = False
+hops_params['optionalCheckBuffer'] = False
+hops_params['optionalNoEmptyTransfers'] = False
 
+# change the params for the optional carrier forwarding
+optional_forwarding_params = copy.deepcopy(param_combination)
+optional_forwarding_params['totalNodes'] = 160
+optional_forwarding_params['carryingThreshold'] = 0.4
+optional_forwarding_params['forwardingThreshold'] = 0.6
+optional_forwarding_params['hops'] = 2
+optional_forwarding_params['staggeredStart'] = True
+optional_forwarding_params['optionalCheckBuffer'] = False
+optional_forwarding_params['optionalNoEmptyTransfers'] = False
+
+# change the params for the optional check buffer
+optional_buffer_params = copy.deepcopy(param_combination)
+optional_buffer_params['totalNodes'] = 160
+optional_buffer_params['carryingThreshold'] = 0.4
+optional_buffer_params['forwardingThreshold'] = 0.6
+optional_buffer_params['hops'] = 2
+optional_buffer_params['staggeredStart'] = True
+optional_buffer_params['optionCarrierForwarding'] = False
+optional_buffer_params['optionalNoEmptyTransfers'] = False
+
+# change the params for the optional no empty transfers
+optional_no_empty_params = copy.deepcopy(param_combination)
+optional_no_empty_params['totalNodes'] = 160
+optional_no_empty_params['carryingThreshold'] = 0.4
+optional_no_empty_params['forwardingThreshold'] = 0.6
+optional_no_empty_params['hops'] = 2
+optional_no_empty_params['staggeredStart'] = True
+optional_no_empty_params['optionCarrierForwarding'] = False
+optional_no_empty_params['optionalCheckBuffer'] = False
 
 
 @sem.utils.output_labels([
@@ -293,17 +334,18 @@ createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
 createPlot('forwardingThreshold', 'successRatio', forwarding_params)
 createDelayPlot('forwardingThreshold', forwarding_params)
 
-createPlot('optionCarrierForwarding', 'FinalTotalSent', forwarding_params)
-createPlot('optionCarrierForwarding', 'successRatio', forwarding_params)
-createDelayPlot('optionCarrierForwarding', forwarding_params)
+createPlot('optionCarrierForwarding', 'FinalTotalSent', optional_forwarding_params)
+createPlot('optionCarrierForwarding', 'successRatio', optional_forwarding_params)
+createDelayPlot('optionCarrierForwarding', optional_forwarding_params)
 
-createPlot('optionalCheckBuffer', 'FinalTotalSent', forwarding_params)
-createPlot('optionalCheckBuffer', 'successRatio', forwarding_params)
-createDelayPlot('optionalCheckBuffer', forwarding_params)
+createPlot('optionalCheckBuffer', 'FinalTotalSent', optional_buffer_params)
+createPlot('optionalCheckBuffer', 'successRatio', optional_buffer_params)
+createDelayPlot('optionalCheckBuffer', optional_buffer_params)
 
-createPlot('optionalNoEmptyTransfers', 'FinalTotalSent', forwarding_params)
-createPlot('optionalNoEmptyTransfers', 'successRatio', forwarding_params)
-createDelayPlot('optionalNoEmptyTransfers', forwarding_params)
+createPlot('optionalNoEmptyTransfers', 'FinalTotalSent', optional_no_empty_params)
+createPlot('optionalNoEmptyTransfers', 'successRatio', optional_no_empty_params)
+createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params)
+
 
 
 sendNotification("All the plots have been produced")
