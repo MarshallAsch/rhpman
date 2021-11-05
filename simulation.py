@@ -23,7 +23,7 @@ import requests
 import copy
 
 
-num_runs = 10
+num_runs = 30
 experimentName = 'rhpman_v5'
 
 ns_path = '../allinone2/ns-3.32'
@@ -43,6 +43,9 @@ campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_p
 
 
 def sendNotification(message):
+
+    os.system(f'notify-send "NS3 sims" "{message}"')
+
     if discord_url is not None:
         requests.post(discord_url, json={"content": message})
     else:
@@ -230,6 +233,7 @@ def createPlot(xName, yName, param):
                 kind='point'
                 )
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
+    plt.clf()
 
 
 def createDelayPlot(xName, param):
@@ -244,7 +248,7 @@ def createDelayPlot(xName, param):
             kind='point'
             )
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay.pdf'))
-
+    plt.clf()
 
 def getTimes(condition=lambda r: True):
     res = campaign.db.get_complete_results()
@@ -258,10 +262,11 @@ def getTimes(condition=lambda r: True):
 
 def getRuntimeInfo():
     times = getTimes()
-    print(f"Running all Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}")
+
+    str = f"Running all Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}"
 
     times = getTimes(lambda r: r['meta']['exitcode'] == 0)
-    print(f"Running success Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}")
+    return f"{str}\nRunning success Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}\n"
 
 
 def countFailures():
@@ -291,7 +296,7 @@ def errorTypeCheck(run):
 
 def explainFailures():
     res = campaign.db.get_complete_results()
-    print([ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ])
+    return f"{[ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ]}"
 
 
 
@@ -302,8 +307,9 @@ def explainFailures():
 #################
 
 
-countToRun = len(sem.manager.list_param_combinations(param_combination)) * num_runs
-sendNotification(f'Starting simulations, {countToRun} simulations to run')
+totalSims = len(sem.manager.list_param_combinations(param_combination)) * num_runs
+toRun = len(campaign.get_missing_simulations(sem.manager.list_param_combinations(param_combination), runs=num_runs))
+sendNotification(f'Starting simulations, {toRun} of {totalSims} simulations to run')
 
 campaign.run_missing_simulations(param_combination, runs=num_runs, stop_on_errors=False)
 
@@ -312,9 +318,8 @@ sendNotification(countFailures())
 
 
 ## print some of the information about the run
-getRuntimeInfo()
-print(countFailures())
-explainFailures()
+sendNotification(getRuntimeInfo())
+sendNotification(explainFailures())
 
 
 ## Generate all the figures
