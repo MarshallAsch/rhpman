@@ -20,7 +20,7 @@ jobs:
         with:
           images: marshallasch/rhpman
           tags: |
-            type=ref,event=branch,suffix=${{ matrix.profile }}
+            type=ref,event=branch,suffix=-${{ matrix.profile }}
             type=raw,value=${{ matrix.profile }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
