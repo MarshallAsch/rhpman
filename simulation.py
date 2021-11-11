@@ -48,8 +48,8 @@ def sendNotification(message):
 
     if discord_url is not None:
         requests.post(discord_url, json={"content": message})
-    else:
-        print(message)
+
+    print(message)
 
 def getNumNodes(param):
     return param['totalNodes']
@@ -65,26 +65,6 @@ def getForwardingThreshold(param):
         return [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     else:
         return [0.6]
-
-def getOptionCarrierForwarding(param):
-    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True:
-        return [True, False]
-    else:
-        return [False]
-
-def getOptionalCheckBuffer(param):
-    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True and param['optionCarrierForwarding'] == False:
-        return [True, False]
-    else:
-        return [False]
-
-def getOptionalNoEmptyTransfers(param):
-    if param['hops'] == 2 and param['totalNodes'] == 160 and param['carryingThreshold'] == 0.4 and param['forwardingThreshold'] == 0.6 and param['staggeredStart'] == True and param['optionCarrierForwarding'] == False and param['optionalCheckBuffer'] == False:
-        return [True, False]
-    else:
-        return [False]
-
-
 
 param_combination = {
     'runTime': [2400],
@@ -136,18 +116,17 @@ param_combination = {
 
     # optional parameters
     'staggeredStart': [True, False],
-    'optionCarrierForwarding': getOptionCarrierForwarding,
-    'optionalCheckBuffer': getOptionalCheckBuffer,
-    'optionalNoEmptyTransfers': getOptionalNoEmptyTransfers,
+    'optionCarrierForwarding': [True, False],
+    'optionalCheckBuffer':  [True, False],
+    'optionalNoEmptyTransfers': lambda p: [True, False] if p['optionCarrierForwarding'] == p['optionalCheckBuffer'] == False else [False],
 }
+
 
 # change the params for the carrying
 carrying_params = copy.deepcopy(param_combination)
 carrying_params['totalNodes'] = 160
 carrying_params['hops'] = 2
 carrying_params['forwardingThreshold'] = 0.6
-carrying_params['optionCarrierForwarding'] = False
-carrying_params['optionalCheckBuffer'] = False
 carrying_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the forwarding
@@ -155,8 +134,6 @@ forwarding_params = copy.deepcopy(param_combination)
 forwarding_params['totalNodes'] = 160
 forwarding_params['hops'] = 2
 forwarding_params['carryingThreshold'] = 0.4
-forwarding_params['optionCarrierForwarding'] = False
-forwarding_params['optionalCheckBuffer'] = False
 forwarding_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the change in number of nodes
@@ -164,8 +141,6 @@ totalnodes_params = copy.deepcopy(param_combination)
 totalnodes_params['hops'] = 2
 totalnodes_params['carryingThreshold'] = 0.4
 totalnodes_params['forwardingThreshold'] = 0.6
-totalnodes_params['optionCarrierForwarding'] = False
-totalnodes_params['optionalCheckBuffer'] = False
 totalnodes_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the hops
@@ -173,29 +148,7 @@ hops_params = copy.deepcopy(param_combination)
 hops_params['totalNodes'] = 160
 hops_params['carryingThreshold'] = 0.4
 hops_params['forwardingThreshold'] = 0.6
-hops_params['optionCarrierForwarding'] = False
-hops_params['optionalCheckBuffer'] = False
 hops_params['optionalNoEmptyTransfers'] = False
-
-# change the params for the optional carrier forwarding
-optional_forwarding_params = copy.deepcopy(param_combination)
-optional_forwarding_params['totalNodes'] = 160
-optional_forwarding_params['carryingThreshold'] = 0.4
-optional_forwarding_params['forwardingThreshold'] = 0.6
-optional_forwarding_params['hops'] = 2
-optional_forwarding_params['staggeredStart'] = True
-optional_forwarding_params['optionalCheckBuffer'] = False
-optional_forwarding_params['optionalNoEmptyTransfers'] = False
-
-# change the params for the optional check buffer
-optional_buffer_params = copy.deepcopy(param_combination)
-optional_buffer_params['totalNodes'] = 160
-optional_buffer_params['carryingThreshold'] = 0.4
-optional_buffer_params['forwardingThreshold'] = 0.6
-optional_buffer_params['hops'] = 2
-optional_buffer_params['staggeredStart'] = True
-optional_buffer_params['optionCarrierForwarding'] = False
-optional_buffer_params['optionalNoEmptyTransfers'] = False
 
 # change the params for the optional no empty transfers
 optional_no_empty_params = copy.deepcopy(param_combination)
@@ -230,25 +183,31 @@ def createPlot(xName, yName, param):
                 x=xName,
                 y=yName,
                 hue='staggeredStart',
+                col='optionCarrierForwarding',
+                row='optionalCheckBuffer',
                 kind='point'
                 )
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
     plt.clf()
+    plt.close()
 
 
-def createDelayPlot(xName, param):
+def createDelayPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
     sns.catplot(data=d2,
             x=xName,
             y='value',
             hue='variable',
-            col='staggeredStart',
+            #col='staggeredStart',
+            col='optionCarrierForwarding',
+            row='optionalCheckBuffer',
             kind='point'
             )
-    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_{fileSuffix}.pdf'))
     plt.clf()
+    plt.close()
 
 def getTimes(condition=lambda r: True):
     res = campaign.db.get_complete_results()
@@ -296,9 +255,9 @@ def errorTypeCheck(run):
 
 def explainFailures():
     res = campaign.db.get_complete_results()
-    return f"{[ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ]}"
-
-
+    errorReasons = [ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ]
+    errorReasons.sort()
+    return f"{errorReasons}"
 
 #################
 #
@@ -325,32 +284,38 @@ sendNotification(explainFailures())
 ## Generate all the figures
 createPlot('hops', 'FinalTotalSent', hops_params)
 createPlot('hops', 'successRatio', hops_params)
-createDelayPlot('hops', hops_params)
+hops_params['staggeredStart'] = [ True ]
+createDelayPlot('hops', hops_params, 'staggered')
+hops_params['staggeredStart'] = [ False ]
+createDelayPlot('hops', hops_params, 'notstaggered')
 
 createPlot('totalNodes', 'FinalTotalSent', totalnodes_params)
 createPlot('totalNodes', 'successRatio', totalnodes_params)
-createDelayPlot('totalNodes', totalnodes_params)
+totalnodes_params['staggeredStart'] = [ True ]
+createDelayPlot('totalNodes', totalnodes_params, 'staggered')
+totalnodes_params['staggeredStart'] = [ False ]
+createDelayPlot('totalNodes', totalnodes_params, 'notstaggered')
 
 createPlot('carryingThreshold', 'FinalTotalSent', carrying_params)
 createPlot('carryingThreshold', 'successRatio', carrying_params)
-createDelayPlot('carryingThreshold', carrying_params)
+carrying_params['staggeredStart'] = [ True ]
+createDelayPlot('carryingThreshold', carrying_params, 'staggerd')
+carrying_params['staggeredStart'] = [ False ]
+createDelayPlot('carryingThreshold', carrying_params, 'notstaggerd')
 
 createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
 createPlot('forwardingThreshold', 'successRatio', forwarding_params)
-createDelayPlot('forwardingThreshold', forwarding_params)
-
-createPlot('optionCarrierForwarding', 'FinalTotalSent', optional_forwarding_params)
-createPlot('optionCarrierForwarding', 'successRatio', optional_forwarding_params)
-createDelayPlot('optionCarrierForwarding', optional_forwarding_params)
-
-createPlot('optionalCheckBuffer', 'FinalTotalSent', optional_buffer_params)
-createPlot('optionalCheckBuffer', 'successRatio', optional_buffer_params)
-createDelayPlot('optionalCheckBuffer', optional_buffer_params)
+forwarding_params['staggeredStart'] = [ True ]
+createDelayPlot('forwardingThreshold', forwarding_params, 'staggered')
+forwarding_params['staggeredStart'] = [ False ]
+createDelayPlot('forwardingThreshold', forwarding_params, 'notstaggered')
 
 createPlot('optionalNoEmptyTransfers', 'FinalTotalSent', optional_no_empty_params)
 createPlot('optionalNoEmptyTransfers', 'successRatio', optional_no_empty_params)
-createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params)
-
+optional_no_empty_params['staggeredStart'] = [ True ]
+createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params, 'staggered')
+optional_no_empty_params['staggeredStart'] = [ False ]
+createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params, 'notstaggered')
 
 
 sendNotification("All the plots have been produced")
