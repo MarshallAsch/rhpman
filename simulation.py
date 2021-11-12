@@ -150,16 +150,6 @@ hops_params['carryingThreshold'] = 0.4
 hops_params['forwardingThreshold'] = 0.6
 hops_params['optionalNoEmptyTransfers'] = False
 
-# change the params for the optional no empty transfers
-optional_no_empty_params = copy.deepcopy(param_combination)
-optional_no_empty_params['totalNodes'] = 160
-optional_no_empty_params['carryingThreshold'] = 0.4
-optional_no_empty_params['forwardingThreshold'] = 0.6
-optional_no_empty_params['hops'] = 2
-optional_no_empty_params['staggeredStart'] = True
-optional_no_empty_params['optionCarrierForwarding'] = False
-optional_no_empty_params['optionalCheckBuffer'] = False
-
 
 @sem.utils.output_labels([
     'successRatio',
@@ -206,6 +196,39 @@ def createDelayPlot(xName, param, fileSuffix):
             kind='point'
             )
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_{fileSuffix}.pdf'))
+    plt.clf()
+    plt.close()
+
+
+
+def createPlotOptionalTransfer(xName, yName, param):
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna()
+    sns.catplot(data=data,
+                x=xName,
+                y=yName,
+                hue='staggeredStart',
+                col='optionalNoEmptyTransfers',
+                kind='point'
+                )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}_optionalNoEmptyTransfers.pdf'))
+    plt.clf()
+    plt.close()
+
+
+def createDelayPlotOptionalTransfer(xName, param):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
+            col='optionalNoEmptyTransfers',
+            row='staggeredStart',
+            kind='point'
+            )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
 
@@ -289,12 +312,31 @@ createDelayPlot('hops', hops_params, 'staggered')
 hops_params['staggeredStart'] = [ False ]
 createDelayPlot('hops', hops_params, 'notstaggered')
 
+hops_params['staggeredStart'] = [ True, False ]
+hops_params['optionalNoEmptyTransfers'] = [ True, False ]
+hops_params['optionCarrierForwarding'] = False
+hops_params['optionalCheckBuffer'] = False
+createPlotOptionalTransfer('hops', 'FinalTotalSent', hops_params)
+createPlotOptionalTransfer('hops', 'successRatio', hops_params)
+createDelayPlotOptionalTransfer('hops', hops_params)
+
+
 createPlot('totalNodes', 'FinalTotalSent', totalnodes_params)
 createPlot('totalNodes', 'successRatio', totalnodes_params)
 totalnodes_params['staggeredStart'] = [ True ]
 createDelayPlot('totalNodes', totalnodes_params, 'staggered')
 totalnodes_params['staggeredStart'] = [ False ]
 createDelayPlot('totalNodes', totalnodes_params, 'notstaggered')
+
+totalnodes_params['staggeredStart'] = [ True, False ]
+totalnodes_params['optionalNoEmptyTransfers'] = [ True, False ]
+totalnodes_params['optionCarrierForwarding'] = False
+totalnodes_params['optionalCheckBuffer'] = False
+createPlotOptionalTransfer('totalNodes', 'FinalTotalSent', totalnodes_params)
+createPlotOptionalTransfer('totalNodes', 'successRatio', totalnodes_params)
+createDelayPlotOptionalTransfer('totalNodes', totalnodes_params)
+
+
 
 createPlot('carryingThreshold', 'FinalTotalSent', carrying_params)
 createPlot('carryingThreshold', 'successRatio', carrying_params)
@@ -303,6 +345,15 @@ createDelayPlot('carryingThreshold', carrying_params, 'staggerd')
 carrying_params['staggeredStart'] = [ False ]
 createDelayPlot('carryingThreshold', carrying_params, 'notstaggerd')
 
+carrying_params['staggeredStart'] = [ True, False ]
+carrying_params['optionalNoEmptyTransfers'] = [ True, False ]
+carrying_params['optionCarrierForwarding'] = False
+carrying_params['optionalCheckBuffer'] = False
+createPlotOptionalTransfer('carryingThreshold', 'FinalTotalSent', carrying_params)
+createPlotOptionalTransfer('carryingThreshold', 'successRatio', carrying_params)
+createDelayPlotOptionalTransfer('carryingThreshold', carrying_params)
+
+
 createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
 createPlot('forwardingThreshold', 'successRatio', forwarding_params)
 forwarding_params['staggeredStart'] = [ True ]
@@ -310,12 +361,13 @@ createDelayPlot('forwardingThreshold', forwarding_params, 'staggered')
 forwarding_params['staggeredStart'] = [ False ]
 createDelayPlot('forwardingThreshold', forwarding_params, 'notstaggered')
 
-createPlot('optionalNoEmptyTransfers', 'FinalTotalSent', optional_no_empty_params)
-createPlot('optionalNoEmptyTransfers', 'successRatio', optional_no_empty_params)
-optional_no_empty_params['staggeredStart'] = [ True ]
-createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params, 'staggered')
-optional_no_empty_params['staggeredStart'] = [ False ]
-createDelayPlot('optionalNoEmptyTransfers', optional_no_empty_params, 'notstaggered')
+forwarding_params['staggeredStart'] = [ True, False ]
+forwarding_params['optionalNoEmptyTransfers'] = [ True, False ]
+forwarding_params['optionCarrierForwarding'] = False
+forwarding_params['optionalCheckBuffer'] = False
+createPlotOptionalTransfer('forwardingThreshold', 'FinalTotalSent', forwarding_params)
+createPlotOptionalTransfer('forwardingThreshold', 'successRatio', forwarding_params)
+createDelayPlotOptionalTransfer('forwardingThreshold', forwarding_params)
 
 
 sendNotification("All the plots have been produced")
