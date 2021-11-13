@@ -21,6 +21,8 @@ import numpy as np
 import os
 import requests
 import copy
+import time
+from datetime import timedelta
 
 
 num_runs = 30
@@ -30,26 +32,6 @@ ns_path = '../allinone2/ns-3.32'
 script = 'rhpman-example'
 discord_url = os.environ.get('DISCORD_URL')
 
-
-campaign_dir = os.path.join(os.getcwd(), experimentName)
-figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
-
-
-if not os.path.exists(figure_dir):
-    os.makedirs(figure_dir)
-
-
-campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
-
-
-def sendNotification(message):
-
-    os.system(f'notify-send "NS3 sims" "{message}"')
-
-    if discord_url is not None:
-        requests.post(discord_url, json={"content": message})
-
-    print(message)
 
 def getNumNodes(param):
     return param['totalNodes']
@@ -121,7 +103,6 @@ param_combination = {
     'optionalNoEmptyTransfers': lambda p: [True, False] if p['optionCarrierForwarding'] == p['optionalCheckBuffer'] == False else [False],
 }
 
-
 # change the params for the carrying
 carrying_params = copy.deepcopy(param_combination)
 carrying_params['totalNodes'] = 160
@@ -150,6 +131,10 @@ hops_params['carryingThreshold'] = 0.4
 hops_params['forwardingThreshold'] = 0.6
 hops_params['optionalNoEmptyTransfers'] = False
 
+##############################
+# Start setting up functions
+##############################
+
 
 @sem.utils.output_labels([
     'successRatio',
@@ -165,6 +150,14 @@ def get_all(result):
     successRatio = res['FinalTotalSuccess'] / (res['FinalTotalFailed'] + res['FinalTotalPending'])
     return [successRatio] + [float(r.split('\t')[1]) for r in lines]
 
+def sendNotification(message):
+
+    os.system(f'notify-send "NS3 sims" "{message}"')
+
+    if discord_url is not None:
+        requests.post(discord_url, json={"content": message})
+
+    print(message)
 
 def createPlot(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
@@ -181,11 +174,11 @@ def createPlot(xName, yName, param):
     plt.clf()
     plt.close()
 
-
 def createDelayPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
     d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
+    d3=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending'])
     sns.catplot(data=d2,
             x=xName,
             y='value',
@@ -195,11 +188,48 @@ def createDelayPlot(xName, param, fileSuffix):
             row='optionalCheckBuffer',
             kind='point'
             )
+
+    ax = plt.gca()
+    ax2 = ax.twinx()
+    sns.barplot(data=d3, x=xName, y='value', hue='variable', ax=ax2)
+
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_{fileSuffix}.pdf'))
     plt.clf()
     plt.close()
 
 
+def createLookupsPlot(xName, param, fileSuffix):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'FinalTotalPending'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
+            col='optionCarrierForwarding',
+            row='optionalCheckBuffer',
+            kind='bar'
+            )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
+    plt.clf()
+    plt.close()
+
+
+def createCollisionsPlot(xName, param, fileSuffix):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
+            col='optionCarrierForwarding',
+            row='optionalCheckBuffer',
+            kind='point'
+            )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_{fileSuffix}.pdf'))
+    plt.clf()
+    plt.close()
 
 def createPlotOptionalTransfer(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
@@ -214,7 +244,6 @@ def createPlotOptionalTransfer(xName, yName, param):
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
-
 
 def createDelayPlotOptionalTransfer(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
@@ -232,14 +261,69 @@ def createDelayPlotOptionalTransfer(xName, param):
     plt.clf()
     plt.close()
 
+def createCollisionsPlotOptionalTransfer(xName, param):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
+            col='optionalNoEmptyTransfers',
+            row='staggeredStart',
+            kind='point'
+            )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_optionalNoEmptyTransfers.pdf'))
+    plt.clf()
+    plt.close()
+
+def createLookupsPlotOptionalTransfer(xName, param):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'FinalTotalPending'])
+    sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='variable',
+            col='optionalNoEmptyTransfers',
+            row='staggeredStart',
+            kind='bar'
+            )
+    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_optionalNoEmptyTransfers.pdf'))
+    plt.clf()
+    plt.close()
+
+
+def genFigs(xName, param):
+    createPlot(xName, 'FinalTotalSent', param)
+    createPlot(xName, 'successRatio', param)
+    param['staggeredStart'] = [ True ]
+    createDelayPlot(xName, param, 'staggered')
+    createCollisionsPlot(xName, param, 'staggered')
+    createLookupsPlot(xName, param, 'staggered')
+    param['staggeredStart'] = [ False ]
+    createDelayPlot(xName, param, 'notstaggered')
+    createCollisionsPlot(xName, param, 'notstaggered')
+    createLookupsPlot(xName, param, 'notstaggered')
+
+    param['staggeredStart'] = [ True, False ]
+    param['optionalNoEmptyTransfers'] = [ True, False ]
+    param['optionCarrierForwarding'] = False
+    param['optionalCheckBuffer'] = False
+    createPlotOptionalTransfer(xName, 'FinalTotalSent', param)
+    createPlotOptionalTransfer(xName, 'successRatio', param)
+    createDelayPlotOptionalTransfer(xName, param)
+    createCollisionsPlotOptionalTransfer(xName, param)
+    createLookupsPlotOptionalTransfer(xName, param)
+
 def getTimes(condition=lambda r: True):
     res = campaign.db.get_complete_results()
     times = [ r['meta']['elapsed_time'] for r in res if condition(r)]
     return {
-        'total': sum(times),
-        'min': min(times),
-        'max': max(times),
-        'avg': np.mean(times)
+        'total': timedelta(seconds=sum(times)),
+        'min': timedelta(seconds=min(times)),
+        'max': timedelta(seconds=max(times)),
+        'avg': timedelta(seconds=np.mean(times))
     }
 
 def getRuntimeInfo():
@@ -250,7 +334,6 @@ def getRuntimeInfo():
     times = getTimes(lambda r: r['meta']['exitcode'] == 0)
     return f"{str}\nRunning success Simulations took: avg={times['avg']}s\ttotal={times['total']}\tmin={times['min']}\tmax={times['max']}\n"
 
-
 def countFailures():
     res = campaign.db.get_complete_results()
     failed = [ r for r in res if r['meta']['exitcode'] != 0 ]
@@ -259,7 +342,6 @@ def countFailures():
     total = len(res)
 
     return f'There were {numFailed} simulations that crashed, this makes up {numFailed/total*100:.2f}% of the simulation runs'
-
 
 def errorTypeCheck(run):
     if run['params']['totalNodes'] != 160:
@@ -282,92 +364,68 @@ def explainFailures():
     errorReasons.sort()
     return f"{errorReasons}"
 
-#################
-#
-#   Run the simulations
-#
-#################
+def runSimulation():
+    totalSims = len(sem.manager.list_param_combinations(param_combination)) * num_runs
+    toRun = len(campaign.get_missing_simulations(sem.manager.list_param_combinations(param_combination), runs=num_runs))
+    sendNotification(f'Starting simulations, {toRun} of {totalSims} simulations to run')
+
+    campaign.run_missing_simulations(param_combination, runs=num_runs, stop_on_errors=False)
+
+    sendNotification("Simulations have finished running")
+    sendNotification(countFailures())
 
 
-totalSims = len(sem.manager.list_param_combinations(param_combination)) * num_runs
-toRun = len(campaign.get_missing_simulations(sem.manager.list_param_combinations(param_combination), runs=num_runs))
-sendNotification(f'Starting simulations, {toRun} of {totalSims} simulations to run')
+    ## print some of the information about the run
+    sendNotification(getRuntimeInfo())
+    sendNotification(explainFailures())
 
-campaign.run_missing_simulations(param_combination, runs=num_runs, stop_on_errors=False)
+def genPlots():
+    ## Generate all the figures
 
-sendNotification("Simulations have finished running")
-sendNotification(countFailures())
+    sendNotification("Starting producing plots")
 
+    ## Generate sample plots
+    tmp = copy.deepcopy(hops_params)
+    tmp['optionCarrierForwarding'] = False
+    tmp['optionalCheckBuffer'] = False
+    tmp['optionalNoEmptyTransfers'] = False
+    data = campaign.get_results_as_dataframe(get_all, params=tmp)
+    data = data.dropna()
+    sns.catplot(data=data,
+                x='hops',
+                y='FinalTotalSent',
+                hue='staggeredStart',
+                kind='point'
+                )
+    plt.savefig(os.path.join(figure_dir, 'hops_FinalTotalSent_sample.pdf'))
+    plt.clf()
+    plt.close()
 
-## print some of the information about the run
-sendNotification(getRuntimeInfo())
-sendNotification(explainFailures())
+    # Generate full plots
+    genFigs('hops', hops_params)
+    genFigs('totalNodes', totalnodes_params)
+    genFigs('carryingThreshold', carrying_params)
+    genFigs('forwardingThreshold', forwarding_params)
 
-
-## Generate all the figures
-createPlot('hops', 'FinalTotalSent', hops_params)
-createPlot('hops', 'successRatio', hops_params)
-hops_params['staggeredStart'] = [ True ]
-createDelayPlot('hops', hops_params, 'staggered')
-hops_params['staggeredStart'] = [ False ]
-createDelayPlot('hops', hops_params, 'notstaggered')
-
-hops_params['staggeredStart'] = [ True, False ]
-hops_params['optionalNoEmptyTransfers'] = [ True, False ]
-hops_params['optionCarrierForwarding'] = False
-hops_params['optionalCheckBuffer'] = False
-createPlotOptionalTransfer('hops', 'FinalTotalSent', hops_params)
-createPlotOptionalTransfer('hops', 'successRatio', hops_params)
-createDelayPlotOptionalTransfer('hops', hops_params)
-
-
-createPlot('totalNodes', 'FinalTotalSent', totalnodes_params)
-createPlot('totalNodes', 'successRatio', totalnodes_params)
-totalnodes_params['staggeredStart'] = [ True ]
-createDelayPlot('totalNodes', totalnodes_params, 'staggered')
-totalnodes_params['staggeredStart'] = [ False ]
-createDelayPlot('totalNodes', totalnodes_params, 'notstaggered')
-
-totalnodes_params['staggeredStart'] = [ True, False ]
-totalnodes_params['optionalNoEmptyTransfers'] = [ True, False ]
-totalnodes_params['optionCarrierForwarding'] = False
-totalnodes_params['optionalCheckBuffer'] = False
-createPlotOptionalTransfer('totalNodes', 'FinalTotalSent', totalnodes_params)
-createPlotOptionalTransfer('totalNodes', 'successRatio', totalnodes_params)
-createDelayPlotOptionalTransfer('totalNodes', totalnodes_params)
+    sendNotification("All the plots have been produced")
 
 
+##############################
+#     Run the simulations
+##############################
 
-createPlot('carryingThreshold', 'FinalTotalSent', carrying_params)
-createPlot('carryingThreshold', 'successRatio', carrying_params)
-carrying_params['staggeredStart'] = [ True ]
-createDelayPlot('carryingThreshold', carrying_params, 'staggerd')
-carrying_params['staggeredStart'] = [ False ]
-createDelayPlot('carryingThreshold', carrying_params, 'notstaggerd')
+if __name__ == "__main__":
+    campaign_dir = os.path.join(os.getcwd(), experimentName)
+    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp2')
 
-carrying_params['staggeredStart'] = [ True, False ]
-carrying_params['optionalNoEmptyTransfers'] = [ True, False ]
-carrying_params['optionCarrierForwarding'] = False
-carrying_params['optionalCheckBuffer'] = False
-createPlotOptionalTransfer('carryingThreshold', 'FinalTotalSent', carrying_params)
-createPlotOptionalTransfer('carryingThreshold', 'successRatio', carrying_params)
-createDelayPlotOptionalTransfer('carryingThreshold', carrying_params)
+    if not os.path.exists(figure_dir):
+        os.makedirs(figure_dir)
 
 
-createPlot('forwardingThreshold', 'FinalTotalSent', forwarding_params)
-createPlot('forwardingThreshold', 'successRatio', forwarding_params)
-forwarding_params['staggeredStart'] = [ True ]
-createDelayPlot('forwardingThreshold', forwarding_params, 'staggered')
-forwarding_params['staggeredStart'] = [ False ]
-createDelayPlot('forwardingThreshold', forwarding_params, 'notstaggered')
+    campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
 
-forwarding_params['staggeredStart'] = [ True, False ]
-forwarding_params['optionalNoEmptyTransfers'] = [ True, False ]
-forwarding_params['optionCarrierForwarding'] = False
-forwarding_params['optionalCheckBuffer'] = False
-createPlotOptionalTransfer('forwardingThreshold', 'FinalTotalSent', forwarding_params)
-createPlotOptionalTransfer('forwardingThreshold', 'successRatio', forwarding_params)
-createDelayPlotOptionalTransfer('forwardingThreshold', forwarding_params)
-
-
-sendNotification("All the plots have been produced")
+    runSimulation()
+    start = time.time()
+    genPlots()
+    end = time.time()
+    print(f'Figures generated in: {timedelta(seconds=end - start)}')
