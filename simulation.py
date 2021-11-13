@@ -218,7 +218,7 @@ def createLookupsPlot(xName, param, fileSuffix):
 def createCollisionsPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates'])
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
     sns.catplot(data=d2,
             x=xName,
             y='value',
@@ -264,7 +264,7 @@ def createDelayPlotOptionalTransfer(xName, param):
 def createCollisionsPlotOptionalTransfer(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates'])
+    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
     sns.catplot(data=d2,
             x=xName,
             y='value',
