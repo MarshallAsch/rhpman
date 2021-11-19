@@ -4,6 +4,7 @@
 ![GitHub](https://img.shields.io/github/license/marshallasch/rhpman?style=plastic)
 ![Lines of code](https://img.shields.io/tokei/lines/github/marshallasch/rhpman?style=plastic)
 ![NS3 version](https://img.shields.io/badge/NS--3-3.32-blueviolet?style=plastic)
+[![DOI](https://zenodo.org/badge/329723579.svg)](https://zenodo.org/badge/latestdoi/329723579)
 
 
 # rhpman-sim
