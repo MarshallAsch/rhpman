@@ -152,7 +152,7 @@ def get_all(result):
 
 def sendNotification(message):
 
-    os.system(f'notify-send "NS3 sims" "{message}"')
+    #os.system(f'notify-send "NS3 sims" "{message}"')
 
     if discord_url is not None:
         requests.post(discord_url, json={"content": message})
@@ -170,6 +170,11 @@ def createPlot(xName, yName, param):
                 row='optionalCheckBuffer',
                 kind='point'
                 )
+
+    # limit the success ratio plot between 0 and 1
+    if yName == 'successRatio':
+        plt.ylim(0.0, 1.0)
+
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
     plt.clf()
     plt.close()
@@ -197,7 +202,6 @@ def createDelayPlot(xName, param, fileSuffix):
     plt.clf()
     plt.close()
 
-
 def createLookupsPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
@@ -213,7 +217,6 @@ def createLookupsPlot(xName, param, fileSuffix):
     plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
     plt.clf()
     plt.close()
-
 
 def createCollisionsPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
@@ -293,7 +296,6 @@ def createLookupsPlotOptionalTransfer(xName, param):
     plt.clf()
     plt.close()
 
-
 def genFigs(xName, param):
     createPlot(xName, 'FinalTotalSent', param)
     createPlot(xName, 'successRatio', param)
@@ -362,7 +364,9 @@ def explainFailures():
     res = campaign.db.get_complete_results()
     errorReasons = [ errorTypeCheck(r) for r in res if r['meta']['exitcode'] != 0 ]
     errorReasons.sort()
-    return f"{errorReasons}"
+    err = np.unique(errorReasons, return_counts=True)
+
+    return f"{dict(zip(list(err[0]), err[1]))}"
 
 def runSimulation():
     totalSims = len(sem.manager.list_param_combinations(param_combination)) * num_runs
@@ -416,7 +420,7 @@ def genPlots():
 
 if __name__ == "__main__":
     campaign_dir = os.path.join(os.getcwd(), experimentName)
-    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp2')
+    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp3')
 
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
