@@ -8,3 +8,6 @@ run-clang-format.py
 .gitignore
 .dockerignore
 Dockerfile
+paper.pdf
+paper.md
+paper.bib
