@@ -414,6 +414,46 @@ def genPlots():
     sendNotification("All the plots have been produced")
 
 
+def calculateValues(params, type, metric):
+    param = copy.deepcopy(params)
+    param['staggeredStart'] = True
+    param['optionCarrierForwarding'] = False
+    param['optionalCheckBuffer'] = False
+    param['optionalNoEmptyTransfers'] = False
+
+
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna()
+    means = data.groupby([type]).mean().get(metric)
+    error = data.groupby([type]).sem().get(metric)*1.96
+
+    print(f'{type}: {metric} +- Margin of error')
+    for k,m,e in zip(means.keys().values, means.values, error.values):
+        print(f'{k}: {m} +- {e}')
+
+def calculateAllValues():
+
+    start = time.time()
+
+    calculateValues(hops_params, 'hops', 'successRatio')
+    print('\n')
+    calculateValues(hops_params, 'hops', 'FinalTotalSent')
+    print('\n\n=============================')
+    calculateValues(totalnodes_params, 'totalNodes', 'successRatio')
+    print('\n')
+    calculateValues(totalnodes_params, 'totalNodes', 'FinalTotalSent')
+    print('\n\n=============================')
+    calculateValues(carrying_params, 'carryingThreshold', 'successRatio')
+    print('\n')
+    calculateValues(carrying_params, 'carryingThreshold', 'FinalTotalSent')
+    print('\n\n=============================')
+    calculateValues(forwarding_params, 'forwardingThreshold', 'successRatio')
+    print('\n')
+    calculateValues(forwarding_params, 'forwardingThreshold', 'FinalTotalSent')
+
+    end = time.time()
+    print(f'values generated in: {timedelta(seconds=end - start)}')
+
 ##############################
 #     Run the simulations
 ##############################
@@ -429,7 +469,10 @@ if __name__ == "__main__":
     campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
 
     runSimulation()
+
     start = time.time()
     genPlots()
     end = time.time()
     print(f'Figures generated in: {timedelta(seconds=end - start)}')
+
+    calculateAllValues()
