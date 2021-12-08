@@ -121,7 +121,7 @@ file with `NetAnim` to view what happens during the simulation run.
 $ docker build --build-arg GIT_COMMIT=$(git rev-parse -q --verify HEAD) --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") -t marshallasch/rhpman:latest .
 ```
 
-The build varient can be configured using the `BUILD_PROFILE` `build-arg`, it can be set to either `debug`, `release`, or `optimized`.
+The build variant can be configured using the `BUILD_PROFILE` `build-arg`, it can be set to either `debug`, `release`, or `optimized`.
 It is set to `debug` by default.
 
 
@@ -130,7 +130,7 @@ It is set to `debug` by default.
 For convenience this simulation experiment has also been packaged as a prebuilt docker image so that you do not need to install any of the dependencies or compile the simulator yourself. 
 
 ```bash
-$ docker run --rm -it marshallasch/rhpman:otimized
+$ docker run --rm -it marshallasch/rhpman:optimized
 > ./waf --run "rhpman-example"
 ```
 
