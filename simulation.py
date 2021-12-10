@@ -22,6 +22,7 @@ import os
 import requests
 import copy
 import time
+import itertools
 from datetime import timedelta
 
 
@@ -137,7 +138,7 @@ hops_params['optionalNoEmptyTransfers'] = False
 
 
 @sem.utils.output_labels([
-    'successRatio',
+    'successRatio', 'finalResponse',
     'InitalTotalSaves', 'InitalTotalLookups', 'InitalTotalSuccess', 'InitalTotalFailed', 'InitalTotalLate', 'InitalTotalCacheHits', 'InitalTotalPending', 'InitalTotalStepUp', 'InitalTotalStepDowns', 'InitalTotalPowerloss', 'InitalTotalPowerRecharge', 'InitalMinQueryDelay', 'InitalMaxQueryDelay', 'InitalAvgQueryDelay', 'InitalTotalSent', 'InitalTotalExpectedRecipients', 'InitalTotalReceived', 'InitalTotalDuplicates', 'InitalTotalSentUNKOWN', 'InitalTotalSentPING', 'InitalTotalSentMODE_CHANGE', 'InitalTotalSentELECTION_REQUEST', 'InitalTotalSentSTORE', 'InitalTotalSentLOOKUP', 'InitalTotalSentLOOKUP_RESPONSE', 'InitalTotalSentTRANSFER', 'InitalTotalExpectedReceivesUNKOWN', 'InitalTotalExpectedReceivesPING', 'InitalTotalExpectedReceivesMODE_CHANGE', 'InitalTotalExpectedReceivesELECTION_REQUEST', 'InitalTotalExpectedReceivesSTORE', 'InitalTotalExpectedReceivesLOOKUP', 'InitalTotalExpectedReceivesLOOKUP_RESPONSE', 'InitalTotalExpectedReceivesTRANSFER', 'InitalTotalReceivedUNKOWN', 'InitalTotalReceivedPING', 'InitalTotalReceivedMODE_CHANGE', 'InitalTotalReceivedELECTION_REQUEST', 'InitalTotalReceivedSTORE', 'InitalTotalReceivedLOOKUP', 'InitalTotalReceivedLOOKUP_RESPONSE', 'InitalTotalReceivedTRANSFER',
     'FinalTotalSaves', 'FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending', 'FinalTotalStepUp', 'FinalTotalStepDowns', 'FinalTotalPowerloss', 'FinalTotalPowerRecharge', 'FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay', 'FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates', 'FinalTotalSentUNKOWN', 'FinalTotalSentPING', 'FinalTotalSentMODE_CHANGE', 'FinalTotalSentELECTION_REQUEST', 'FinalTotalSentSTORE', 'FinalTotalSentLOOKUP', 'FinalTotalSentLOOKUP_RESPONSE', 'FinalTotalSentTRANSFER', 'FinalTotalExpectedReceivesUNKOWN', 'FinalTotalExpectedReceivesPING', 'FinalTotalExpectedReceivesMODE_CHANGE', 'FinalTotalExpectedReceivesELECTION_REQUEST', 'FinalTotalExpectedReceivesSTORE', 'FinalTotalExpectedReceivesLOOKUP', 'FinalTotalExpectedReceivesLOOKUP_RESPONSE', 'FinalTotalExpectedReceivesTRANSFER', 'FinalTotalReceivedUNKOWN', 'FinalTotalReceivedPING', 'FinalTotalReceivedMODE_CHANGE', 'FinalTotalReceivedELECTION_REQUEST', 'FinalTotalReceivedSTORE', 'FinalTotalReceivedLOOKUP', 'FinalTotalReceivedLOOKUP_RESPONSE', 'FinalTotalReceivedTRANSFER'
     ])
@@ -148,7 +149,9 @@ def get_all(result):
     lines = result['output']['stdout'].strip().split('\n')
     res = { r.split('\t')[0]: float(r.split('\t')[1]) for r in lines}
     successRatio = res['FinalTotalSuccess'] / (res['FinalTotalFailed'] + res['FinalTotalPending'])
-    return [successRatio] + [float(r.split('\t')[1]) for r in lines]
+    finalResponse = res['FinalTotalSuccess'] - res['FinalTotalCacheHits']
+
+    return [successRatio, finalResponse] + [float(r.split('\t')[1]) for r in lines]
 
 def sendNotification(message):
 
@@ -168,13 +171,16 @@ def createPlot(xName, yName, param):
                 hue='staggeredStart',
                 col='optionCarrierForwarding',
                 row='optionalCheckBuffer',
-                kind='point'
+                kind='point',
+                markers=['o', 'X', 'D', '^'],
+                linestyles=['-', '--', ':', '-.']
                 )
 
     # limit the success ratio plot between 0 and 1
     if yName == 'successRatio':
         plt.ylim(0.0, 1.0)
 
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
     plt.clf()
     plt.close()
@@ -191,13 +197,16 @@ def createDelayPlot(xName, param, fileSuffix):
             #col='staggeredStart',
             col='optionCarrierForwarding',
             row='optionalCheckBuffer',
-            kind='point'
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
             )
 
     ax = plt.gca()
     ax2 = ax.twinx()
     sns.barplot(data=d3, x=xName, y='value', hue='variable', ax=ax2)
 
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_{fileSuffix}.pdf'))
     plt.clf()
     plt.close()
@@ -214,6 +223,7 @@ def createLookupsPlot(xName, param, fileSuffix):
             row='optionalCheckBuffer',
             kind='bar'
             )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
     plt.clf()
     plt.close()
@@ -228,8 +238,11 @@ def createCollisionsPlot(xName, param, fileSuffix):
             hue='variable',
             col='optionCarrierForwarding',
             row='optionalCheckBuffer',
-            kind='point'
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
             )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_{fileSuffix}.pdf'))
     plt.clf()
     plt.close()
@@ -242,8 +255,15 @@ def createPlotOptionalTransfer(xName, yName, param):
                 y=yName,
                 hue='staggeredStart',
                 col='optionalNoEmptyTransfers',
-                kind='point'
+                kind='point',
+                markers=['o', 'X', 'D', '^'],
+                linestyles=['-', '--', ':', '-.']
                 )
+
+    if yName == 'successRatio':
+        plt.ylim(0.0, 1.0)
+
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
@@ -258,8 +278,11 @@ def createDelayPlotOptionalTransfer(xName, param):
             hue='variable',
             col='optionalNoEmptyTransfers',
             row='staggeredStart',
-            kind='point'
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
             )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
@@ -274,8 +297,11 @@ def createCollisionsPlotOptionalTransfer(xName, param):
             hue='variable',
             col='optionalNoEmptyTransfers',
             row='staggeredStart',
-            kind='point'
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
             )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
@@ -292,6 +318,7 @@ def createLookupsPlotOptionalTransfer(xName, param):
             row='staggeredStart',
             kind='bar'
             )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
@@ -399,8 +426,11 @@ def genPlots():
                 x='hops',
                 y='FinalTotalSent',
                 hue='staggeredStart',
-                kind='point'
+                kind='point',
+                markers=['o', 'X', 'D', '^'],
+                linestyles=['-', '--', ':', '-.']
                 )
+    plt.style.use('seaborn')
     plt.savefig(os.path.join(figure_dir, 'hops_FinalTotalSent_sample.pdf'))
     plt.clf()
     plt.close()
@@ -414,42 +444,217 @@ def genPlots():
     sendNotification("All the plots have been produced")
 
 
-def calculateValues(params, type, metric):
+def collisionsSample():
+    tmp = copy.deepcopy(carrying_params)
+    tmp['optionCarrierForwarding'] = False
+    tmp['optionalCheckBuffer'] = False
+    tmp['optionalNoEmptyTransfers'] = False
+    d1 = campaign.get_results_as_dataframe(get_all, params=tmp)
+    d1 = d1.dropna()
+    d2 = pd.melt(d1, id_vars=['carryingThreshold', 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived'])
+    sns.catplot(data=d2,
+            x='carryingThreshold',
+            y='value',
+            hue='variable',
+            col='staggeredStart',
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
+            )
+    plt.style.use('seaborn')
+    plt.savefig(os.path.join(figure_dir, f'carryingThreshold_networkCollisions_sample.pdf'))
+    plt.clf()
+    plt.close()
+
+    # Calculate the percent of messages that have been lost
+
+    data = d1.groupby(['staggeredStart'])
+    means = data.mean()
+    error = data.sem()*1.96
+
+    lost1 = (means.get('FinalTotalSent').values[0] - means.get('FinalTotalReceived').values[0])
+    lost2 = (means.get('FinalTotalSent').values[1] - means.get('FinalTotalReceived').values[1])
+
+    u1 = np.sqrt(error.get('FinalTotalReceived').values[0]**2 + error.get('FinalTotalSent').values[0]**2)
+    u2 = np.sqrt(error.get('FinalTotalReceived').values[1]**2 + error.get('FinalTotalSent').values[1]**2)
+
+    percentLost1 = lost1 /  means.get('FinalTotalSent').values[0] *100
+    percentLost2 = lost2 /  means.get('FinalTotalSent').values[1]*100
+
+    # error calculated using https://www.statisticshowto.com/error-propagation/
+    u3 = np.sqrt((u1/lost1)**2 + (error.get('FinalTotalSent').values[0]/means.get('FinalTotalSent').values[0])**2)
+    u4 = np.sqrt((u2/lost2)**2 + (error.get('FinalTotalSent').values[1]/means.get('FinalTotalSent').values[1])**2)
+
+    print(f'percent loss when disabled: {percentLost1:.3f} \pm {u3*100:.3f}')
+    print(f'percent loss when enabled: {percentLost2:.3f} \pm {u4*100:.3f}')
+
+def createLookupsPlotSample(xName, param, fileSuffix):
+
+    param = copy.deepcopy(param)
+    param['staggeredStart'] = True
+    param['optionCarrierForwarding'] = False
+    param['optionalCheckBuffer'] = [True, False]
+    param['optionalNoEmptyTransfers'] = False
+
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d1 = d1.dropna()
+    d2 = pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'finalResponse'])
+    fig = sns.catplot(data=d2,
+            x=xName,
+            y='value',
+            hue='optionalCheckBuffer',
+            col='variable',
+            col_wrap=2,
+            kind='bar'
+            )
+    plt.style.use('seaborn')
+
+
+    num_locations = len(d2.get(xName).unique())
+    def hatch(ax, num):
+        # Define some hatches
+        hatches = itertools.cycle(['/', '\\', '+', '-', 'x', '//', '*', 'o', 'O', '.'])        # Loop over the bars
+        for i,bar in enumerate(ax.patches):
+            # Set a different hatch for each bar
+            if i % num == 0:
+                hatch = next(hatches)
+            bar.set_hatch(hatch)
+
+    for (k, v) in fig.axes_dict.items():
+        hatch(v, num_locations)
+
+    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
+    plt.clf()
+    plt.close()
+
+def carryingTrafficSample():
+
+    tmp = copy.deepcopy(carrying_params)
+    tmp['staggeredStart'] = True
+    tmp['optionCarrierForwarding'] = [True, False]
+    tmp['optionalCheckBuffer'] = False
+    tmp['optionalNoEmptyTransfers'] = False
+
+    data = campaign.get_results_as_dataframe(get_all, params=tmp)
+    data = data.dropna()
+    sns.catplot(data=data,
+                x='carryingThreshold',
+                y='FinalTotalSent',
+                hue='optionCarrierForwarding',
+                # col='optionCarrierForwarding',
+                # row='optionalCheckBuffer',
+                kind='point',
+                markers=['o', 'X', 'D', '^'],
+                linestyles=['-', '--', ':', '-.']
+                )
+
+    plt.style.use('seaborn')
+    plt.savefig(os.path.join(figure_dir, f'carryingThreshold_traffic_sample.pdf'))
+    plt.clf()
+    plt.close()
+
+
+
+def percentChange(metric, data):
+    means = data.mean().get(metric)
+    error = data.sem().get(metric)*1.96
+
+    v1 = means.values[0]
+    v2 = means.values[1]
+    u1 = error.values[0]
+    u2 = error.values[1]
+
+    # calculated using https://www.calculatorsoup.com/calculators/algebra/percent-change-calculator.php
+    v3 = v2-v1
+    change = v3 / v1 * 100
+
+    # error calculated using https://www.statisticshowto.com/error-propagation/
+    u3 = np.sqrt(u1**2 + u2**2)
+    u4 = np.sqrt((u3/v3)**2 + (u1/v1)**2)
+
+    print(f'percent change: {change:.3f} \pm {u4*100:.3f}')
+
+def values(metric, data):
+    means = data.mean().get(metric)
+    error = data.sem().get(metric)*1.96
+
+    print(f'{metric} +- Margin of error')
+    for k,m,e in zip(means.keys().values, means.values, error.values):
+        print(f'{k}: {m:.3f} \pm {e:.3f}')
+
+
+def calculateValues(params, type):
+
     param = copy.deepcopy(params)
     param['staggeredStart'] = True
     param['optionCarrierForwarding'] = False
     param['optionalCheckBuffer'] = False
     param['optionalNoEmptyTransfers'] = False
 
+    if type == 'staggeredStart' or type == 'optionCarrierForwarding' or type == 'optionalCheckBuffer' or type == 'optionalNoEmptyTransfers':
+        param[type] = [True, False]
 
-    data = campaign.get_results_as_dataframe(get_all, params=param)
-    data = data.dropna()
-    means = data.groupby([type]).mean().get(metric)
-    error = data.groupby([type]).sem().get(metric)*1.96
+    data = campaign.get_results_as_dataframe(get_all, params=param).dropna()
+    data = data.groupby([type])
 
-    print(f'{type}: {metric} +- Margin of error')
-    for k,m,e in zip(means.keys().values, means.values, error.values):
-        print(f'{k}: {m} +- {e}')
+    print('\n\n=============================')
+    print(f'---- {type} -----')
+    print('=============================')
+    values('successRatio', data)
+
+    # only try to calculate the percent change if it is for one of the optional features
+    if type == 'staggeredStart' or type == 'optionCarrierForwarding' or type == 'optionalCheckBuffer' or type == 'optionalNoEmptyTransfers':
+        percentChange('successRatio', data)
+
+
+    print(f'\n+++ totalSent +++ ')
+
+    values('FinalTotalSent', data)
+
+    # only try to calculate the percent change if it is for one of the optional features
+    if type == 'staggeredStart' or type == 'optionCarrierForwarding' or type == 'optionalCheckBuffer' or type == 'optionalNoEmptyTransfers':
+        percentChange('FinalTotalSent', data)
+
+
+def calcValues(type=None):
+    start = time.time()
+
+    print('\n\n***************************')
+    print(f'---- {type} -----')
+    print('***************************')
+    calculateValues(carrying_params, 'staggeredStart')
+    calculateValues(carrying_params, 'optionCarrierForwarding')
+    calculateValues(carrying_params, 'optionalCheckBuffer')
+    calculateValues(carrying_params, 'optionalNoEmptyTransfers')
+
+
+    end = time.time()
+    print(f'values generated in: {timedelta(seconds=end - start)}')
 
 def calculateAllValues():
 
+    print('\n=============================')
+    print('=============================')
+    print('The value at each point in the optional dissabled plots, staggered on')
+    print('=============================')
+    print('=============================\n')
     start = time.time()
 
-    calculateValues(hops_params, 'hops', 'successRatio')
-    print('\n')
-    calculateValues(hops_params, 'hops', 'FinalTotalSent')
-    print('\n\n=============================')
-    calculateValues(totalnodes_params, 'totalNodes', 'successRatio')
-    print('\n')
-    calculateValues(totalnodes_params, 'totalNodes', 'FinalTotalSent')
-    print('\n\n=============================')
+    # calculateValues(hops_params, 'hops', 'successRatio')
+    # print('\n')
+    # calculateValues(hops_params, 'hops', 'FinalTotalSent')
+    # print('\n\n=============================')
+    # calculateValues(totalnodes_params, 'totalNodes', 'successRatio')
+    # print('\n')
+    # calculateValues(totalnodes_params, 'totalNodes', 'FinalTotalSent')
+    # print('\n\n=============================')
     calculateValues(carrying_params, 'carryingThreshold', 'successRatio')
     print('\n')
     calculateValues(carrying_params, 'carryingThreshold', 'FinalTotalSent')
-    print('\n\n=============================')
-    calculateValues(forwarding_params, 'forwardingThreshold', 'successRatio')
-    print('\n')
-    calculateValues(forwarding_params, 'forwardingThreshold', 'FinalTotalSent')
+    # print('\n\n=============================')
+    # calculateValues(forwarding_params, 'forwardingThreshold', 'successRatio')
+    # print('\n')
+    # calculateValues(forwarding_params, 'forwardingThreshold', 'FinalTotalSent')
 
     end = time.time()
     print(f'values generated in: {timedelta(seconds=end - start)}')
@@ -467,12 +672,18 @@ if __name__ == "__main__":
 
 
     campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
+    #campaign = sem.CampaignManager.load(campaign_dir, ns_path=ns_path, check_repo=False, max_parallel_processes=14, skip_configuration=True)
 
     runSimulation()
 
     start = time.time()
     genPlots()
+    createLookupsPlotSample('carryingThreshold', carrying_params, 'sample')
+    carryingTrafficSample()
+    collisionsSample()
     end = time.time()
     print(f'Figures generated in: {timedelta(seconds=end - start)}')
 
-    calculateAllValues()
+    calcValues('carryingThreshold')
+    #calculateAllValues()
+    #calculateAllPercentChange()
