@@ -20,6 +20,20 @@ def build(bld):
     obj = bld.create_ns3_program('collisions-example', ['rhpman'])
     obj.source = [ 'tests/collisions-example.cc', ]
 
+    obj = bld.create_ns3_program('no-collisions-example', ['rhpman'])
+    obj.source = [ 'tests/no-collisions-example.cc', ]
+
+    obj = bld.create_ns3_program('no-collisions-example-many', ['rhpman'])
+    obj.source = [ 'tests/no-collisions-example-many.cc', ]
+
+    obj = bld.create_ns3_program('single-node', ['rhpman'])
+    obj.source = [ 'tests/single-node.cc', ]
+
+    obj = bld.create_ns3_program('many-out-of-range-node', ['rhpman'])
+    obj.source = [ 'tests/many-out-of-range-node.cc', ]
+
+
+
     obj = bld.create_ns3_program('stable-network-one-election-example', ['rhpman'])
     obj.source = [ 'tests/stable-network-one-election-example.cc', ]
 

@@ -8,14 +8,22 @@
 #
 # See test.py for more information.
 cpp_examples = [
-    ("trigger-timeouts-example", True, "False"),
-    ("no-timeouts-example", True, "False"),
-    ("ping-count-example", True, "False"),
-    ("collisions-example", True, "False"),
-    ("stable-network-one-election-example", True, "False"),
-    ("battery-runtime-example", True, "False"),
-    ("low-battery-runtime-example", True, "False"),
-    ("stable-network-lookup-success-example", True, "False"),
+    ("single-node", "True", "False"),
+    ("trigger-timeouts-example", "True", "False"),
+    ("no-timeouts-example", "True", "False"),
+    ("ping-count-example", "True", "False"),
+    ("collisions-example", "True", "False"),
+    ("no-collisions-example", "True", "False"),
+    ("no-collisions-example-many", "True", "False"),
+    ("many-out-of-range-node", "True", "False"),
+    ("stable-network-one-election-example", "True", "False"),
+    ("battery-runtime-example", "True", "False"),
+    ("low-battery-runtime-example", "True", "False"),
+    ("stable-network-lookup-success-example", "True", "False"),
+
+
+
+
 
 ]
 
