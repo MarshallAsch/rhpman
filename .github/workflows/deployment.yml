@@ -45,5 +45,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BUILD_DATE=${{ steps.date.outputs.date }}
-            GIT_COMMIT=${{ github.sha }}
+            VCS_REF=${{ github.sha }}
             BUILD_PROFILE=${{ matrix.profile }}

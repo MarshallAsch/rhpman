@@ -27,8 +27,8 @@ ENTRYPOINT [ "/bin/bash" ]
 
 # these two labels will change every time the container is built
 # put them at the end because of layer caching
-ARG GIT_COMMIT
-LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
+ARG VCS_REF
+LABEL org.opencontainers.image.revision="${VCS_REF}"
 
 ARG BUILD_DATE
 LABEL org.opencontainers.image.created="${BUILD_DATE}"

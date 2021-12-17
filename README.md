@@ -119,7 +119,7 @@ file with `NetAnim` to view what happens during the simulation run.
 
 ```bash
 $ docker build \
-         --build-arg GIT_COMMIT=$(git rev-parse -q --verify HEAD) \
+         --build-arg VCS_REF=$(git rev-parse -q --verify HEAD) \
          --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
          -t marshallasch/rhpman:latest .
 ```
