@@ -138,7 +138,7 @@ hops_params['optionalNoEmptyTransfers'] = False
 
 
 @sem.utils.output_labels([
-    'successRatio', 'finalResponse',
+    'successRatio', 'finalResponse', 'finalPercentPending', 'finalPercentCache', 'finalPercentSuccess',
     'InitalTotalSaves', 'InitalTotalLookups', 'InitalTotalSuccess', 'InitalTotalFailed', 'InitalTotalLate', 'InitalTotalCacheHits', 'InitalTotalPending', 'InitalTotalStepUp', 'InitalTotalStepDowns', 'InitalTotalPowerloss', 'InitalTotalPowerRecharge', 'InitalMinQueryDelay', 'InitalMaxQueryDelay', 'InitalAvgQueryDelay', 'InitalTotalSent', 'InitalTotalExpectedRecipients', 'InitalTotalReceived', 'InitalTotalDuplicates', 'InitalTotalSentUNKOWN', 'InitalTotalSentPING', 'InitalTotalSentMODE_CHANGE', 'InitalTotalSentELECTION_REQUEST', 'InitalTotalSentSTORE', 'InitalTotalSentLOOKUP', 'InitalTotalSentLOOKUP_RESPONSE', 'InitalTotalSentTRANSFER', 'InitalTotalExpectedReceivesUNKOWN', 'InitalTotalExpectedReceivesPING', 'InitalTotalExpectedReceivesMODE_CHANGE', 'InitalTotalExpectedReceivesELECTION_REQUEST', 'InitalTotalExpectedReceivesSTORE', 'InitalTotalExpectedReceivesLOOKUP', 'InitalTotalExpectedReceivesLOOKUP_RESPONSE', 'InitalTotalExpectedReceivesTRANSFER', 'InitalTotalReceivedUNKOWN', 'InitalTotalReceivedPING', 'InitalTotalReceivedMODE_CHANGE', 'InitalTotalReceivedELECTION_REQUEST', 'InitalTotalReceivedSTORE', 'InitalTotalReceivedLOOKUP', 'InitalTotalReceivedLOOKUP_RESPONSE', 'InitalTotalReceivedTRANSFER',
     'FinalTotalSaves', 'FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending', 'FinalTotalStepUp', 'FinalTotalStepDowns', 'FinalTotalPowerloss', 'FinalTotalPowerRecharge', 'FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay', 'FinalTotalSent', 'FinalTotalExpectedRecipients', 'FinalTotalReceived', 'FinalTotalDuplicates', 'FinalTotalSentUNKOWN', 'FinalTotalSentPING', 'FinalTotalSentMODE_CHANGE', 'FinalTotalSentELECTION_REQUEST', 'FinalTotalSentSTORE', 'FinalTotalSentLOOKUP', 'FinalTotalSentLOOKUP_RESPONSE', 'FinalTotalSentTRANSFER', 'FinalTotalExpectedReceivesUNKOWN', 'FinalTotalExpectedReceivesPING', 'FinalTotalExpectedReceivesMODE_CHANGE', 'FinalTotalExpectedReceivesELECTION_REQUEST', 'FinalTotalExpectedReceivesSTORE', 'FinalTotalExpectedReceivesLOOKUP', 'FinalTotalExpectedReceivesLOOKUP_RESPONSE', 'FinalTotalExpectedReceivesTRANSFER', 'FinalTotalReceivedUNKOWN', 'FinalTotalReceivedPING', 'FinalTotalReceivedMODE_CHANGE', 'FinalTotalReceivedELECTION_REQUEST', 'FinalTotalReceivedSTORE', 'FinalTotalReceivedLOOKUP', 'FinalTotalReceivedLOOKUP_RESPONSE', 'FinalTotalReceivedTRANSFER'
     ])
@@ -151,7 +151,12 @@ def get_all(result):
     successRatio = res['FinalTotalSuccess'] / (res['FinalTotalFailed'] + res['FinalTotalPending'])
     finalResponse = res['FinalTotalSuccess'] - res['FinalTotalCacheHits']
 
-    return [successRatio, finalResponse] + [float(r.split('\t')[1]) for r in lines]
+    finalPercentPending = res['FinalTotalPending'] / res['FinalTotalLookups'] * 100
+    finalPercentCache = res['FinalTotalCacheHits'] / res['FinalTotalSuccess'] * 100
+    finalPercentSuccess = res['FinalTotalSuccess'] / res['FinalTotalLookups'] * 100
+
+
+    return [successRatio, finalResponse, finalPercentPending, finalPercentCache, finalPercentSuccess] + [float(r.split('\t')[1]) for r in lines]
 
 def sendNotification(message):
 
@@ -559,6 +564,10 @@ def percentChange(metric, data):
     means = data.mean().get(metric)
     error = data.sem().get(metric)*1.96
 
+    #only calculate if there are 2 values
+    if len(means.values) != 2:
+        return
+
     v1 = means.values[0]
     v2 = means.values[1]
     u1 = error.values[0]
@@ -600,33 +609,50 @@ def calculateValues(params, type):
     print('\n\n=============================')
     print(f'---- {type} -----')
     print('=============================')
+
+
+    print(f'\n+++ successRatio +++ ')
     values('successRatio', data)
-
-    # only try to calculate the percent change if it is for one of the optional features
-    if type == 'staggeredStart' or type == 'optionCarrierForwarding' or type == 'optionalCheckBuffer' or type == 'optionalNoEmptyTransfers':
-        percentChange('successRatio', data)
-
+    percentChange('successRatio', data)
 
     print(f'\n+++ totalSent +++ ')
-
     values('FinalTotalSent', data)
+    percentChange('FinalTotalSent', data)
 
-    # only try to calculate the percent change if it is for one of the optional features
-    if type == 'staggeredStart' or type == 'optionCarrierForwarding' or type == 'optionalCheckBuffer' or type == 'optionalNoEmptyTransfers':
-        percentChange('FinalTotalSent', data)
+    print(f'\n+++ finalPercentPending +++ ')
+    values('finalPercentPending', data)
 
+    print(f'\n+++ finalPercentCache +++ ')
+    values('finalPercentCache', data)
 
-def calcValues(type=None):
+    print(f'\n+++ FinalMinQueryDelay +++ ')
+    values('FinalMinQueryDelay', data)
+
+    print(f'\n+++ FinalMaxQueryDelay +++ ')
+    values('FinalMaxQueryDelay', data)
+
+    print(f'\n+++ FinalAvgQueryDelay +++ ')
+    values('FinalAvgQueryDelay', data)
+
+    print(f'\n+++ finalPercentSuccess +++ ')
+    values('finalPercentSuccess', data)
+
+def calcValues(type=None, params=None):
+
+    if params is None:
+        return
+
     start = time.time()
 
     print('\n\n***************************')
     print(f'---- {type} -----')
     print('***************************')
-    calculateValues(carrying_params, 'staggeredStart')
-    calculateValues(carrying_params, 'optionCarrierForwarding')
-    calculateValues(carrying_params, 'optionalCheckBuffer')
-    calculateValues(carrying_params, 'optionalNoEmptyTransfers')
 
+
+    calculateValues(params, 'staggeredStart')
+    calculateValues(params, 'optionCarrierForwarding')
+    calculateValues(params, 'optionalCheckBuffer')
+    calculateValues(params, 'optionalNoEmptyTransfers')
 
     end = time.time()
     print(f'values generated in: {timedelta(seconds=end - start)}')
@@ -640,21 +666,16 @@ def calculateAllValues():
     print('=============================\n')
     start = time.time()
 
-    # calculateValues(hops_params, 'hops', 'successRatio')
-    # print('\n')
-    # calculateValues(hops_params, 'hops', 'FinalTotalSent')
-    # print('\n\n=============================')
-    # calculateValues(totalnodes_params, 'totalNodes', 'successRatio')
-    # print('\n')
-    # calculateValues(totalnodes_params, 'totalNodes', 'FinalTotalSent')
-    # print('\n\n=============================')
-    calculateValues(carrying_params, 'carryingThreshold', 'successRatio')
-    print('\n')
-    calculateValues(carrying_params, 'carryingThreshold', 'FinalTotalSent')
-    # print('\n\n=============================')
-    # calculateValues(forwarding_params, 'forwardingThreshold', 'successRatio')
-    # print('\n')
-    # calculateValues(forwarding_params, 'forwardingThreshold', 'FinalTotalSent')
+    calcValues(type='hops', params=hops_params)
+    print('\n\n=============================')
+
+    calcValues(type='totalNodes', params=totalnodes_params)
+    print('\n\n=============================')
+
+    calcValues(type='carryingThreshold', params=carrying_params)
+    print('\n\n=============================')
+
+    calcValues(type='forwardingThreshold', params=forwarding_params)
 
     end = time.time()
     print(f'values generated in: {timedelta(seconds=end - start)}')
@@ -684,6 +705,4 @@ if __name__ == "__main__":
     end = time.time()
     print(f'Figures generated in: {timedelta(seconds=end - start)}')
 
-    calcValues('carryingThreshold')
-    #calculateAllValues()
-    #calculateAllPercentChange()
+    calculateAllValues()
