@@ -27,7 +27,7 @@ from datetime import timedelta
 
 
 num_runs = 30
-experimentName = 'rhpman_v5'
+experimentName = 'rhpman_v6'
 
 ns_path = '../allinone2/ns-3.32'
 script = 'rhpman-example'
@@ -686,7 +686,7 @@ def calculateAllValues():
 
 if __name__ == "__main__":
     campaign_dir = os.path.join(os.getcwd(), experimentName)
-    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures_tmp3')
+    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
 
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)

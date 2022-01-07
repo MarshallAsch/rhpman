@@ -253,10 +253,12 @@ int main(int argc, char* argv[]) {
   rhpman.SetAttribute("OptionalNoEmptyTransfers", BooleanValue(params.optionalNoEmptyTransfers));
 
   ApplicationContainer rhpmanApps = rhpman.Install(allAdHocNodes);
+
+  Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
+  jitter->SetAttribute("Min", DoubleValue(0));
+  jitter->SetAttribute("Max", DoubleValue(1.0));
+
   if (params.staggeredStart) {
-    Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
-    jitter->SetAttribute("Min", DoubleValue(0));
-    jitter->SetAttribute("Max", DoubleValue(params.profileUpdateDelay.GetSeconds()));
     rhpmanApps.StartWithJitter(Seconds(0), jitter);
   } else {
     rhpmanApps.Start(Seconds(0));
@@ -273,9 +275,6 @@ int main(int argc, char* argv[]) {
   ApplicationContainer accessApps = dataAccess.Install(allAdHocNodes);
 
   if (params.staggeredStart) {
-    Ptr<UniformRandomVariable> jitter = CreateObject<UniformRandomVariable>();
-    jitter->SetAttribute("Min", DoubleValue(0));
-    jitter->SetAttribute("Max", DoubleValue(params.profileUpdateDelay.GetSeconds()));
     accessApps.StartWithJitter(params.waitTime, jitter);
   } else {
     accessApps.Start(params.waitTime);
