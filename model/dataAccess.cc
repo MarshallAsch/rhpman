@@ -93,7 +93,7 @@ void DataAccess::StartApplication() {
     NS_LOG_DEBUG("Ignoring DataAccess::StartApplication request on already started application");
     return;
   }
-  NS_LOG_DEBUG("Starting DataAccess");
+  NS_LOG_DEBUG("Starting DataAccess at: "<< Simulator::Now().GetMilliSeconds() << "ms");
   m_state = State::NOT_STARTED;
 
   // get application

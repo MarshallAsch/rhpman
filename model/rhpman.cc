@@ -208,7 +208,7 @@ void RhpmanApp::StartApplication() {
     NS_LOG_DEBUG("Ignoring RhpmanApp::StartApplication request on already started application");
     return;
   }
-  NS_LOG_DEBUG("Starting RhpmanApp");
+  NS_LOG_DEBUG("Starting RhpmanApp at: "<< Simulator::Now().GetMilliSeconds() << "ms");
   m_state = State::NOT_STARTED;
 
   Setup();
