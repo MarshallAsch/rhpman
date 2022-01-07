@@ -63,15 +63,15 @@ uint32_t DataItem::getSize() const { return size; }
 
 uint32_t DataItem::getOwner() const { return owner; }
 
-// Note this Must be freed by the caller, it is a copy of the data item
+// Note this Must NOT be freed by the caller,
 const uint8_t* DataItem::getPayload() const {
   return bytes;
-  if (size == 0 || bytes == NULL) return NULL;
+  // if (size == 0 || bytes == NULL) return NULL;
 
-  uint8_t* tmp;
-  tmp = (uint8_t*)malloc(size * sizeof(uint8_t));
-  memcpy(tmp, bytes, size);
-  return tmp;
+  // uint8_t* tmp;
+  // tmp = (uint8_t*)malloc(size * sizeof(uint8_t));
+  // memcpy(tmp, bytes, size);
+  // return tmp;
 }
 
 }  // namespace rhpman
