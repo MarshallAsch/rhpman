@@ -8,3 +8,8 @@ run-clang-format.py
 .gitignore
 .dockerignore
 Dockerfile
+
+
+# remove this if SEM gets added to the container
+simulation.py
+
