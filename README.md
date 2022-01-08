@@ -121,6 +121,7 @@ file with `NetAnim` to view what happens during the simulation run.
 $ docker build \
          --build-arg VCS_REF=$(git rev-parse -q --verify HEAD) \
          --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+         --build-arg BUILD_PROFILE=debug \
          -t marshallasch/rhpman:latest .
 ```
 
@@ -132,11 +133,31 @@ It is set to `debug` by default.
 
 For convenience this simulation experiment has also been packaged as a prebuilt docker image so that you do not need to install any of the dependencies or compile the simulator yourself. 
 
+There are two ways that the docker container can be used:
+
+1. to run ns-3 simulations directly
+2. to get a bash shell in a ns-3 installation
+
+
+### Interactive bash terminal
+
+The interactive shell will put you in the ns-3 root directory.
+Depending on which docker image tag is used ns-3 can either be built in debug mode or optimized mode.
+Then the ./waf command can be run manually.
+
 ```bash
-$ docker run --rm -it marshallasch/rhpman:optimized
-> ./waf --run "rhpman-example"
+docker run --rm -it marshallasch/rhpman:optimized bash
 ```
 
+
+### To run ns-3 simulations
+
+If anything other than `bash` is given as the command to the Docker container then the command will
+be passed to `./waf --run "rhpman-example <command>"` to run a simulation using the flags.
+
+```bash
+docker run --rm marshallasch/rhpman:optimized --printHelp
+```
 ## Code style
 
 This project is formatted according to the `.clang-format` file included in this
