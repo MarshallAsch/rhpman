@@ -87,7 +87,7 @@ project!
 
    ```sh
    cd ..
-   ./waf --run 'rhpman-example`
+   ./waf --run 'rhpman-example'
    ```
 
 ## Running the simulation
