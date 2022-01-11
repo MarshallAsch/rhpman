@@ -132,6 +132,12 @@ hops_params['carryingThreshold'] = 0.4
 hops_params['forwardingThreshold'] = 0.6
 hops_params['optionalNoEmptyTransfers'] = False
 
+
+ID_VARS = ['hops', 'totalNodes', 'carryingThreshold', 'forwardingThreshold', 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers']
+COLLISION_VALUE_VARS = ['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates']
+LOOKUP_VAL_VARS = ['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'FinalTotalPending']
+DELAY_VAL_VARS = ['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay']
+
 ##############################
 # Start setting up functions
 ##############################
@@ -201,8 +207,8 @@ def createPlot(xName, yName, param):
 def createDelayPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
-    d3=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalFailed', 'FinalTotalLate', 'FinalTotalCacheHits', 'FinalTotalPending'])
+    d2=pd.melt(d1, id_vars=ID_VARS, value_vars=DELAY_VAL_VARS)
+    d3=pd.melt(d1, id_vars=ID_VARS, value_vars=LOOKUP_VAL_VARS)
     sns.catplot(data=d2,
             x=xName,
             y='value',
@@ -225,10 +231,9 @@ def createDelayPlot(xName, param, fileSuffix):
     plt.close()
 
 def createLookupsPlot(xName, param, fileSuffix):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'FinalTotalPending'])
-    sns.catplot(data=d2,
+    data = getMeltedData(param, LOOKUP_VAL_VARS)
+
+    sns.catplot(data=data,
             x=xName,
             y='value',
             hue='variable',
@@ -242,11 +247,8 @@ def createLookupsPlot(xName, param, fileSuffix):
     plt.close()
 
 def createCollisionsPlot(xName, param, fileSuffix):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
-
-    createLinePlot(d2, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_networkCollisions_{fileSuffix}')
+    data = getMeltedData(param, COLLISION_VALUE_VARS)
+    createLinePlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_networkCollisions_{fileSuffix}')
 
 def createPlotOptionalTransfer(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
@@ -255,25 +257,17 @@ def createPlotOptionalTransfer(xName, yName, param):
     createLinePlot(data, xName, yName, hue='staggeredStart', col='optionalNoEmptyTransfers', row=None, name=f'{xName}_{yName}_optionalNoEmptyTransfers')
 
 def createDelayPlotOptionalTransfer(xName, param):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
-
-    createLinePlot(d2, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_queryDelay_optionalNoEmptyTransfers')
-
+    data = getMeltedData(param, DELAY_VAL_VARS)
+    createLinePlot(data, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_queryDelay_optionalNoEmptyTransfers')
 
 def createCollisionsPlotOptionalTransfer(xName, param):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
-
-    createLinePlot(d2, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_networkCollisions_optionalNoEmptyTransfers')
+    data = getMeltedData(param, COLLISION_VALUE_VARS)
+    createLinePlot(data, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_networkCollisions_optionalNoEmptyTransfers')
 
 def createLookupsPlotOptionalTransfer(xName, param):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'FinalTotalPending'])
-    sns.catplot(data=d2,
+    data = getMeltedData(param, LOOKUP_VAL_VARS)
+
+    sns.catplot(data=data,
             x=xName,
             y='value',
             hue='variable',
@@ -285,6 +279,12 @@ def createLookupsPlotOptionalTransfer(xName, param):
     plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_optionalNoEmptyTransfers.pdf'))
     plt.clf()
     plt.close()
+
+
+def getMeltedData(param, value_vars):
+    d1 = campaign.get_results_as_dataframe(get_all, params=param)
+    d2 = d1.dropna()
+    return pd.melt(d2, id_vars=ID_VARS, value_vars=value_vars)
 
 def genFigs(xName, param):
     createPlot(xName, 'FinalTotalSent', param)
@@ -404,7 +404,7 @@ def collisionsSample():
     tmp['optionalNoEmptyTransfers'] = False
     d1 = campaign.get_results_as_dataframe(get_all, params=tmp)
     d1 = d1.dropna()
-    d2 = pd.melt(d1, id_vars=['carryingThreshold', 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived'])
+    d2 = pd.melt(d1, id_vars=ID_VARS, value_vars=COLLISION_VALUE_VARS)
 
     createLinePlot(d2, 'carryingThreshold', 'value', hue='variable', col='staggeredStart', row=None, name='carryingThreshold_networkCollisions_sample')
 
@@ -440,7 +440,7 @@ def createLookupsPlotSample(xName, param, fileSuffix):
 
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
-    d2 = pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'finalResponse'])
+    d2 = pd.melt(d1, id_vars=ID_VARS, value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'finalResponse'])
     fig = sns.catplot(data=d2,
             x=xName,
             y='value',
@@ -529,10 +529,9 @@ def calculateValues(params, type):
     data = campaign.get_results_as_dataframe(get_all, params=param).dropna()
     data = data.groupby([type])
 
-    print('\n\n=============================')
+    seperator('=')
     print(f'---- {type} -----')
-    print('=============================')
-
+    seperator('=')
 
     print(f'\n+++ successRatio +++ ')
     values('successRatio', data)
@@ -567,10 +566,9 @@ def calcValues(type=None, params=None):
 
     start = time.time()
 
-    print('\n\n***************************')
+    seperator('*')
     print(f'---- {type} -----')
-    print('***************************')
-
+    seperator('*')
 
     calculateValues(params, 'staggeredStart')
     calculateValues(params, 'optionCarrierForwarding')
@@ -580,23 +578,28 @@ def calcValues(type=None, params=None):
     end = time.time()
     print(f'values generated in: {timedelta(seconds=end - start)}')
 
+
+def seperator(char, newlines=0):
+    print(char * 32 + '\n' * newlines)
+
 def calculateAllValues():
 
-    print('\n=============================')
-    print('=============================')
+    seperator('=')
+    seperator('=')
     print('The value at each point in the optional dissabled plots, staggered on')
-    print('=============================')
-    print('=============================\n')
+    seperator('=')
+    seperator('=')
+
     start = time.time()
 
     calcValues(type='hops', params=hops_params)
-    print('\n\n=============================')
+    seperator('=', 2)
 
     calcValues(type='totalNodes', params=totalnodes_params)
-    print('\n\n=============================')
+    seperator('=', 2)
 
     calcValues(type='carryingThreshold', params=carrying_params)
-    print('\n\n=============================')
+    seperator('=', 2)
 
     calcValues(type='forwardingThreshold', params=forwarding_params)
 
