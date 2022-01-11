@@ -167,28 +167,36 @@ def sendNotification(message):
 
     print(message)
 
+
+def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer', name=None):
+    sns.catplot(data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            col=col,
+            row=row,
+            kind='point',
+            markers=['o', 'X', 'D', '^'],
+            linestyles=['-', '--', ':', '-.']
+            )
+
+    # limit the success ratio plot between 0 and 1
+    if y == 'successRatio':
+        plt.ylim(0.0, 1.0)
+
+    name = f'{x}_{y}' if name is None else name
+
+    plt.style.use('seaborn')
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.clf()
+    plt.close()
+
+
 def createPlot(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
     data = data.dropna()
-    sns.catplot(data=data,
-                x=xName,
-                y=yName,
-                hue='staggeredStart',
-                col='optionCarrierForwarding',
-                row='optionalCheckBuffer',
-                kind='point',
-                markers=['o', 'X', 'D', '^'],
-                linestyles=['-', '--', ':', '-.']
-                )
 
-    # limit the success ratio plot between 0 and 1
-    if yName == 'successRatio':
-        plt.ylim(0.0, 1.0)
-
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}.pdf'))
-    plt.clf()
-    plt.close()
+    createLinePlot(data, xName, yName, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer')
 
 def createDelayPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
@@ -237,79 +245,29 @@ def createCollisionsPlot(xName, param, fileSuffix):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
     d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
-    sns.catplot(data=d2,
-            x=xName,
-            y='value',
-            hue='variable',
-            col='optionCarrierForwarding',
-            row='optionalCheckBuffer',
-            kind='point',
-            markers=['o', 'X', 'D', '^'],
-            linestyles=['-', '--', ':', '-.']
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_{fileSuffix}.pdf'))
-    plt.clf()
-    plt.close()
+
+    createLinePlot(d2, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_networkCollisions_{fileSuffix}')
 
 def createPlotOptionalTransfer(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
     data = data.dropna()
-    sns.catplot(data=data,
-                x=xName,
-                y=yName,
-                hue='staggeredStart',
-                col='optionalNoEmptyTransfers',
-                kind='point',
-                markers=['o', 'X', 'D', '^'],
-                linestyles=['-', '--', ':', '-.']
-                )
 
-    if yName == 'successRatio':
-        plt.ylim(0.0, 1.0)
-
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_{yName}_optionalNoEmptyTransfers.pdf'))
-    plt.clf()
-    plt.close()
+    createLinePlot(data, xName, yName, hue='staggeredStart', col='optionalNoEmptyTransfers', row=None, name=f'{xName}_{yName}_optionalNoEmptyTransfers')
 
 def createDelayPlotOptionalTransfer(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
     d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalMinQueryDelay', 'FinalMaxQueryDelay', 'FinalAvgQueryDelay'])
-    sns.catplot(data=d2,
-            x=xName,
-            y='value',
-            hue='variable',
-            col='optionalNoEmptyTransfers',
-            row='staggeredStart',
-            kind='point',
-            markers=['o', 'X', 'D', '^'],
-            linestyles=['-', '--', ':', '-.']
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_optionalNoEmptyTransfers.pdf'))
-    plt.clf()
-    plt.close()
+
+    createLinePlot(d2, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_queryDelay_optionalNoEmptyTransfers')
+
 
 def createCollisionsPlotOptionalTransfer(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
     d1 = d1.dropna()
     d2=pd.melt(d1, id_vars=[xName, 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived', 'FinalTotalDuplicates'])
-    sns.catplot(data=d2,
-            x=xName,
-            y='value',
-            hue='variable',
-            col='optionalNoEmptyTransfers',
-            row='staggeredStart',
-            kind='point',
-            markers=['o', 'X', 'D', '^'],
-            linestyles=['-', '--', ':', '-.']
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_networkCollisions_optionalNoEmptyTransfers.pdf'))
-    plt.clf()
-    plt.close()
+
+    createLinePlot(d2, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_networkCollisions_optionalNoEmptyTransfers')
 
 def createLookupsPlotOptionalTransfer(xName, param):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
@@ -427,18 +385,8 @@ def genPlots():
     tmp['optionalNoEmptyTransfers'] = False
     data = campaign.get_results_as_dataframe(get_all, params=tmp)
     data = data.dropna()
-    sns.catplot(data=data,
-                x='hops',
-                y='FinalTotalSent',
-                hue='staggeredStart',
-                kind='point',
-                markers=['o', 'X', 'D', '^'],
-                linestyles=['-', '--', ':', '-.']
-                )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, 'hops_FinalTotalSent_sample.pdf'))
-    plt.clf()
-    plt.close()
+
+    createLinePlot(data, 'hops', 'FinalTotalSent', hue='staggeredStart', col=None, row=None, name='hops_FinalTotalSent_sample')
 
     # Generate full plots
     genFigs('hops', hops_params)
@@ -457,19 +405,8 @@ def collisionsSample():
     d1 = campaign.get_results_as_dataframe(get_all, params=tmp)
     d1 = d1.dropna()
     d2 = pd.melt(d1, id_vars=['carryingThreshold', 'staggeredStart', 'optionCarrierForwarding', 'optionalCheckBuffer', 'optionalNoEmptyTransfers'], value_vars=['FinalTotalSent', 'FinalTotalReceived'])
-    sns.catplot(data=d2,
-            x='carryingThreshold',
-            y='value',
-            hue='variable',
-            col='staggeredStart',
-            kind='point',
-            markers=['o', 'X', 'D', '^'],
-            linestyles=['-', '--', ':', '-.']
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'carryingThreshold_networkCollisions_sample.pdf'))
-    plt.clf()
-    plt.close()
+
+    createLinePlot(d2, 'carryingThreshold', 'value', hue='variable', col='staggeredStart', row=None, name='carryingThreshold_networkCollisions_sample')
 
     # Calculate the percent of messages that have been lost
 
@@ -542,22 +479,8 @@ def carryingTrafficSample():
 
     data = campaign.get_results_as_dataframe(get_all, params=tmp)
     data = data.dropna()
-    sns.catplot(data=data,
-                x='carryingThreshold',
-                y='FinalTotalSent',
-                hue='optionCarrierForwarding',
-                # col='optionCarrierForwarding',
-                # row='optionalCheckBuffer',
-                kind='point',
-                markers=['o', 'X', 'D', '^'],
-                linestyles=['-', '--', ':', '-.']
-                )
 
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'carryingThreshold_traffic_sample.pdf'))
-    plt.clf()
-    plt.close()
-
+    createLinePlot(data, 'carryingThreshold', 'FinalTotalSent', hue='optionCarrierForwarding', col=None, row=None, name='carryingThreshold_traffic_sample')
 
 
 def percentChange(metric, data):
