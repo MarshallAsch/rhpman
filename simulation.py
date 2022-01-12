@@ -27,12 +27,12 @@ from datetime import timedelta
 
 
 num_runs = 30
-experimentName = 'rhpman_v6'
 
-ns_path = '../allinone2/ns-3.32'
-script = 'rhpman-example'
+experimentName = os.environ.get('NS3_EXPERIMENT', 'rhpman_v6')
+ns_path = os.environ.get('NS3_ROOT', '../allinone2/ns-3.32')
+script = os.environ.get('NS3_SCRIPT', 'rhpman-example')
 discord_url = os.environ.get('DISCORD_URL')
-
+results_path = os.environ.get('RESULTS_DIR', os.getcwd())
 
 def getNumNodes(param):
     return param['totalNodes']
@@ -182,6 +182,7 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
             col=col,
             row=row,
             kind='point',
+            palette=["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"],
             markers=['o', 'X', 'D', '^'],
             linestyles=['-', '--', ':', '-.']
             )
@@ -197,6 +198,39 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
     plt.clf()
     plt.close()
 
+def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=None, **kwargs):
+    fig = sns.catplot(data=data,
+            x=x,
+            y=y,
+            hue=hue,
+            col=col,
+            row=row,
+            kind='bar',
+            palette=["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"],
+            **kwargs
+            )
+
+    num_locations = len(data.get(x).unique())
+
+    def hatch(ax, num):
+        # Define some hatches
+        hatches = itertools.cycle(['/', '\\', '+', '-', 'x', '//', '*', 'o', 'O', '.'])        # Loop over the bars
+        for i,bar in enumerate(ax.patches):
+            # Set a different hatch for each bar
+            if i % num == 0:
+                hatch = next(hatches)
+            bar.set_hatch(hatch)
+
+    for (k, v) in fig.axes_dict.items():
+        hatch(v, num_locations)
+
+
+    name = f'{x}_{y}' if name is None else name
+
+    plt.style.use('seaborn')
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.clf()
+    plt.close()
 
 def createPlot(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
@@ -205,46 +239,12 @@ def createPlot(xName, yName, param):
     createLinePlot(data, xName, yName, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer')
 
 def createDelayPlot(xName, param, fileSuffix):
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2=pd.melt(d1, id_vars=ID_VARS, value_vars=DELAY_VAL_VARS)
-    d3=pd.melt(d1, id_vars=ID_VARS, value_vars=LOOKUP_VAL_VARS)
-    sns.catplot(data=d2,
-            x=xName,
-            y='value',
-            hue='variable',
-            #col='staggeredStart',
-            col='optionCarrierForwarding',
-            row='optionalCheckBuffer',
-            kind='point',
-            markers=['o', 'X', 'D', '^'],
-            linestyles=['-', '--', ':', '-.']
-            )
-
-    ax = plt.gca()
-    ax2 = ax.twinx()
-    sns.barplot(data=d3, x=xName, y='value', hue='variable', ax=ax2)
-
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_queryDelay_{fileSuffix}.pdf'))
-    plt.clf()
-    plt.close()
+    data = getMeltedData(param, DELAY_VAL_VARS)
+    createLinePlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_queryDelay_{fileSuffix}')
 
 def createLookupsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, LOOKUP_VAL_VARS)
-
-    sns.catplot(data=data,
-            x=xName,
-            y='value',
-            hue='variable',
-            col='optionCarrierForwarding',
-            row='optionalCheckBuffer',
-            kind='bar'
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
-    plt.clf()
-    plt.close()
+    createBarPlot(data, xName, 'value', hue='value', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_lookupResults_{fileSuffix}')
 
 def createCollisionsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, COLLISION_VALUE_VARS)
@@ -266,20 +266,7 @@ def createCollisionsPlotOptionalTransfer(xName, param):
 
 def createLookupsPlotOptionalTransfer(xName, param):
     data = getMeltedData(param, LOOKUP_VAL_VARS)
-
-    sns.catplot(data=data,
-            x=xName,
-            y='value',
-            hue='variable',
-            col='optionalNoEmptyTransfers',
-            row='staggeredStart',
-            kind='bar'
-            )
-    plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_optionalNoEmptyTransfers.pdf'))
-    plt.clf()
-    plt.close()
-
+    createBarPlot(data, xName, 'value', hue='variable', col='optionalNoEmptyTransfers', row='staggeredStart', name=f'{xName}_lookupResults_optionalNoEmptyTransfers')
 
 def getMeltedData(param, value_vars):
     d1 = campaign.get_results_as_dataframe(get_all, params=param)
@@ -396,7 +383,6 @@ def genPlots():
 
     sendNotification("All the plots have been produced")
 
-
 def collisionsSample():
     tmp = copy.deepcopy(carrying_params)
     tmp['optionCarrierForwarding'] = False
@@ -432,42 +418,14 @@ def collisionsSample():
 
 def createLookupsPlotSample(xName, param, fileSuffix):
 
-    param = copy.deepcopy(param)
-    param['staggeredStart'] = True
-    param['optionCarrierForwarding'] = False
-    param['optionalCheckBuffer'] = [True, False]
-    param['optionalNoEmptyTransfers'] = False
+    tmp = copy.deepcopy(param)
+    tmp['staggeredStart'] = True
+    tmp['optionCarrierForwarding'] = False
+    tmp['optionalCheckBuffer'] = [True, False]
+    tmp['optionalNoEmptyTransfers'] = False
 
-    d1 = campaign.get_results_as_dataframe(get_all, params=param)
-    d1 = d1.dropna()
-    d2 = pd.melt(d1, id_vars=ID_VARS, value_vars=['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'finalResponse'])
-    fig = sns.catplot(data=d2,
-            x=xName,
-            y='value',
-            hue='optionalCheckBuffer',
-            col='variable',
-            col_wrap=2,
-            kind='bar'
-            )
-    plt.style.use('seaborn')
-
-
-    num_locations = len(d2.get(xName).unique())
-    def hatch(ax, num):
-        # Define some hatches
-        hatches = itertools.cycle(['/', '\\', '+', '-', 'x', '//', '*', 'o', 'O', '.'])        # Loop over the bars
-        for i,bar in enumerate(ax.patches):
-            # Set a different hatch for each bar
-            if i % num == 0:
-                hatch = next(hatches)
-            bar.set_hatch(hatch)
-
-    for (k, v) in fig.axes_dict.items():
-        hatch(v, num_locations)
-
-    plt.savefig(os.path.join(figure_dir, f'{xName}_lookupResults_{fileSuffix}.pdf'))
-    plt.clf()
-    plt.close()
+    data = getMeltedData(tmp, ['FinalTotalLookups', 'FinalTotalSuccess', 'FinalTotalCacheHits', 'finalResponse'])
+    createBarPlot(data, xName, 'value', hue='optionalCheckBuffer', col='variable', row=None, name=f'{xName}_lookupResults_{fileSuffix}', col_wrap=2)
 
 def carryingTrafficSample():
 
@@ -481,7 +439,6 @@ def carryingTrafficSample():
     data = data.dropna()
 
     createLinePlot(data, 'carryingThreshold', 'FinalTotalSent', hue='optionCarrierForwarding', col=None, row=None, name='carryingThreshold_traffic_sample')
-
 
 def percentChange(metric, data):
     means = data.mean().get(metric)
@@ -513,7 +470,6 @@ def values(metric, data):
     print(f'{metric} +- Margin of error')
     for k,m,e in zip(means.keys().values, means.values, error.values):
         print(f'{k}: {m:.3f} \pm {e:.3f}')
-
 
 def calculateValues(params, type):
 
@@ -578,7 +534,6 @@ def calcValues(type=None, params=None):
     end = time.time()
     print(f'values generated in: {timedelta(seconds=end - start)}')
 
-
 def seperator(char, newlines=0):
     print(char * 32 + '\n' * newlines)
 
@@ -611,8 +566,8 @@ def calculateAllValues():
 ##############################
 
 if __name__ == "__main__":
-    campaign_dir = os.path.join(os.getcwd(), experimentName)
-    figure_dir = os.path.join(os.getcwd(), f'{experimentName}_figures')
+    campaign_dir = os.path.join(results_path, experimentName)
+    figure_dir = os.path.join(results_path, f'{experimentName}_figures')
 
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
@@ -621,7 +576,7 @@ if __name__ == "__main__":
     campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
     #campaign = sem.CampaignManager.load(campaign_dir, ns_path=ns_path, check_repo=False, max_parallel_processes=14, skip_configuration=True)
 
-    runSimulation()
+    #runSimulation()
 
     start = time.time()
     genPlots()
