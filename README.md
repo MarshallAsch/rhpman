@@ -158,6 +158,20 @@ be passed to `./waf --run "rhpman-example <command>"` to run a simulation using 
 ```bash
 docker run --rm marshallasch/rhpman:optimized --printHelp
 ```
+
+### To run all of the simulation experiments
+
+When the `sem` command is given to the docker container all of the simulations will be run and the figures will be generated. 
+**WARNING: This will run 7800 experiments that take ~20 minutes each.**
+This will attempt to run the simulations in parallel, one per thread.
+The number of simultaneous simulations can be changed by setting the `NUM_THREADS` environment variable to the number of threads that should be used. 
+When `NUM_THREADS=0` all threads will be used. 
+The results will be placed in the `/results` folder. 
+
+```bash
+docker run --rm -v "$(pwd)/results:/results" marshallasch/rhpman:optimized sem
+```
+
 ## Code style
 
 This project is formatted according to the `.clang-format` file included in this

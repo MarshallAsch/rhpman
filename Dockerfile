@@ -15,12 +15,23 @@ LABEL org.opencontainers.image.description="ns-3 simulation of the RHPMAN data s
 
 ENV BUILD_PROFILE=$BUILD_PROFILE
 
+
 ENTRYPOINT [ "contrib/rhpman/entrypoint.sh" ]
 
-# install protobuf 
-RUN apt-get update && apt-get install -y --no-install-recommends \ 
+VOLUME [ "/results" ]
+
+ENV RESULTS_DIR=/results \
+    NS3_EXPERIMENT=rhpman \
+    NUM_THREADS=0
+
+# install protobuf
+RUN apt-get update && apt-get install -y --no-install-recommends \
     protobuf-compiler \
-    libprotobuf-dev
+    libprotobuf-dev \
+    python3-pip
+
+COPY requirements.txt contrib/rhpman/requirements.txt
+RUN pip install -r contrib/rhpman/requirements.txt
 
 COPY . contrib/rhpman/
 

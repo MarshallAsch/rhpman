@@ -33,6 +33,10 @@ ns_path = os.environ.get('NS3_ROOT', '../allinone2/ns-3.32')
 script = os.environ.get('NS3_SCRIPT', 'rhpman-example')
 discord_url = os.environ.get('DISCORD_URL')
 results_path = os.environ.get('RESULTS_DIR', os.getcwd())
+optimized = os.environ.get('BUILD_PROFILE', 'optimized') == 'optimized'
+numThreads = os.environ.get('NUM_THREADS', 14)
+
+numThreads = None if numThreads == 0 else numThreads
 
 def getNumNodes(param):
     return param['totalNodes']
@@ -244,7 +248,7 @@ def createDelayPlot(xName, param, fileSuffix):
 
 def createLookupsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, LOOKUP_VAL_VARS)
-    createBarPlot(data, xName, 'value', hue='value', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_lookupResults_{fileSuffix}')
+    createBarPlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_lookupResults_{fileSuffix}')
 
 def createCollisionsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, COLLISION_VALUE_VARS)
@@ -573,10 +577,10 @@ if __name__ == "__main__":
         os.makedirs(figure_dir)
 
 
-    campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, max_parallel_processes=14)
+    campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, check_repo=False, optimized=optimized, max_parallel_processes=numThreads)
     #campaign = sem.CampaignManager.load(campaign_dir, ns_path=ns_path, check_repo=False, max_parallel_processes=14, skip_configuration=True)
 
-    #runSimulation()
+    runSimulation()
 
     start = time.time()
     genPlots()
