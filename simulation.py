@@ -569,6 +569,58 @@ def calculateAllValues():
 #     Run the simulations
 ##############################
 
+def tmp(params, type, metric):
+    param = copy.deepcopy(params)
+    param['staggeredStart'] = True
+    param['optionCarrierForwarding'] = False
+    param['optionalCheckBuffer'] = False
+    param['optionalNoEmptyTransfers'] = False
+
+
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna().groupby([type])
+
+    values(metric, data)
+
+def tmp2(params, type):
+    print(f'---- {type} - success ratio -----')
+    tmp(params, type, 'successRatio')
+    print(f'---- {type} - total sent -----')
+    tmp(params, type, 'FinalTotalSent')
+
+    seperator('>>')
+    seperator('>>')
+
+def genAllBaseValues():
+    tmp2(hops_params, 'hops')
+    tmp2(totalnodes_params, 'totalNodes')
+    tmp2(carrying_params, 'carryingThreshold')
+    tmp2(forwarding_params, 'forwardingThreshold')
+
+def highest(params, type, metric):
+    param = copy.deepcopy(params)
+    param['staggeredStart'] = True
+    param['optionCarrierForwarding'] = True
+    param['optionalCheckBuffer'] = True
+    param['optionalNoEmptyTransfers'] = False
+
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna().groupby([type])
+
+    values(metric, data)
+
+def lowest(params, type, metric):
+    param = copy.deepcopy(params)
+    param['staggeredStart'] = False
+    param['optionCarrierForwarding'] = False
+    param['optionalCheckBuffer'] = False
+    param['optionalNoEmptyTransfers'] = False
+
+    data = campaign.get_results_as_dataframe(get_all, params=param)
+    data = data.dropna().groupby([type])
+
+    values(metric, data)
+
 if __name__ == "__main__":
     campaign_dir = os.path.join(results_path, experimentName)
     figure_dir = os.path.join(results_path, f'{experimentName}_figures')
@@ -591,3 +643,16 @@ if __name__ == "__main__":
     print(f'Figures generated in: {timedelta(seconds=end - start)}')
 
     calculateAllValues()
+
+
+    print('\nGenerate all the values to go with the graphs')
+    genAllBaseValues()
+
+    print('\nhops success ratio highest values')
+    highest(hops_params, 'hops', 'successRatio')
+
+    print('\nTotalNodes success ratio highest values')
+    highest(totalnodes_params, 'totalNodes', 'successRatio')
+
+    print('\nTotalNodes success ratio lowest values')
+    lowest(totalnodes_params, 'totalNodes', 'successRatio')
