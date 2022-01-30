@@ -404,21 +404,31 @@ def collisionsSample():
     means = data.mean()
     error = data.sem()*1.96
 
-    lost1 = (means.get('FinalTotalSent').values[0] - means.get('FinalTotalReceived').values[0])
-    lost2 = (means.get('FinalTotalSent').values[1] - means.get('FinalTotalReceived').values[1])
+    change1, uncertainty1 = percent_change(means.get('FinalTotalSent').values[0],means.get('FinalTotalReceived').values[0], error.get('FinalTotalReceived').values[0], error.get('FinalTotalSent').values[0])
+    change2, uncertainty2 = percent_change(means.get('FinalTotalSent').values[1],means.get('FinalTotalReceived').values[1], error.get('FinalTotalReceived').values[1], error.get('FinalTotalSent').values[1])
 
-    u1 = np.sqrt(error.get('FinalTotalReceived').values[0]**2 + error.get('FinalTotalSent').values[0]**2)
-    u2 = np.sqrt(error.get('FinalTotalReceived').values[1]**2 + error.get('FinalTotalSent').values[1]**2)
+    print(f'percent loss when disabled: {change1:.3f} \pm {uncertainty1:.3f}')
+    print(f'percent loss when enabled: {change2:.3f} \pm {uncertainty2:.3f}')
 
-    percentLost1 = lost1 /  means.get('FinalTotalSent').values[0] *100
-    percentLost2 = lost2 /  means.get('FinalTotalSent').values[1]*100
+
+def percent_change(a, b, ea, eb):
+    """
+    Calculating percent loss = (a - b) / a
+    """
+    v = (a - b)
+
+    u = np.sqrt(ea ** 2 +  eb **2)
+
+    # calculated using https://www.calculatorsoup.com/calculators/algebra/percent-change-calculator.php
+    percentChange = v /  a *100
 
     # error calculated using https://www.statisticshowto.com/error-propagation/
-    u3 = np.sqrt((u1/lost1)**2 + (error.get('FinalTotalSent').values[0]/means.get('FinalTotalSent').values[0])**2)
-    u4 = np.sqrt((u2/lost2)**2 + (error.get('FinalTotalSent').values[1]/means.get('FinalTotalSent').values[1])**2)
+    error = np.sqrt((u / v) ** 2 + (ea / eb ) ** 2) * 100
 
-    print(f'percent loss when disabled: {percentLost1:.3f} \pm {u3*100:.3f}')
-    print(f'percent loss when enabled: {percentLost2:.3f} \pm {u4*100:.3f}')
+
+    return percentChange, error
+
+
 
 def createLookupsPlotSample(xName, param, fileSuffix):
 
@@ -452,20 +462,9 @@ def percentChange(metric, data):
     if len(means.values) != 2:
         return
 
-    v1 = means.values[0]
-    v2 = means.values[1]
-    u1 = error.values[0]
-    u2 = error.values[1]
+    change, uncertainty = percent_change(means.values[0], means.values[1], error.values[0], error.values[1])
 
-    # calculated using https://www.calculatorsoup.com/calculators/algebra/percent-change-calculator.php
-    v3 = v2-v1
-    change = v3 / v1 * 100
-
-    # error calculated using https://www.statisticshowto.com/error-propagation/
-    u3 = np.sqrt(u1**2 + u2**2)
-    u4 = np.sqrt((u3/v3)**2 + (u1/v1)**2)
-
-    print(f'percent change: {change:.3f} \pm {u4*100:.3f}')
+    print(f'percent change: {change:.3f} \pm {uncertainty:.3f}')
 
 def values(metric, data):
     means = data.mean().get(metric)
@@ -621,6 +620,33 @@ def lowest(params, type, metric):
 
     values(metric, data)
 
+
+def nodes_loss_calculation():
+
+    tmp = copy.deepcopy(totalnodes_params)
+    tmp['optionCarrierForwarding'] = False
+    tmp['optionalCheckBuffer'] = False
+    tmp['optionalNoEmptyTransfers'] = False
+    tmp['staggeredStart'] = True
+    d1 = campaign.get_results_as_dataframe(get_all, params=tmp)
+    d1 = d1.dropna()
+    # d2 = pd.melt(d1, id_vars=ID_VARS, value_vars=COLLISION_VALUE_VARS)
+
+    # createLinePlot(d2, 'carryingThreshold', 'value', hue='variable', col='staggeredStart', row=None, name='carryingThreshold_networkCollisions_sample')
+
+    # Calculate the percent of messages that have been lost
+
+    data = d1.groupby(['totalNodes'])
+
+    means = data.mean()
+    error = data.sem()*1.96
+
+    change1, uncertainty1 = percent_change(means.get('FinalTotalSent').values[0],means.get('FinalTotalReceived').values[0], error.get('FinalTotalReceived').values[0], error.get('FinalTotalSent').values[0])
+    change2, uncertainty2 = percent_change(means.get('FinalTotalSent').values[1],means.get('FinalTotalReceived').values[1], error.get('FinalTotalReceived').values[1], error.get('FinalTotalSent').values[1])
+
+    print(f'percent loss when nodes={means.index[0]}: {change1:.3f} \pm {uncertainty1:.3f}')
+    print(f'percent loss when nodes={means.index[1]}: {change2:.3f} \pm {uncertainty2:.3f}')
+
 if __name__ == "__main__":
     campaign_dir = os.path.join(results_path, experimentName)
     figure_dir = os.path.join(results_path, f'{experimentName}_figures')
@@ -656,3 +682,6 @@ if __name__ == "__main__":
 
     print('\nTotalNodes success ratio lowest values')
     lowest(totalnodes_params, 'totalNodes', 'successRatio')
+
+    print('\nTotalNodes loss valuses')
+    nodes_loss_calculation()
