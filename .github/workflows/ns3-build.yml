@@ -1,7 +1,21 @@
 # Run build-ns3
 name: build-ns3
 
-on: [push, pull_request]
+on: 
+  push:
+    paths:
+      - '**.cc'
+      - '**.h'
+      - '**/wscript'
+      - 'pre.sh'
+      - 'post.sh'
+  pull_request:
+    paths:
+      - '**.cc'
+      - '**.h'
+      - '**/wscript'
+      - 'pre.sh'
+      - 'post.sh'
 
 jobs:
   build-on-ns3:
