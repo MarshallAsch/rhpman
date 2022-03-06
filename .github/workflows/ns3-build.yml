@@ -18,7 +18,7 @@ jobs:
         sim_name: 'rhpman-example'
         sim_args: '--runTime=120'
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: /output/results.txt
