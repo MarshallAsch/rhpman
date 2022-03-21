@@ -411,24 +411,24 @@ def collisionsSample():
     print(f'percent loss when enabled: {change2:.3f} \pm {uncertainty2:.3f}')
 
 
+
+
+
 def percent_change(a, b, ea, eb):
     """
-    Calculating percent loss = (a - b) / a
+    Calculating percent loss = (b - a) / a
     """
-    v = (a - b)
+    v = (b - a)
 
     u = np.sqrt(ea ** 2 +  eb **2)
 
     # calculated using https://www.calculatorsoup.com/calculators/algebra/percent-change-calculator.php
-    percentChange = v /  a *100
+    percentChange = v / abs(a) * 100
 
     # error calculated using https://www.statisticshowto.com/error-propagation/
-    error = np.sqrt((u / v) ** 2 + (ea / eb ) ** 2) * 100
-
+    error = percentChange * np.sqrt((u / v) ** 2 + (ea / a ) ** 2) * 100
 
     return percentChange, error
-
-
 
 def createLookupsPlotSample(xName, param, fileSuffix):
 
@@ -653,7 +653,6 @@ if __name__ == "__main__":
 
     if not os.path.exists(figure_dir):
         os.makedirs(figure_dir)
-
 
     campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, check_repo=False, optimized=optimized, max_parallel_processes=numThreads)
     #campaign = sem.CampaignManager.load(campaign_dir, ns_path=ns_path, check_repo=False, max_parallel_processes=14, skip_configuration=True)
