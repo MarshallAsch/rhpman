@@ -621,6 +621,40 @@ def lowest(params, type, metric):
     values(metric, data)
 
 
+def defence_hops_success():
+
+
+    tmp = copy.deepcopy(hops_params)
+    tmp['optionCarrierForwarding'] = False
+    tmp['optionalCheckBuffer'] = False
+    tmp['optionalNoEmptyTransfers'] = False
+    tmp['staggeredStart'] = True
+    data = campaign.get_results_as_dataframe(get_all, params=tmp)
+    data = data.dropna()
+
+    sns.lineplot(data=data,
+            x='hops',
+            y='successRatio',
+            markers=True,
+            dashes=False,
+            # style='event',
+            # kind='point',
+            palette=["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+            # markers=['o', 'X', 'D', '^'],
+            # linestyles=['-', '--', ':', '-.'],
+            ).set(title="Success Ratio vs. Hops with Staggered Start and all Options Dissabled")
+
+    # limit the success ratio plot between 0 and 1
+    plt.ylim(0.0, 1.0)
+
+    name = f'hops_success_defence'
+
+    # plt.style.use('seaborn')
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.clf()
+    plt.close()
+
+
 def nodes_loss_calculation():
 
     tmp = copy.deepcopy(totalnodes_params)
@@ -655,7 +689,8 @@ if __name__ == "__main__":
         os.makedirs(figure_dir)
 
     campaign = sem.CampaignManager.new(ns_path, script, campaign_dir, check_repo=False, optimized=optimized, max_parallel_processes=numThreads)
-    #campaign = sem.CampaignManager.load(campaign_dir, ns_path=ns_path, check_repo=False, max_parallel_processes=14, skip_configuration=True)
+
+    defence_hops_success()
 
     runSimulation()
 
