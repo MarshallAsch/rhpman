@@ -117,6 +117,8 @@ file with `NetAnim` to view what happens during the simulation run.
 
 ## Building the container
 
+This takes a very long time.
+
 ```bash
 $ docker build \
          --build-arg VCS_REF=$(git rev-parse -q --verify HEAD) \
@@ -185,6 +187,15 @@ This **MUST** be run only on IPv4 based networks, the node ID that is used is a 
 identifier that is equal to the IPv4 address of the node.
 This ID is used to communicate and assign the nodes as replica holder nodes.
 This could be modified to use IPv6 addresses by using a 128 bit value instead. 
+
+Currently the implementation does not support data updates, which was part of the origional description of the algorithm. 
+See Issue #10 for more information on that. 
+
+## Getting Help, Contributions, and Feature Requests 
+
+Open an issue for any feature additions, bug reports, or for any support questions.
+Contributions to the project are welcome and there is a [Contribution Guide](CONTRIBUTING.md), that can be followed for any modifications or new features. 
+We would suggest opening an issue on this project first so it can be discussed and the implementation can be thought about before work begins. 
 
 ## License
 
