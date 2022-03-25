@@ -179,7 +179,15 @@ def sendNotification(message):
 
 
 def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer', name=None):
-    sns.catplot(data=data,
+    
+    sns.set(rc={
+        "xtick.bottom" : True, 
+        "ytick.left" : True, 
+        "ytick.minor.visible": True, 
+        "xtick.direction": "in", 
+        "ytick.direction": "in"
+        })
+    g = sns.catplot(data=data,
             x=x,
             y=y,
             hue=hue,
@@ -194,11 +202,37 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
     # limit the success ratio plot between 0 and 1
     if y == 'successRatio':
         plt.ylim(0.0, 1.0)
+       
+
+    yTitle = y
+    if y == 'successRatio':
+        yTitle = 'Success Ratio'
+    elif y == 'FinalTotalSent':
+        yTitle = 'Total Number of Transmissions'
+    elif name == 'carryingThreshold_networkCollisions_sample':
+        yTitle = 'Number of Transmissions'
+    elif y == 'value':
+        yTitle = 'Query Delay (ms)'
+
+    xTitle = x
+    if x == 'hops':
+        xTitle == 'Total Number of Hops'
+    elif y == 'carryingThreshold':
+        xTitle = 'Carrying Threshold'
+    elif y == 'forwardingThreshold':
+        xTitle = 'Forwarding Threshold'
+    elif y == 'totalNodes':
+        xTitle = 'Total Number of Nodes'
+    
+    g.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    g.set_axis_labels(xTitle, yTitle)
+
+
 
     name = f'{x}_{y}' if name is None else name
 
     plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'), metadata={'Author': 'Marshall Asch', 'Creator': 'ns3 RHPMAN Simulation Runner'})
     plt.clf()
     plt.close()
 
@@ -218,7 +252,7 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
 
     def hatch(ax, num):
         # Define some hatches
-        hatches = itertools.cycle(['/', '\\', '+', '-', 'x', '//', '*', 'o', 'O', '.'])        # Loop over the bars
+        hatches = itertools.cycle(['/', '\\', 'x', '-', '*', '//', '#', 'o', 'O', '.'])        # Loop over the bars
         for i,bar in enumerate(ax.patches):
             # Set a different hatch for each bar
             if i % num == 0:
@@ -229,10 +263,31 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
         hatch(v, num_locations)
 
 
+    yTitle = y
+    if y == 'successRatio':
+        yTitle = 'Success Ratio'
+    elif y == 'FinalTotalSent':
+        yTitle = 'Total Number of Transmissions'
+    elif y == 'value':
+        yTitle = 'Number of Lookups'
+
+    xTitle = x
+    if x == 'hops':
+        xTitle == 'Total Number of Hops'
+    elif y == 'carryingThreshold':
+        xTitle = 'Carrying Threshold'
+    elif y == 'forwardingThreshold':
+        xTitle = 'Forwarding Threshold'
+    elif y == 'totalNodes':
+        xTitle = 'Total Number of Nodes'
+
+    fig.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    fig.set_axis_labels(xTitle, yTitle)
+
     name = f'{x}_{y}' if name is None else name
 
     plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'), metadata={'Author': 'Marshall Asch', 'Creator': 'ns3 RHPMAN Simulation Runner'})
     plt.clf()
     plt.close()
 
