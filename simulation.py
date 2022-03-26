@@ -34,7 +34,7 @@ script = os.environ.get('NS3_SCRIPT', 'rhpman-example')
 discord_url = os.environ.get('DISCORD_URL')
 results_path = os.environ.get('RESULTS_DIR', os.getcwd())
 optimized = os.environ.get('BUILD_PROFILE', 'optimized') == 'optimized'
-numThreads = os.environ.get('NUM_THREADS', 14)
+numThreads = int(os.environ.get('NUM_THREADS', 0))
 
 numThreads = None if numThreads == 0 else numThreads
 
@@ -229,7 +229,13 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
 
     xTitle = getXTitle(x)
     
-    g.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    if row != None and col != None:
+        g.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    elif row != None and col == None:
+        g.set_titles(template="{row_var}={row_name}")
+    elif row == None and col != None:
+        g.set_titles(template="{col_var}={col_name}")
+    
     g.set_axis_labels(xTitle, yTitle)
 
 
@@ -278,7 +284,13 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
 
     xTitle = getXTitle(x)
 
-    fig.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    if row != None and col != None:
+        fig.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+    elif row != None and col == None:
+        fig.set_titles(template="{row_var}={row_name}")
+    elif row == None and col != None:
+        fig.set_titles(template="{col_var}={col_name}")
+
     fig.set_axis_labels(xTitle, yTitle)
 
     name = f'{x}_{y}' if name is None else name
