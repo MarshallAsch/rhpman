@@ -34,7 +34,7 @@ script = os.environ.get('NS3_SCRIPT', 'rhpman-example')
 discord_url = os.environ.get('DISCORD_URL')
 results_path = os.environ.get('RESULTS_DIR', os.getcwd())
 optimized = os.environ.get('BUILD_PROFILE', 'optimized') == 'optimized'
-numThreads = os.environ.get('NUM_THREADS', 14)
+numThreads = int(os.environ.get('NUM_THREADS', 0))
 
 numThreads = None if numThreads == 0 else numThreads
 
@@ -178,8 +178,29 @@ def sendNotification(message):
     print(message)
 
 
+def getXTitle(x):
+    xTitle = x
+    if x == 'hops':
+        xTitle == 'Total Number of Hops'
+    elif x == 'carryingThreshold':
+        xTitle = 'Carrying Threshold'
+    elif x == 'forwardingThreshold':
+        xTitle = 'Forwarding Threshold'
+    elif x == 'totalNodes':
+        xTitle = 'Total Number of Nodes'
+
+    return xTitle
+
 def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer', name=None):
-    sns.catplot(data=data,
+    
+    sns.set(rc={
+        "xtick.bottom" : True, 
+        "ytick.left" : True, 
+        "ytick.minor.visible": True, 
+        "xtick.direction": "in", 
+        "ytick.direction": "in"
+        })
+    g = sns.catplot(data=data,
             x=x,
             y=y,
             hue=hue,
@@ -194,11 +215,35 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
     # limit the success ratio plot between 0 and 1
     if y == 'successRatio':
         plt.ylim(0.0, 1.0)
+       
+
+    yTitle = y
+    if y == 'successRatio':
+        yTitle = 'Success Ratio'
+    elif y == 'FinalTotalSent':
+        yTitle = 'Total Number of Transmissions'
+    elif name == 'carryingThreshold_networkCollisions_sample':
+        yTitle = 'Number of Transmissions'
+    elif y == 'value':
+        yTitle = 'Query Delay (ms)'
+
+    xTitle = getXTitle(x)
+    
+    if row != None and col != None:
+        g.set_titles(template="{col_var}={col_name} & {row_var}={row_name}")
+    elif row != None and col == None:
+        g.set_titles(template="{row_var}={row_name}")
+    elif row == None and col != None:
+        g.set_titles(template="{col_var}={col_name}")
+    
+    g.set_axis_labels(xTitle, yTitle)
+
+
 
     name = f'{x}_{y}' if name is None else name
 
     plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'), metadata={'Author': 'Marshall Asch', 'Creator': 'ns3 RHPMAN Simulation Runner'})
     plt.clf()
     plt.close()
 
@@ -218,7 +263,7 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
 
     def hatch(ax, num):
         # Define some hatches
-        hatches = itertools.cycle(['/', '\\', '+', '-', 'x', '//', '*', 'o', 'O', '.'])        # Loop over the bars
+        hatches = itertools.cycle(['/', '\\', 'x', '-', '*', '//', '#', 'o', 'O', '.'])        # Loop over the bars
         for i,bar in enumerate(ax.patches):
             # Set a different hatch for each bar
             if i % num == 0:
@@ -229,10 +274,29 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
         hatch(v, num_locations)
 
 
+    yTitle = y
+    if y == 'successRatio':
+        yTitle = 'Success Ratio'
+    elif y == 'FinalTotalSent':
+        yTitle = 'Total Number of Transmissions'
+    elif y == 'value':
+        yTitle = 'Number of Lookups'
+
+    xTitle = getXTitle(x)
+
+    if row != None and col != None:
+        fig.set_titles(template="{col_var}={col_name} & {row_var}={row_name}")
+    elif row != None and col == None:
+        fig.set_titles(template="{row_var}={row_name}")
+    elif row == None and col != None:
+        fig.set_titles(template="{col_var}={col_name}")
+
+    fig.set_axis_labels(xTitle, yTitle)
+
     name = f'{x}_{y}' if name is None else name
 
     plt.style.use('seaborn')
-    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'))
+    plt.savefig(os.path.join(figure_dir, f'{name}.pdf'), metadata={'Author': 'Marshall Asch', 'Creator': 'ns3 RHPMAN Simulation Runner'})
     plt.clf()
     plt.close()
 
@@ -240,19 +304,19 @@ def createPlot(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
     data = data.dropna()
 
-    createLinePlot(data, xName, yName, hue='staggeredStart', col='optionCarrierForwarding', row='optionalCheckBuffer')
+    createLinePlot(data, xName, yName)
 
 def createDelayPlot(xName, param, fileSuffix):
     data = getMeltedData(param, DELAY_VAL_VARS)
-    createLinePlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_queryDelay_{fileSuffix}')
+    createLinePlot(data, xName, 'value', hue='variable', name=f'{xName}_queryDelay_{fileSuffix}')
 
 def createLookupsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, LOOKUP_VAL_VARS)
-    createBarPlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_lookupResults_{fileSuffix}')
+    createBarPlot(data, xName, 'value', hue='variable', name=f'{xName}_lookupResults_{fileSuffix}')
 
 def createCollisionsPlot(xName, param, fileSuffix):
     data = getMeltedData(param, COLLISION_VALUE_VARS)
-    createLinePlot(data, xName, 'value', hue='variable', col='optionCarrierForwarding', row='optionalCheckBuffer', name=f'{xName}_networkCollisions_{fileSuffix}')
+    createLinePlot(data, xName, 'value', hue='variable', name=f'{xName}_networkCollisions_{fileSuffix}')
 
 def createPlotOptionalTransfer(xName, yName, param):
     data = campaign.get_results_as_dataframe(get_all, params=param)
@@ -352,15 +416,13 @@ def explainFailures():
 def runSimulation():
     totalSims = len(sem.manager.list_param_combinations(param_combination)) * num_runs
     toRun = len(campaign.get_missing_simulations(sem.manager.list_param_combinations(param_combination), runs=num_runs))
+
     sendNotification(f'Starting simulations, {toRun} of {totalSims} simulations to run')
-
     campaign.run_missing_simulations(param_combination, runs=num_runs, stop_on_errors=False)
-
     sendNotification("Simulations have finished running")
-    sendNotification(countFailures())
-
 
     ## print some of the information about the run
+    sendNotification(countFailures())
     sendNotification(getRuntimeInfo())
     sendNotification(explainFailures())
 
@@ -409,10 +471,6 @@ def collisionsSample():
 
     print(f'percent loss when disabled: {change1:.3f} \pm {uncertainty1:.3f}')
     print(f'percent loss when enabled: {change2:.3f} \pm {uncertainty2:.3f}')
-
-
-
-
 
 def percent_change(a, b, ea, eb):
     """
@@ -622,8 +680,6 @@ def lowest(params, type, metric):
 
 
 def defence_hops_success():
-
-
     tmp = copy.deepcopy(hops_params)
     tmp['optionCarrierForwarding'] = False
     tmp['optionalCheckBuffer'] = False
@@ -664,11 +720,6 @@ def nodes_loss_calculation():
     tmp['staggeredStart'] = True
     d1 = campaign.get_results_as_dataframe(get_all, params=tmp)
     d1 = d1.dropna()
-    # d2 = pd.melt(d1, id_vars=ID_VARS, value_vars=COLLISION_VALUE_VARS)
-
-    # createLinePlot(d2, 'carryingThreshold', 'value', hue='variable', col='staggeredStart', row=None, name='carryingThreshold_networkCollisions_sample')
-
-    # Calculate the percent of messages that have been lost
 
     data = d1.groupby(['totalNodes'])
 
