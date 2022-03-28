@@ -230,7 +230,7 @@ def createLinePlot(data, x, y, hue='staggeredStart', col='optionCarrierForwardin
     xTitle = getXTitle(x)
     
     if row != None and col != None:
-        g.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+        g.set_titles(template="{col_var}={col_name} & {row_var}={row_name}")
     elif row != None and col == None:
         g.set_titles(template="{row_var}={row_name}")
     elif row == None and col != None:
@@ -285,7 +285,7 @@ def createBarPlot(data, x, y, hue='variable', col='optionCarrierForwarding', row
     xTitle = getXTitle(x)
 
     if row != None and col != None:
-        fig.set_titles(template="{col_var}={col_name} and {row_var}={row_name}")
+        fig.set_titles(template="{col_var}={col_name} & {row_var}={row_name}")
     elif row != None and col == None:
         fig.set_titles(template="{row_var}={row_name}")
     elif row == None and col != None:
