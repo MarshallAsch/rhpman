@@ -2,5 +2,5 @@ seaborn==0.11.2
 requests==2.27.1
 pandas==1.4.1
 numpy==1.22.3
-matplotlib==3.5.1
+matplotlib==3.10.0
 git+https://github.com/marshallasch/sem@develop#egg=sem
